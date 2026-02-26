@@ -2,7 +2,7 @@
   "name": "מעקב שעות Pro",
   "short_name": "שעות Pro",
   "description": "מעקב שעות עבודה והכנסות אישי ומשותף",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#0A0F1E",
   "theme_color": "#1E3A8A",
