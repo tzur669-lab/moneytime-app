@@ -1,0 +1,26 @@
+{
+  "name": "מעקב שעות Pro",
+  "short_name": "שעות Pro",
+  "description": "מעקב שעות עבודה והכנסות אישי ומשותף",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0F1E",
+  "theme_color": "#1E3A8A",
+  "orientation": "portrait",
+  "lang": "he",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%231E3A8A'/%3E%3Ctext x='96' y='115' font-size='90' text-anchor='middle' fill='white' font-family='Arial'%3E%E2%82%AA%3C/text%3E%3Cpath d='M40 140 Q96 120 152 140' stroke='%2310B981' stroke-width='6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%231E3A8A'/%3E%3Ctext x='256' y='310' font-size='240' text-anchor='middle' fill='white' font-family='Arial'%3E%E2%82%AA%3C/text%3E%3Cpath d='M80 400 Q256 360 430 400' stroke='%2310B981' stroke-width='16' fill='none' stroke-linecap='round'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
