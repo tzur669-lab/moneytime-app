@@ -13,20 +13,36 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<!-- Google auth handled via custom OAuth redirect — works in APK WebView -->
 <style>
 :root{
   --b8:#1E3A8A;--b7:#1D4ED8;--b6:#2563EB;--b5:#3B82F6;--b4:#60A5FA;--b1:#DBEAFE;--b0:#EFF6FF;
-  --g:#10B981;--gl:#D1FAE5;--r:#EF4444;--rl:#FEE2E2;--am:#F59E0B;--aml:#FEF3C7;
+  --g:#10B981;--gl:#D1FAE5;--r:#EF4444;--rl:#FEE2E2;--am:#0EA5E9;--aml:#E0F2FE;
   --bg:#F0F4FF;--s:#fff;--s2:#F8FAFF;--bd:#E2E8F0;--t:#0F172A;--t2:#475569;--t3:#94A3B8;
   --sh:0 1px 4px rgba(30,58,138,.08);--shm:0 4px 20px rgba(30,58,138,.12);--shl:0 10px 40px rgba(30,58,138,.18);
   --r1:18px;--r2:12px;--r3:8px;--nh:68px;--hh:60px;
 }
 [data-theme=dark]{
   --bg:#080E1E;--s:#111827;--s2:#1E293B;--bd:#1E3A5F;--t:#F1F5F9;--t2:#94A3B8;--t3:#475569;
-  --b1:#1E3A5F;--b0:#162036;--gl:#064E3B;--rl:#450A0A;--aml:#451A03;
+  --b1:#1E3A5F;--b0:#162036;--gl:#064E3B;--rl:#450A0A;--aml:#0C4A6E;--am:#38BDF8;
   --sh:0 1px 4px rgba(0,0,0,.3);--shm:0 4px 20px rgba(0,0,0,.4);--shl:0 10px 40px rgba(0,0,0,.5);
 }
+[data-color=green]{--b8:#166534;--b7:#15803D;--b6:#16A34A;--b5:#22C55E;--b4:#4ADE80;--b1:#BBF7D0;--b0:#F0FDF4;--bg:#F0FDF4;}
+[data-color=purple]{--b8:#4C1D95;--b7:#6D28D9;--b6:#7C3AED;--b5:#8B5CF6;--b4:#A78BFA;--b1:#EDE9FE;--b0:#F5F3FF;--bg:#F5F3FF;}
+[data-color=black]{--b8:#0F172A;--b7:#1E293B;--b6:#334155;--b5:#38BDF8;--b4:#7DD3FC;--b1:#1E293B;--b0:#0F172A;--bg:#060D1A;--s:#111827;--s2:#0F172A;--bd:#1E293B;--t:#F8FAFC;--t2:#94A3B8;--t3:#475569;--g:#34D399;--am:#38BDF8;--aml:#0C4A6E;}
+[data-color=orange]{--b8:#C2410C;--b7:#EA580C;--b6:#F97316;--b5:#FB923C;--b4:#FDBA74;--b1:#FED7AA;--b0:#FFF7ED;--bg:#FFF7ED;}
+[data-color=pink]{--b8:#9F1239;--b7:#BE123C;--b6:#E11D48;--b5:#F43F5E;--b4:#FB7185;--b1:#FFE4E6;--b0:#FFF1F2;--bg:#FFF1F2;}
+[data-color=teal]{--b8:#134E4A;--b7:#0F766E;--b6:#0D9488;--b5:#14B8A6;--b4:#2DD4BF;--b1:#CCFBF1;--b0:#F0FDFA;--bg:#F0FDFA;}
+.theme-picker{display:flex;gap:10px;flex-wrap:wrap;padding:8px 0}
+.tpick{width:42px;height:42px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .2s;position:relative;flex-shrink:0}
+.tpick.sel{border-color:var(--t);transform:scale(1.1);box-shadow:0 0 0 3px var(--s),0 0 0 5px var(--b6)}
+.tpick-row{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--bd)}
+.tpick-row:last-child{border-bottom:none}
+.tpick-swatch{width:36px;height:36px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px}
+.tpick-info{flex:1}
+.tpick-name{font-size:14px;font-weight:700}
+.tpick-sub{font-size:11px;color:var(--t3);margin-top:2px}
+.premium-badge{background:linear-gradient(135deg,#F59E0B,#EF4444);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px;letter-spacing:.5px;display:inline-block;margin-right:4px}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;padding-top:var(--hh);padding-bottom:calc(var(--nh)+12px);transition:background .3s,color .3s;overflow-x:hidden}
 .hdr{position:fixed;top:0;left:0;right:0;height:var(--hh);background:var(--b8);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100;box-shadow:0 2px 20px rgba(30,58,138,.4)}
@@ -314,6 +330,45 @@ input[type=time].fi{text-align:center}
     <div class="trow"><div><div class="trow-lbl">שעות נוספות</div><div class="trow-sub">מעל 8 ש' = 125%, מעל 10 = 150%</div></div><label class="toggle"><input type="checkbox" id="togOT" onchange="setSetting('calcOvertime',this.checked)"><span class="tsl"></span></label></div>
     <div class="trow"><div><div class="trow-lbl">סימון ימים חסרים ⚠️</div><div class="trow-sub">ימי חול ללא רישום</div></div><label class="toggle"><input type="checkbox" id="togMiss" onchange="setSetting('showMissing',this.checked)"><span class="tsl"></span></label></div>
   </div>
+  <div class="set-sec-ttl">🎨 ערכת צבעים</div>
+  <div class="card" style="padding:14px">
+    <div class="tpick-row" onclick="setColor('blue')">
+      <div class="tpick-swatch" style="background:#1E3A8A;border-radius:10px;width:36px;height:36px;flex-shrink:0"></div>
+      <div class="tpick-info"><div class="tpick-name">🔵 כחול נייבי</div><div class="tpick-sub">ברירת המחדל — מקצועי ונקי</div></div>
+      <div id="tc-blue" class="tpick sel" style="background:#1E3A8A"></div>
+    </div>
+    <div class="tpick-row" onclick="setColor('green')">
+      <div class="tpick-swatch" style="background:#166534;border-radius:10px;width:36px;height:36px;flex-shrink:0"></div>
+      <div class="tpick-info"><div class="tpick-name">🟢 ירוק יער</div><div class="tpick-sub">רענן ואופטימי</div></div>
+      <div id="tc-green" class="tpick" style="background:#166534"></div>
+    </div>
+    <div class="tpick-row" onclick="setColor('teal')">
+      <div class="tpick-swatch" style="background:#0D9488;border-radius:10px;width:36px;height:36px;flex-shrink:0"></div>
+      <div class="tpick-info"><div class="tpick-name">🩵 טורקיז</div><div class="tpick-sub">מרגיע ומודרני</div></div>
+      <div id="tc-teal" class="tpick" style="background:#0D9488"></div>
+    </div>
+    <div class="tpick-row" onclick="setColor('purple')">
+      <div class="tpick-swatch" style="background:linear-gradient(135deg,#4C1D95,#7C3AED);border-radius:10px;width:36px;height:36px;flex-shrink:0"></div>
+      <div class="tpick-info"><div class="tpick-name">🟣 סגול מלכותי <span class="premium-badge">PREMIUM</span></div><div class="tpick-sub">עשיר ומיוחד</div></div>
+      <div id="tc-purple" class="tpick" style="background:linear-gradient(135deg,#4C1D95,#7C3AED)"></div>
+    </div>
+    <div class="tpick-row" onclick="setColor('black')">
+      <div class="tpick-swatch" style="background:linear-gradient(135deg,#0F172A,#334155);border-radius:10px;width:36px;height:36px;flex-shrink:0;border:1px solid #334155"></div>
+      <div class="tpick-info"><div class="tpick-name">⚫ שחור פינטק <span class="premium-badge">PREMIUM</span></div><div class="tpick-sub">דארק מוד — עיצוב פרימיום</div></div>
+      <div id="tc-black" class="tpick" style="background:linear-gradient(135deg,#0F172A,#334155);border:1px solid #475569"></div>
+    </div>
+    <div class="tpick-row" onclick="setColor('orange')">
+      <div class="tpick-swatch" style="background:#C2410C;border-radius:10px;width:36px;height:36px;flex-shrink:0"></div>
+      <div class="tpick-info"><div class="tpick-name">🟠 כתום חם</div><div class="tpick-sub">אנרגטי ובולט</div></div>
+      <div id="tc-orange" class="tpick" style="background:#C2410C"></div>
+    </div>
+    <div class="tpick-row" onclick="setColor('pink')">
+      <div class="tpick-swatch" style="background:#E11D48;border-radius:10px;width:36px;height:36px;flex-shrink:0"></div>
+      <div class="tpick-info"><div class="tpick-name">🌸 ורוד מודרני</div><div class="tpick-sub">עדין ומיוחד</div></div>
+      <div id="tc-pink" class="tpick" style="background:#E11D48"></div>
+    </div>
+  </div>
+
   <div class="set-sec-ttl">☁️ גיבוי Google Drive (אופציונלי)</div>
   <div class="card">
     <div id="drOff"><button class="btn btn-o" id="authBtn">🔗 חבר חשבון Google לגיבוי</button></div>
@@ -478,7 +533,7 @@ input[type=time].fi{text-align:center}
 const JC=['#1E3A8A','#2563EB','#10B981','#F59E0B','#EF4444','#8B5CF6'];
 const MN=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 const CID='57616527068-9ogg9tnmgcku8icu5bjkvd7e48b9hujs.apps.googleusercontent.com';
-const SCOPES='https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.email';
+const SCOPES='https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email';
 let curDt=new Date(), selDt=null, mType='', per='7', rTab='gen';
 let hCh,pCh,cmpCh,cplCh,jCh;
 let aToken=null, tClient=null, dProm=null, tInt=null;
@@ -820,8 +875,37 @@ function setPC(c,el){el.closest('div').querySelectorAll('.cdot').forEach(d=>d.cl
 function unpair(){if(confirm('לנתק מהזוג?')){const s=D.gs();s.pairCode=null;s.partnerCode=null;D.ss(s);localStorage.removeItem('pd');closeM('mPair');renderCouple();}}
 
 // ---- SETTINGS ----
+function setColor(c){
+  const s=D.gs(); s.colorTheme=c; D.ss(s);
+  applyColorTheme(c);
+  vib();
+}
+
+function applyColorTheme(c){
+  // Remove previous color
+  document.documentElement.removeAttribute('data-color');
+  // Remove any forced dark from previous black selection
+  const savedTheme=D.gs().theme||'light';
+  document.body.setAttribute('data-theme', savedTheme==='dark'?'dark':'');
+  if(!savedTheme||savedTheme==='light') document.body.removeAttribute('data-theme');
+  // Apply new color
+  if(c && c!=='blue') document.documentElement.setAttribute('data-color',c);
+  // Black forces dark mode visually via CSS vars only — no data-theme manipulation
+  // Update picker highlight
+  document.querySelectorAll('.tpick').forEach(el=>el.classList.remove('sel'));
+  const el=document.getElementById('tc-'+c);
+  if(el) el.classList.add('sel');
+  // Update status bar color
+  const colors={blue:'#1E3A8A',green:'#166534',purple:'#4C1D95',black:'#0F172A',orange:'#C2410C',pink:'#9F1239',teal:'#134E4A'};
+  document.getElementById('metaTC').content=colors[c]||'#1E3A8A';
+}
+
 function renderSettings(){
   const s=D.gs();
+  // Sync color picker
+  const c=s.colorTheme||'blue';
+  document.querySelectorAll('.tpick').forEach(el=>el.classList.remove('sel'));
+  document.getElementById('tc-'+c)?.classList.add('sel');
   document.getElementById('togOT').checked=!!s.calcOvertime;
   document.getElementById('togMiss').checked=s.showMissing!==false;
   document.getElementById('drOff').style.display=aToken?'none':'block';
@@ -865,45 +949,178 @@ function handleClock(){
 
 // ---- GOOGLE DRIVE ----
 function initGD(){
-  if(typeof google==='undefined'||!google.accounts){setTimeout(initGD,800);return;}
-  try{
-    tClient=google.accounts.oauth2.initTokenClient({client_id:CID,scope:SCOPES,callback:async resp=>{
-      if(resp.error)return;aToken=resp.access_token;localStorage.setItem('syen','1');
-      await fetchEmail();await loadDr();renderSettings();setSyncDot(true);
-    }});
-    document.getElementById('authBtn').onclick=()=>{vib();tClient.requestAccessToken();};
-    if(localStorage.getItem('syen')==='1')setTimeout(()=>tClient.requestAccessToken({prompt:''}),1500);
-  }catch(e){console.error(e);}
+  // בדוק אם חזרנו מ-OAuth (חייב להיות ראשון!)
+  handleOAuthReturn();
+  // בדוק אם יש token שמור
+  const saved=localStorage.getItem('gtoken');
+  if(saved){
+    aToken=saved;
+    // בדוק שה-token עדיין תקף
+    fetch('https://www.googleapis.com/oauth2/v3/tokeninfo?access_token='+saved)
+      .then(r=>r.json())
+      .then(info=>{
+        if(info.error){
+          // Token פג תוקף
+          localStorage.removeItem('gtoken');localStorage.removeItem('syen');
+          aToken=null;setSyncDot(false);renderSettings();
+        } else {
+          fetchEmail().then(()=>{renderSettings();setSyncDot(true);loadDr();});
+        }
+      }).catch(()=>{fetchEmail().then(()=>{renderSettings();setSyncDot(true);});});
+  }
+  document.getElementById('authBtn').onclick=()=>{vib();startGoogleAuth();};
+}
+
+function startGoogleAuth(){
+  // Redirect URI — חייב להיות מאושר ב-Google Console
+  const REDIRECT='https://tzur669-lab.github.io/moneytime-app';
+  const url='https://accounts.google.com/o/oauth2/v2/auth'
+    +'?client_id='+encodeURIComponent(CID)
+    +'&redirect_uri='+encodeURIComponent(REDIRECT)
+    +'&response_type=token'
+    +'&scope='+encodeURIComponent(SCOPES)
+    +'&prompt=select_account'
+    +'&include_granted_scopes=true';
+  // נסה לפתוח — ב-APK יפתח דפדפן חיצוני, בדפדפן יעבד בטאב נוכחי
+  window.location.href=url;
+}
+
+function handleOAuthReturn(){
+  // Google מחזיר access_token ב-hash fragment (#access_token=...)
+  const hash=window.location.hash;
+  if(!hash||!hash.includes('access_token'))return;
+  const params=new URLSearchParams(hash.substring(1));
+  const token=params.get('access_token');
+  if(token){
+    aToken=token;
+    localStorage.setItem('gtoken',token);
+    localStorage.setItem('syen','1');
+    // נקה את ה-URL כדי שלא יופיע ה-token
+    history.replaceState(null,'',location.pathname);
+    // הצג הצלחה
+    setTimeout(()=>{
+      fetchEmail().then(()=>{renderSettings();setSyncDot(true);loadDr();
+        showToast('✅ חובר ל-Google Drive בהצלחה!');
+      });
+    },300);
+  }
+}
+
+function showToast(msg){
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--g);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:700;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.3);white-space:nowrap';
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
 }
 async function fetchEmail(){try{const r=await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:`Bearer ${aToken}`}});const i=await r.json();if(i.email)document.getElementById('drEmail').textContent=`מחובר: ${i.email}`;}catch(e){}}
+// ---- DRIVE HELPERS ----
+// Solo: שומר ב-appDataFolder (פרטי)
+// Pair: שומר ב-Drive הרגיל עם שם ייחודי שהפרטנר יכול לקרוא
+
+async function driveUpsert(fileName, body, isShared){
+  // isShared=true → Drive רגיל (שניהם יכולים לקרוא), false → appDataFolder (פרטי)
+  const space = isShared ? 'drive' : 'appDataFolder';
+  const q = encodeURIComponent(`name='${fileName}' and trashed=false`);
+  const listUrl = `https://www.googleapis.com/drive/v3/files?q=${q}&spaces=${space}&fields=files(id)`;
+  const list = await (await fetch(listUrl,{headers:{Authorization:`Bearer ${aToken}`}})).json();
+  let fid = list.files?.[0]?.id;
+  if(!fid){
+    const meta = {name:fileName};
+    if(!isShared) meta.parents=['appDataFolder'];
+    const cr = await (await fetch('https://www.googleapis.com/drive/v3/files',{
+      method:'POST',
+      headers:{Authorization:`Bearer ${aToken}`,'Content-Type':'application/json'},
+      body:JSON.stringify(meta)
+    })).json();
+    fid = cr.id;
+    // אם shared — הפוך לציבורי (קריאה לכולם עם קישור)
+    if(isShared && fid){
+      await fetch(`https://www.googleapis.com/drive/v3/files/${fid}/permissions`,{
+        method:'POST',
+        headers:{Authorization:`Bearer ${aToken}`,'Content-Type':'application/json'},
+        body:JSON.stringify({role:'reader',type:'anyone'})
+      });
+    }
+  }
+  await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fid}?uploadType=media`,{
+    method:'PATCH',
+    headers:{Authorization:`Bearer ${aToken}`,'Content-Type':'application/json'},
+    body
+  });
+  return fid;
+}
+
+async function driveRead(fileName, isShared){
+  const space = isShared ? 'drive' : 'appDataFolder';
+  const q = encodeURIComponent(`name='${fileName}' and trashed=false`);
+  const list = await (await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=${space}&fields=files(id)`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
+  if(!list.files?.length) return null;
+  const data = await (await fetch(`https://www.googleapis.com/drive/v3/files/${list.files[0].id}?alt=media`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
+  return data;
+}
+
 async function saveDr(){
   if(!aToken)return;
   const s=D.gs();
-  const fn=s.pairCode?`moneytime_pair_${s.pairCode}_${s.myUID||s.pairCode}.json`:'moneytime_db.json';
-  const body=JSON.stringify({workData:D.g(),settings:s,timestamp:Date.now()});
+  const uid=s.myUID||'solo';
   try{
-    const list=await(await fetch(`https://www.googleapis.com/drive/v3/files?q=name='${fn}'&spaces=appDataFolder`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
-    let fid=list.files?.[0]?.id;
-    if(!fid){const cr=await(await fetch('https://www.googleapis.com/drive/v3/files',{method:'POST',headers:{Authorization:`Bearer ${aToken}`,'Content-Type':'application/json'},body:JSON.stringify({name:fn,parents:['appDataFolder']})})).json();fid=cr.id;}
-    await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fid}?uploadType=media`,{method:'PATCH',headers:{Authorization:`Bearer ${aToken}`,'Content-Type':'application/json'},body});
+    if(s.pairCode){
+      // מצב זוגי — שמור קובץ ב-Drive הרגיל עם שם ייחודי לזוג+משתמש
+      const fn=`moneytime_${s.pairCode}_${uid}.json`;
+      await driveUpsert(fn, JSON.stringify({workData:D.g(),myName:s.myName,myColor:s.myColor,timestamp:Date.now()}), true);
+    } else {
+      // מצב יחיד — שמור ב-appDataFolder פרטי
+      await driveUpsert('moneytime_solo.json', JSON.stringify({workData:D.g(),settings:s,timestamp:Date.now()}), false);
+    }
     setSyncDot(true);
-  }catch(e){setSyncDot(false);}
+  }catch(e){console.error(e);setSyncDot(false);}
 }
+
 async function loadDr(){
   if(!aToken)return;
   const s=D.gs();
-  const fn=s.pairCode?`moneytime_pair_${s.pairCode}_${s.myUID||s.pairCode}.json`:'moneytime_db.json';
+  const uid=s.myUID||'solo';
   try{
-    const list=await(await fetch(`https://www.googleapis.com/drive/v3/files?q=name='${fn}'&spaces=appDataFolder`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
-    if(list.files?.length>0){const cloud=await(await fetch(`https://www.googleapis.com/drive/v3/files/${list.files[0].id}?alt=media`,{headers:{Authorization:`Bearer ${aToken}`}})).json();const cTs=cloud.timestamp||0,lTs=parseInt(localStorage.getItem('wdts'))||0;if(cTs>lTs||lTs===0){if(cloud.workData)D.s(cloud.workData);}else{saveDr();}}
-  }catch(e){}
-  if(s.pairCode&&s.partnerCode){
-    try{
-      const q=encodeURIComponent(`name contains 'moneytime_pair_${s.partnerCode}'`);
-      const pl=await(await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=appDataFolder`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
-      if(pl.files?.length>0){const pc=await(await fetch(`https://www.googleapis.com/drive/v3/files/${pl.files[0].id}?alt=media`,{headers:{Authorization:`Bearer ${aToken}`}})).json();if(pc.workData)D.sp(pc.workData);}
-    }catch(e){}
-  }
+    if(s.pairCode){
+      // טען את הנתונים שלי
+      const myFn=`moneytime_${s.pairCode}_${uid}.json`;
+      const mine=await driveRead(myFn, true);
+      if(mine){
+        const cTs=mine.timestamp||0, lTs=parseInt(localStorage.getItem('wdts'))||0;
+        if(cTs>lTs||lTs===0){if(mine.workData)D.s(mine.workData);}
+        else{await saveDr();}
+      } else {
+        await saveDr(); // העלה לראשונה
+      }
+      // טען את נתוני הפרטנר (חפש כל קובץ של הזוג שאינו שלי)
+      if(s.partnerUID){
+        const pFn=`moneytime_${s.pairCode}_${s.partnerUID}.json`;
+        const partner=await driveRead(pFn, true);
+        if(partner?.workData) D.sp(partner.workData);
+      } else {
+        // חפש קובץ של הפרטנר לפי קוד הזוג
+        const q=encodeURIComponent(`name contains 'moneytime_${s.pairCode}_' and trashed=false`);
+        const all=await(await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive&fields=files(id,name)`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
+        const pFile=all.files?.find(f=>!f.name.includes(uid));
+        if(pFile){
+          // שמור את ה-UID של הפרטנר
+          const pUID=pFile.name.replace(`moneytime_${s.pairCode}_`,'').replace('.json','');
+          s.partnerUID=pUID; D.ss(s);
+          const pc=await(await fetch(`https://www.googleapis.com/drive/v3/files/${pFile.id}?alt=media`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
+          if(pc?.workData) D.sp(pc.workData);
+        }
+      }
+    } else {
+      // מצב יחיד
+      const data=await driveRead('moneytime_solo.json', false);
+      if(data){
+        const cTs=data.timestamp||0, lTs=parseInt(localStorage.getItem('wdts'))||0;
+        if(cTs>lTs||lTs===0){if(data.workData)D.s(data.workData);}
+        else{await saveDr();}
+      }
+    }
+  }catch(e){console.error(e);}
   renderCal();updRep();
 }
 async function manualSync(){
@@ -911,7 +1128,7 @@ async function manualSync(){
   try{await loadDr();await saveDr();renderCal();if(document.getElementById('pg-couple').classList.contains('active'))renderCouple();alert('✅ סנכרון הושלם!');}
   catch(e){alert('שגיאה בסנכרון');}
 }
-function disconnDrive(){if(confirm('לנתק?')){aToken=null;localStorage.removeItem('syen');renderSettings();setSyncDot(false);}}
+function disconnDrive(){if(confirm('לנתק?')){aToken=null;localStorage.removeItem('syen');localStorage.removeItem('gtoken');renderSettings();setSyncDot(false);}}
 function setSyncDot(on){const d=document.getElementById('sdot');if(d)d.className='sdot'+(on?'':' off');}
 window.addEventListener('online',()=>{if(aToken)saveDr();});
 
@@ -992,6 +1209,9 @@ document.addEventListener('DOMContentLoaded',()=>{
   const s=D.gs();
   if(s.theme==='dark')toggleTheme(true);
   if(!s.myUID){s.myUID=Math.random().toString(36).substring(2,10);D.ss(s);}
+  // Apply saved color theme
+  const savedColor=D.gs().colorTheme||'blue';
+  applyColorTheme(savedColor);
   initClock();renderCal();setSyncDot(false);initGD();renderSettings();
 });
 </script>
