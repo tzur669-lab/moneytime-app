@@ -26,20 +26,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
       # 4. Install dependencies
       - name: Install npm dependencies
         run: npm install
 
-      # 5. Prepare www folder (copy index.html etc.)
+      # 5. Prepare www folder
       - name: Prepare web assets
         run: |
           mkdir -p www
           cp index.html www/index.html
           cp sw.js www/sw.js || true
           cp manifest.json www/manifest.json || true
-          # Make sure index.html loads local assets (no external dependency needed for core)
           echo "Web assets prepared"
           ls -la www/
 
@@ -49,13 +47,11 @@ jobs:
           npx cap add android
           npx cap sync android
 
-      # 7. Patch the Android app — set app name, colors, remove chrome dependency
+      # 7. Patch Android resources
       - name: Patch Android resources
         run: |
-          # Set app name in strings.xml
           sed -i 's/<string name="app_name">.*<\/string>/<string name="app_name">מעקב שעות Pro<\/string>/' android/app/src/main/res/values/strings.xml || true
 
-          # Set status bar color to match our blue
           cat > android/app/src/main/res/values/colors.xml << 'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
@@ -65,8 +61,6 @@ jobs:
           </resources>
           EOF
 
-          # Update AndroidManifest — disable chrome custom tabs, force standalone
-          # Allow cleartext (for local assets)
           sed -i 's/android:usesCleartextTraffic="false"/android:usesCleartextTraffic="true"/' android/app/src/main/AndroidManifest.xml || true
 
           echo "Android resources patched"
@@ -75,7 +69,7 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
-      # 9. Build debug APK (no signing needed for direct install)
+      # 9. Build debug APK
       - name: Build Debug APK
         run: |
           cd android
@@ -83,13 +77,13 @@ jobs:
         env:
           GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
 
-      # 10. Find and rename the APK
+      # 10. Rename the APK
       - name: Locate APK
         run: |
           find android -name "*.apk" -type f
           cp android/app/build/outputs/apk/debug/app-debug.apk moneytime-pro.apk
 
-      # 11. Upload APK as artifact — download from GitHub Actions
+      # 11. Upload APK as artifact
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
@@ -97,7 +91,7 @@ jobs:
           path: moneytime-pro.apk
           retention-days: 30
 
-      # 12. Create a GitHub Release with the APK attached
+      # 12. Create GitHub Release
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -105,14 +99,14 @@ jobs:
           name: "מעקב שעות Pro v${{ github.run_number }}"
           body: |
             ## 📱 APK להתקנה ישירה באנדרואיד
-            
+
             ### הוראות התקנה:
             1. הורד את הקובץ `moneytime-pro.apk`
             2. שלח לפלאפון (וואטסאפ / מייל / כבל USB)
             3. פתח בפלאפון ולחץ "התקן"
             4. אם מופיע "מקורות לא ידועים" — אשר
             5. האפליקציה מותקנת! 🎉
-            
+
             ### ✅ מה בגרסה זו:
             - ממשק עצמאי — אפס תלות בכרום
             - עובד 100% אופליין
