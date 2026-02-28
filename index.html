@@ -69,11 +69,12 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--t);min-heig
 .page.active{display:block}
 @keyframes pgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .card{background:var(--s);border-radius:var(--r1);padding:16px;box-shadow:var(--sh);border:1px solid var(--bd);margin-bottom:12px}
-.clk-card{background:linear-gradient(135deg,var(--b8),var(--b6));border-radius:var(--r1);padding:18px;margin-bottom:12px;color:#fff;box-shadow:var(--shl);border:none}
-.clk-label{font-size:10px;font-weight:700;opacity:.65;letter-spacing:1.5px;text-transform:uppercase}
-.clk-time{font-size:44px;font-weight:900;letter-spacing:-2px;font-variant-numeric:tabular-nums;line-height:1;margin:6px 0 14px}
+.clk-card{background:linear-gradient(135deg,var(--b8),var(--b6));border-radius:var(--r1);padding:10px 16px;margin-bottom:12px;color:#fff;box-shadow:var(--shl);border:none;display:flex;align-items:center;gap:12px}
+.clk-left{flex:1}
+.clk-label{font-size:9px;font-weight:700;opacity:.65;letter-spacing:1.5px;text-transform:uppercase}
+.clk-time{font-size:26px;font-weight:900;letter-spacing:-1px;font-variant-numeric:tabular-nums;line-height:1;margin:2px 0}
 .clk-time.on{color:#93C5FD}
-.btn-clk{width:100%;padding:13px;border-radius:12px;border:none;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;background:rgba(255,255,255,.18);color:#fff}
+.btn-clk{padding:9px 16px;border-radius:10px;border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;background:rgba(255,255,255,.18);color:#fff;white-space:nowrap;flex-shrink:0}
 .btn-clk.on{background:rgba(239,68,68,.8)}
 .btn-clk:active{transform:scale(.98)}
 .qa{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
@@ -261,8 +262,10 @@ input[type=time].fi{text-align:center}
 <!-- PAGE: CALENDAR -->
 <div class="page active" id="pg-cal">
   <div class="clk-card">
-    <div class="clk-label">שעון נוכחות</div>
-    <div class="clk-time" id="clkTime">00:00:00</div>
+    <div class="clk-left">
+      <div class="clk-label">שעון נוכחות</div>
+      <div class="clk-time" id="clkTime">00:00:00</div>
+    </div>
     <button class="btn-clk" id="clkBtn" onclick="handleClock()">▶ התחל משמרת</button>
   </div>
   <div id="missBanner"></div>
@@ -275,7 +278,10 @@ input[type=time].fi{text-align:center}
   <div class="card">
     <div class="cal-nav">
       <button class="btn-nav" onclick="navMonth(-1)">◀</button>
-      <div class="cal-title" id="calTitle"></div>
+      <div style="text-align:center">
+        <div class="cal-title" id="calTitle"></div>
+        <div id="calYear" style="font-size:11px;color:var(--t3);line-height:1;margin-top:1px"></div>
+      </div>
       <div style="display:flex;gap:6px">
         <button class="btn-today" onclick="goToday()">היום</button>
         <button class="btn-nav" onclick="navMonth(1)">▶</button>
@@ -298,9 +304,10 @@ input[type=time].fi{text-align:center}
 <div class="page" id="pg-rep">
   <div class="rtabs">
     <button class="rtab active" onclick="switchRTab('gen',this)">📊 כללי</button>
-    <button class="rtab" onclick="switchRTab('jobs',this)">💼 לפי עבודה</button>
+    <button class="rtab" onclick="switchRTab('jobs',this)">💼 עבודה</button>
     <button class="rtab" onclick="switchRTab('cmp',this)">📈 השוואה</button>
     <button class="rtab" onclick="switchRTab('arc',this)">📅 ארכיון</button>
+    <button class="rtab" onclick="switchRTab('year',this)">🗓️ שנתי</button>
   </div>
   <div class="pills">
     <button class="pill active" data-p="7" onclick="selPer(this)">7 ימים</button>
@@ -390,6 +397,7 @@ input[type=time].fi{text-align:center}
   <div class="set-sec-ttl">💾 גיבוי וייצוא</div>
   <div class="card">
     <button class="btn btn-o" onclick="expCSV()">📊 ייצוא CSV</button>
+    <button class="btn btn-o" onclick="expXLSX()" style="margin-top:8px">📗 ייצוא Excel (.xlsx)</button>
     <button class="btn btn-o" onclick="expJSON()" style="margin-top:8px">📦 ייצוא JSON (גיבוי מלא)</button>
     <button class="btn btn-g" onclick="openM('mPDF')" style="margin-top:8px">📄 ייצוא PDF מותאם</button>
     <div class="div"></div>
@@ -613,7 +621,8 @@ function swPage(p,btn){
 // ---- CALENDAR ----
 function renderCal(){
   const y=curDt.getFullYear(),m=curDt.getMonth();
-  document.getElementById('calTitle').textContent=`${MN[m]} ${y}`;
+  document.getElementById('calTitle').textContent=MN[m];
+  const yearEl=document.getElementById('calYear');if(yearEl)yearEl.textContent=y;
   const grid=document.getElementById('calGrid');grid.innerHTML='';
   const data=D.g(),pd=D.gp(),s=D.gs(),tk=fk(new Date()),today=new Date();today.setHours(0,0,0,0);
   ['א','ב','ג','ד','ה','ו','ש'].forEach(d=>{const h=document.createElement('div');h.className='chc';h.textContent=d+"'";grid.appendChild(h);});
@@ -721,6 +730,7 @@ function updRep(){
   else if(rTab==='jobs')renderJobs(dates,cont);
   else if(rTab==='cmp')renderCmp(cont);
   else if(rTab==='arc')renderArc(cont);
+  else if(rTab==='year')renderYear(cont);
 }
 
 const cOpts=dk=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.05)'},ticks:{color:dk?'#475569':'#94A3B8',font:{size:10,family:'Heebo'},maxRotation:0}},y:{grid:{color:dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.05)'},ticks:{color:dk?'#475569':'#94A3B8',font:{size:10,family:'Heebo'}}}}});
@@ -786,13 +796,101 @@ function renderCmp(cont){
 
 function renderArc(cont){
   const data=D.g(),s=D.gs(),months={};
-  Object.keys(data).forEach(k=>{const mk=k.substring(0,7),d=data[k],pr=cp(d.hours,d.rate,d.bonuses);if(!months[mk])months[mk]={h:0,p:0};months[mk].h+=d.hours;months[mk].p+=pr.total;});
+  Object.keys(data).forEach(k=>{const mk=k.substring(0,7),d=data[k],pr=cp(d.hours,d.rate,d.bonuses);if(!months[mk])months[mk]={h:0,p:0,days:0};months[mk].h+=d.hours;months[mk].p+=pr.total;months[mk].days++;});
   (s.jobs||[]).forEach(j=>{const f=parseFloat(j.fixed)||0;if(f>0)Object.keys(months).forEach(mk=>months[mk].p+=f);});
   const sorted=Object.keys(months).sort().reverse();
   if(!sorted.length){cont.innerHTML=`<div class="card"><div class="empty"><div class="empty-ico">📅</div><div class="empty-ttl">אין נתונים עדיין</div></div></div>`;return;}
-  let html='<div class="card">';
-  sorted.forEach(mk=>{const[y,m]=mk.split('-');html+=`<div class="arc-row"><div><div class="arc-m">${MN[parseInt(m)-1]} ${y}</div></div><div class="arc-h">${months[mk].h.toFixed(1)} ש'</div><div class="arc-p">₪${Math.round(months[mk].p).toLocaleString('he-IL')}</div></div>`;});
-  html+='</div>';cont.innerHTML=html;
+
+  // חישוב סטטיסטיקות שנתיות
+  const years={};
+  sorted.forEach(mk=>{const y=mk.substring(0,4);if(!years[y])years[y]={h:0,p:0,months:0,best:{p:0,mk:''}};years[y].h+=months[mk].h;years[y].p+=months[mk].p;years[y].months++;if(months[mk].p>years[y].best.p)years[y].best={p:months[mk].p,mk};});
+
+  let html='';
+
+  // כרטיס סטטיסטיקות שנתיות
+  Object.keys(years).sort().reverse().forEach(y=>{
+    const yr=years[y];
+    const avgM=yr.months>0?Math.round(yr.p/yr.months):0;
+    const [bY,bM]=yr.best.mk.split('-');
+    html+=`<div class="card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="font-size:18px;font-weight:900">📊 ${y}</div>
+        <div style="background:var(--b1);color:var(--b8);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">${yr.months} חודשים</div>
+      </div>
+      <div class="stats-row" style="margin-bottom:12px">
+        <div class="scard"><div class="slbl">סה"כ שעות</div><div class="sval b">${yr.h.toFixed(0)}</div></div>
+        <div class="scard"><div class="slbl">סה"כ הכנסה</div><div class="sval g">₪${Math.round(yr.p).toLocaleString('he-IL')}</div></div>
+      </div>
+      <div class="stats-row" style="margin-bottom:8px">
+        <div class="scard"><div class="slbl">ממוצע חודשי</div><div class="sval" style="color:var(--b6)">₪${avgM.toLocaleString('he-IL')}</div></div>
+        <div class="scard"><div class="slbl">🏆 חודש שיא</div><div class="sval" style="font-size:14px;color:var(--am)">${MN[parseInt(bM)-1]}</div></div>
+      </div>
+    </div>`;
+  });
+
+  // ארכיון חודשים
+  html+='<div class="card"><div style="font-size:13px;font-weight:700;color:var(--t2);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--bd)">📅 ארכיון חודשי</div>';
+  sorted.forEach(mk=>{const[y,m]=mk.split('-');const maxP=Math.max(...Object.values(months).map(x=>x.p));const pct=maxP>0?Math.round(months[mk].p/maxP*100):0;
+    html+=`<div class="arc-row"><div style="flex:1"><div class="arc-m">${MN[parseInt(m)-1]} ${y}</div><div class="pbar-wrap" style="margin-top:4px;height:4px"><div class="pbar-fill" style="width:${pct}%;background:var(--b6)"></div></div></div><div class="arc-h">${months[mk].h.toFixed(1)} ש'</div><div class="arc-p">₪${Math.round(months[mk].p).toLocaleString('he-IL')}</div></div>`;
+  });
+  html+='</div>';
+  cont.innerHTML=html;
+}
+
+// ---- YEARLY STATS ----
+function renderYear(cont){
+  const data=D.g();
+  const now=new Date();
+  const curY=now.getFullYear();
+  // בנה נתונים לשנה הנוכחית לפי חודשים
+  const months=Array.from({length:12},(_,i)=>({m:i,h:0,p:0,days:0}));
+  let totalH=0,totalP=0,bestM=-1,bestP=0,worstM=-1,worstP=Infinity;
+  Object.keys(data).forEach(k=>{
+    if(!k.startsWith(curY))return;
+    const d=data[k],mi=parseInt(k.split('-')[1])-1;
+    if(mi<0||mi>11)return;
+    const pr=cp(d.hours,d.rate,d.bonuses);
+    months[mi].h+=d.hours;months[mi].p+=pr.total;months[mi].days++;
+    totalH+=d.hours;totalP+=pr.total;
+  });
+  months.forEach((m,i)=>{if(m.days>0&&m.p>bestP){bestP=m.p;bestM=i;}if(m.days>0&&m.p<worstP){worstP=m.p;worstM=i;}});
+  const avgM=months.filter(m=>m.days>0).length;
+  const avgMonthly=avgM>0?totalP/avgM:0;
+  const dk=document.body.getAttribute('data-theme')==='dark';
+  const lb=MN.map(n=>n.substring(0,3));
+  const vals=months.map(m=>Math.round(m.p));
+  const hvals=months.map(m=>parseFloat(m.h.toFixed(1)));
+  cont.innerHTML=`
+  <div class="stats-row">
+    <div class="scard"><div class="slbl">סה"כ ${curY}</div><div class="sval g">₪${Math.round(totalP).toLocaleString('he-IL')}</div></div>
+    <div class="scard"><div class="slbl">שעות ${curY}</div><div class="sval b">${totalH.toFixed(1)}</div></div>
+  </div>
+  <div class="stats-row">
+    <div class="scard"><div class="slbl">ממוצע חודשי</div><div class="sval" style="color:var(--am)">₪${Math.round(avgMonthly).toLocaleString('he-IL')}</div></div>
+    <div class="scard"><div class="slbl">חודש שיא</div><div class="sval" style="color:var(--g);font-size:16px">${bestM>=0?MN[bestM]:'—'}</div></div>
+  </div>
+  <div class="card">
+    <div class="csummary"><span>📈 הכנסה חודשית ${curY}</span><span style="color:var(--g)">שיא: ${bestM>=0?MN[bestM]+' ₪'+Math.round(bestP).toLocaleString('he-IL'):'—'}</span></div>
+    <div class="cwrap" style="height:180px"><canvas id="yrIncomeCh"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="csummary"><span>⏱️ שעות לפי חודש</span></div>
+    <div class="cwrap" style="height:150px"><canvas id="yrHoursCh"></canvas></div>
+  </div>
+  <div class="card">
+    <div style="font-size:13px;font-weight:700;margin-bottom:10px">פירוט חודשי ${curY}</div>
+    ${months.map((m,i)=>m.days>0?`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd)">
+      <div style="font-size:13px;font-weight:${i===bestM?'800':'600'};color:${i===bestM?'var(--g)':'var(--t)'}">${MN[i]}${i===bestM?' 🏆':''}</div>
+      <div style="text-align:left"><div style="font-size:13px;font-weight:700;color:var(--g)">₪${Math.round(m.p).toLocaleString('he-IL')}</div><div style="font-size:10px;color:var(--t3)">${m.h.toFixed(1)} ש' · ${m.days} ימים</div></div>
+    </div>`:'').join('')}
+  </div>`;
+  // גרף הכנסות שנתי
+  const bgColors=vals.map((_,i)=>i===bestM?'#10B981':'#2563EB');
+  if(window.yrInCh)window.yrInCh.destroy();
+  window.yrInCh=new Chart(document.getElementById('yrIncomeCh'),{type:'bar',data:{labels:lb,datasets:[{data:vals,backgroundColor:bgColors,borderRadius:6,borderSkipped:false}]},options:{...cOpts(dk),plugins:{legend:{display:false}}}});
+  if(window.yrHrCh)window.yrHrCh.destroy();
+  window.yrHrCh=new Chart(document.getElementById('yrHoursCh'),{type:'bar',data:{labels:lb,datasets:[{data:hvals,backgroundColor:'#3B82F6',borderRadius:4,borderSkipped:false}]},options:{...cOpts(dk),plugins:{legend:{display:false}}}});
 }
 
 // ---- COUPLE PAGE ----
@@ -1151,6 +1249,11 @@ async function manualSync(){
 function disconnDrive(){if(confirm('לנתק?')){aToken=null;localStorage.removeItem('syen');localStorage.removeItem('gtoken');renderSettings();setSyncDot(false);}}
 function setSyncDot(on){const d=document.getElementById('sdot');if(d)d.className='sdot'+(on?'':' off');}
 window.addEventListener('online',()=>{if(aToken)saveDr();});
+// גיבוי אוטומטי כשסוגרים/מחליפים טאב
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&aToken)saveDr();});
+window.addEventListener('beforeunload',()=>{if(aToken)saveDr();});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&aToken)saveDr();});
+window.addEventListener('pagehide',()=>{if(aToken)saveDr();});
 
 // ---- PDF ----
 function tpdf(id){const el=document.getElementById(id);el.classList.toggle('on');el.textContent=el.classList.contains('on')?'✓':'';}
@@ -1243,17 +1346,135 @@ function _buildPDF(){
     doc.text(line1,105,y+1,{align:'center'});
     if(line2)doc.text(line2,105,y+6,{align:'center'});
 
-    doc.save(`hours_${name}_${today.replace(/\//g,'-')}.pdf`);
+    const fileName=`hours_${name}_${today.replace(/\//g,'-')}.pdf`;
+    const pdfBlob=doc.output('blob');
+    // נסה לשמור לתיקיית מעקב שעות
+    _savePDFToFolder(pdfBlob, fileName);
     closeM('mPDF');vib();
-    showToast('✅ PDF נוצר בהצלחה!');
   }catch(e){
     console.error('PDF error:',e);
     alert('שגיאה ביצירת PDF: '+e.message);
   }
 }
 
+async function _savePDFToFolder(blob, fileName){
+  try{
+    // ב-APK אנדרואיד — שמור + הצע שיתוף
+    if(navigator.share && navigator.canShare?.({files:[new File([blob],fileName,{type:'application/pdf'})]})){
+      const file=new File([blob],fileName,{type:'application/pdf'});
+      // שמור קודם (download)
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download=fileName;
+      a.click();
+      // הצג אפשרות שיתוף
+      setTimeout(()=>{
+        const d=document.createElement('div');
+        d.style.cssText='position:fixed;bottom:90px;left:16px;right:16px;background:var(--s);border-radius:16px;padding:16px;box-shadow:var(--shl);z-index:999;border:1px solid var(--bd)';
+        d.innerHTML=`<div style="font-size:14px;font-weight:800;margin-bottom:12px">📄 ${fileName}</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-p" style="flex:1" onclick="navigator.share({files:[new File([window._lastPDF],'${fileName}',{type:'application/pdf'})],title:'דוח שעות'}).catch(()=>{});this.closest('div').parentNode.remove()">📤 שתף</button>
+            <button class="btn btn-o" style="flex:1" onclick="this.closest('div').parentNode.remove()">סגור</button>
+          </div>`;
+        window._lastPDF=blob;
+        document.body.appendChild(d);
+        setTimeout(()=>d.remove(),8000);
+      },500);
+    } else {
+      // דפדפן רגיל
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download=fileName;
+      a.click();
+      showToast('✅ PDF נשמר ב-Downloads');
+    }
+  }catch(e){
+    // fallback
+    const doc2=new (window.jspdf?.jsPDF||window.jsPDF)();
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=fileName;
+    a.click();
+    showToast('✅ PDF נשמר!');
+  }
+}
+
 // ---- BACKUP ----
+function expXLSX(){
+  // טען SheetJS דינמית
+  if(!window.XLSX){
+    const sc=document.createElement('script');
+    sc.src='https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js';
+    sc.onload=()=>_buildXLSX();
+    sc.onerror=()=>alert('לא ניתן לטעון ספריית Excel');
+    document.head.appendChild(sc);
+    showToast('⏳ טוען ספריית Excel...');
+    return;
+  }
+  _buildXLSX();
+}
+
+function _buildXLSX(){
+  try{
+    const data=D.g(),s=D.gs();
+    const rows=[['תאריך','יום','שעות','תעריף','שעות רגילות','שעות נוספות 125%','שעות נוספות 150%','בונוסים','סה"כ','מקום עבודה','הערה']];
+    const days=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+    const jobs=s.jobs||[];
+    Object.keys(data).sort().forEach(k=>{
+      const d=data[k];if(!(d.hours>0))return;
+      const dt=new Date(k);
+      const pr=cp(d.hours,d.rate,d.bonuses);
+      const bon=(d.bonuses||[]).reduce((s,b)=>s+(parseFloat(b.amount)||0),0);
+      const job=jobs[d.jobIdx??0]?.name||'';
+      rows.push([k,days[dt.getDay()],d.hours,d.rate,pr.regular?.toFixed(2)||d.hours,pr.ot125?.toFixed(2)||0,pr.ot150?.toFixed(2)||0,bon.toFixed(2),Math.round(pr.total),job,d.note||'']);
+    });
+    // הוסף שורת סיכום
+    rows.push([]);
+    const totH=rows.slice(1).filter(r=>r.length>2).reduce((s,r)=>s+(parseFloat(r[2])||0),0);
+    const totP=rows.slice(1).filter(r=>r.length>2).reduce((s,r)=>s+(parseFloat(r[8])||0),0);
+    rows.push(['סה"כ','',''+totH.toFixed(1),'','','','','',''+Math.round(totP),'','']);
+
+    const ws=window.XLSX.utils.aoa_to_sheet(rows);
+    // עיצוב רוחב עמודות
+    ws['!cols']=[{wch:12},{wch:8},{wch:8},{wch:8},{wch:12},{wch:14},{wch:14},{wch:10},{wch:10},{wch:16},{wch:20}];
+    const wb=window.XLSX.utils.book_new();
+    window.XLSX.utils.book_append_sheet(wb,'שעות עבודה',ws);
+    const today=new Date().toLocaleDateString('he-IL').replace(/\//g,'-');
+    window.XLSX.writeFile(wb,`שעות_${s.myName||'דוח'}_${today}.xlsx`);
+    showToast('✅ Excel נשמר בהצלחה!');vib();
+  }catch(e){alert('שגיאה ביצירת Excel: '+e.message);console.error(e);}
+}
+
 function expCSV(){const d=D.g();let c='\uFEFFתאריך,שעות,תעריף,סה"כ,הערות\n';Object.keys(d).sort().forEach(k=>{const r=d[k],pr=cp(r.hours,r.rate,r.bonuses);c+=`${k},${r.hours},${r.rate},${pr.total.toFixed(2)},${(r.note||'').replace(/,/g,' ')}\n`;});const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:'text/csv'}));a.download='שעות.csv';a.click();}
+function expXLSX(){
+  // בנה CSV בפורמט UTF-8 עם BOM לפתיחה נכונה באקסל
+  const d=D.g(),s=D.gs();
+  const jobs=s.jobs||[];
+  let rows=[['תאריך','יום','שעות','תעריף','שעות רגילות','שעות נוספות 125%','שעות נוספות 150%','סה"כ','בונוסים','הערה','מקום עבודה']];
+  const days=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+  Object.keys(d).sort().forEach(k=>{
+    const r=d[k];if(!(r.hours>0))return;
+    const pr=cp(r.hours,r.rate,r.bonuses);
+    const dt=new Date(k);
+    const jobName=jobs[r.jobIdx??0]?.name||'ראשי';
+    const bonTotal=(r.bonuses||[]).reduce((s,b)=>s+(parseFloat(b.amount)||0),0);
+    rows.push([k,days[dt.getDay()],r.hours,r.rate,pr.reg.toFixed(2),pr.ot1.toFixed(2),pr.ot2.toFixed(2),Math.round(pr.total),bonTotal,r.note||'',jobName]);
+  });
+  // סיכום
+  rows.push([]);
+  const allH=Object.values(d).reduce((s,r)=>s+(r.hours||0),0);
+  const allP=Object.values(d).reduce((s,r)=>s+cp(r.hours,r.rate,r.bonuses).total,0);
+  rows.push(['סה"כ','',''+allH.toFixed(1),'','','','',''+Math.round(allP),'','','']);
+  // המר ל-CSV
+  const csv='﻿'+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('
+');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download=`שעות_${new Date().toLocaleDateString('he-IL').replace(/\//g,'-')}.csv`;
+  a.click();
+  showToast('📗 קובץ Excel נוצר! פתח עם Excel/Sheets');
+}
+
 function expJSON(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({workData:D.g(),settings:D.gs()})],{type:'application/json'}));a.download='גיבוי.json';a.click();}
 function restoreData(e){const r=new FileReader();r.onload=ev=>{try{const p=JSON.parse(ev.target.result);if(p.workData)D.s(p.workData);if(p.settings)D.ss(p.settings);location.reload();}catch{alert('קובץ לא תקין');}};r.readAsText(e.target.files[0]);}
 function execDel(){if(!confirm('האם אתה בטוח?'))return;const r=document.getElementById('delR').value;if(r==='all'){D.s({});location.reload();return;}let data=D.g();getDts(r,'delS','delE').forEach(d=>delete data[fk(d)]);D.s(data);closeM('mDel');renderCal();updRep();saveDr();vib();}
