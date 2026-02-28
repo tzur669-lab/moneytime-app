@@ -576,9 +576,17 @@ const HC=(()=>{
 // ---- PROFIT ----
 function cp(h,r,b=[]){
   const s=D.gs();
-  let base=s.calcOvertime&&h>8?(8*r)+(Math.min(h-8,2)*r*1.25)+(Math.max(h-10,0)*r*1.5):h*r;
+  h=parseFloat(h)||0; r=parseFloat(r)||0;
+  let reg=h,ot1=0,ot2=0;
+  let base;
+  if(s.calcOvertime&&h>8){
+    reg=8; ot1=Math.min(h-8,2); ot2=Math.max(h-10,0);
+    base=(reg*r)+(ot1*r*1.25)+(ot2*r*1.5);
+  } else {
+    base=h*r;
+  }
   const bon=(b||[]).reduce((a,x)=>a+(parseFloat(x.amount)||0),0);
-  return{base,bonus:bon,total:base+bon};
+  return{base,bonus:bon,total:base+bon,reg,ot1,ot2};
 }
 
 // ---- DATES ----
@@ -1401,80 +1409,39 @@ async function _savePDFToFolder(blob, fileName){
 
 // ---- BACKUP ----
 function expXLSX(){
-  // טען SheetJS דינמית
-  if(!window.XLSX){
-    const sc=document.createElement('script');
-    sc.src='https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js';
-    sc.onload=()=>_buildXLSX();
-    sc.onerror=()=>alert('לא ניתן לטעון ספריית Excel');
-    document.head.appendChild(sc);
-    showToast('⏳ טוען ספריית Excel...');
-    return;
-  }
-  _buildXLSX();
-}
-
-function _buildXLSX(){
-  try{
-    const data=D.g(),s=D.gs();
-    const rows=[['תאריך','יום','שעות','תעריף','שעות רגילות','שעות נוספות 125%','שעות נוספות 150%','בונוסים','סה"כ','מקום עבודה','הערה']];
-    const days=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
-    const jobs=s.jobs||[];
-    Object.keys(data).sort().forEach(k=>{
-      const d=data[k];if(!(d.hours>0))return;
-      const dt=new Date(k);
-      const pr=cp(d.hours,d.rate,d.bonuses);
-      const bon=(d.bonuses||[]).reduce((s,b)=>s+(parseFloat(b.amount)||0),0);
-      const job=jobs[d.jobIdx??0]?.name||'';
-      rows.push([k,days[dt.getDay()],d.hours,d.rate,pr.regular?.toFixed(2)||d.hours,pr.ot125?.toFixed(2)||0,pr.ot150?.toFixed(2)||0,bon.toFixed(2),Math.round(pr.total),job,d.note||'']);
-    });
-    // הוסף שורת סיכום
-    rows.push([]);
-    const totH=rows.slice(1).filter(r=>r.length>2).reduce((s,r)=>s+(parseFloat(r[2])||0),0);
-    const totP=rows.slice(1).filter(r=>r.length>2).reduce((s,r)=>s+(parseFloat(r[8])||0),0);
-    rows.push(['סה"כ','',''+totH.toFixed(1),'','','','','',''+Math.round(totP),'','']);
-
-    const ws=window.XLSX.utils.aoa_to_sheet(rows);
-    // עיצוב רוחב עמודות
-    ws['!cols']=[{wch:12},{wch:8},{wch:8},{wch:8},{wch:12},{wch:14},{wch:14},{wch:10},{wch:10},{wch:16},{wch:20}];
-    const wb=window.XLSX.utils.book_new();
-    window.XLSX.utils.book_append_sheet(wb,'שעות עבודה',ws);
-    const today=new Date().toLocaleDateString('he-IL').replace(/\//g,'-');
-    window.XLSX.writeFile(wb,`שעות_${s.myName||'דוח'}_${today}.xlsx`);
-    showToast('✅ Excel נשמר בהצלחה!');vib();
-  }catch(e){alert('שגיאה ביצירת Excel: '+e.message);console.error(e);}
-}
-
-function expCSV(){const d=D.g();let c='\uFEFFתאריך,שעות,תעריף,סה"כ,הערות\n';Object.keys(d).sort().forEach(k=>{const r=d[k],pr=cp(r.hours,r.rate,r.bonuses);c+=`${k},${r.hours},${r.rate},${pr.total.toFixed(2)},${(r.note||'').replace(/,/g,' ')}\n`;});const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:'text/csv'}));a.download='שעות.csv';a.click();}
-function expXLSX(){
-  // בנה CSV בפורמט UTF-8 עם BOM לפתיחה נכונה באקסל
-  const d=D.g(),s=D.gs();
-  const jobs=s.jobs||[];
-  let rows=[['תאריך','יום','שעות','תעריף','שעות רגילות','שעות נוספות 125%','שעות נוספות 150%','סה"כ','בונוסים','הערה','מקום עבודה']];
-  const days=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
-  Object.keys(d).sort().forEach(k=>{
-    const r=d[k];if(!(r.hours>0))return;
-    const pr=cp(r.hours,r.rate,r.bonuses);
-    const dt=new Date(k);
-    const jobName=jobs[r.jobIdx??0]?.name||'ראשי';
-    const bonTotal=(r.bonuses||[]).reduce((s,b)=>s+(parseFloat(b.amount)||0),0);
-    rows.push([k,days[dt.getDay()],r.hours,r.rate,pr.reg.toFixed(2),pr.ot1.toFixed(2),pr.ot2.toFixed(2),Math.round(pr.total),bonTotal,r.note||'',jobName]);
+  var d=D.g(),s=D.gs(),jobs=s.jobs||[];
+  var dayNames=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+  var header=['תאריך','יום','שעות','תעריף','שעות רגילות','125%','150%','סה"כ','בונוסים','הערה','מקום עבודה'];
+  var rows=[header];
+  Object.keys(d).sort().forEach(function(k){
+    var r=d[k];
+    if(!(r.hours>0))return;
+    var pr=cp(r.hours,r.rate,r.bonuses);
+    var dt=new Date(k);
+    var jobName=((jobs[r.jobIdx||0])||{}).name||'ראשי';
+    var bon=(r.bonuses||[]).reduce(function(s,b){return s+(parseFloat(b.amount)||0);},0);
+    rows.push([k,dayNames[dt.getDay()],r.hours,r.rate,
+      (pr.reg||r.hours).toFixed(2),(pr.ot1||0).toFixed(2),(pr.ot2||0).toFixed(2),
+      Math.round(pr.total),bon.toFixed(2),r.note||'',jobName]);
   });
-  // סיכום
   rows.push([]);
-  const allH=Object.values(d).reduce((s,r)=>s+(r.hours||0),0);
-  const allP=Object.values(d).reduce((s,r)=>s+cp(r.hours,r.rate,r.bonuses).total,0);
-  rows.push(['סה"כ','',''+allH.toFixed(1),'','','','',''+Math.round(allP),'','','']);
-  // המר ל-CSV
-  const csv='﻿'+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('
-');
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
-  a.download=`שעות_${new Date().toLocaleDateString('he-IL').replace(/\//g,'-')}.csv`;
+  var allH=Object.values(d).reduce(function(s,r){return s+(r.hours||0);},0);
+  var allP=Object.values(d).reduce(function(s,r){return s+cp(r.hours,r.rate,r.bonuses).total;},0);
+  rows.push(['סה"כ','',allH.toFixed(1),'','','','',Math.round(allP),'','','']);
+  var lines=rows.map(function(row){
+    return row.map(function(cell){
+      return '"'+String(cell).replace(/"/g,'""')+'"';
+    }).join(',');
+  });
+  var csv='\uFEFF'+lines.join('\r\n');
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download='hours_'+new Date().toLocaleDateString('he-IL').replace(/[\/]/g,'-')+'.csv';
   a.click();
-  showToast('📗 קובץ Excel נוצר! פתח עם Excel/Sheets');
+  showToast('קובץ Excel נוצר בהצלחה');
 }
-
 function expJSON(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({workData:D.g(),settings:D.gs()})],{type:'application/json'}));a.download='גיבוי.json';a.click();}
 function restoreData(e){const r=new FileReader();r.onload=ev=>{try{const p=JSON.parse(ev.target.result);if(p.workData)D.s(p.workData);if(p.settings)D.ss(p.settings);location.reload();}catch{alert('קובץ לא תקין');}};r.readAsText(e.target.files[0]);}
 function execDel(){if(!confirm('האם אתה בטוח?'))return;const r=document.getElementById('delR').value;if(r==='all'){D.s({});location.reload();return;}let data=D.g();getDts(r,'delS','delE').forEach(d=>delete data[fk(d)]);D.s(data);closeM('mDel');renderCal();updRep();saveDr();vib();}
