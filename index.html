@@ -1240,14 +1240,14 @@ window.addEventListener('pagehide',()=>{if(aToken)saveDr();});
 // ---- PDF ----
 function tpdf(id){const el=document.getElementById(id);el.classList.toggle('on');el.textContent=el.classList.contains('on')?'✓':'';}
 function genPDF(){
-  // טען jsPDF דינמית אם לא קיים
-  if(!window.jspdf){
-    const sc=document.createElement('script');
+  // טען jsPDF אם צריך, אחר כך בנה
+  if(!window.jspdf && !window.jsPDF){
+    var sc=document.createElement('script');
     sc.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-    sc.onload=()=>_buildPDF();
-    sc.onerror=()=>alert('לא ניתן לטעון את ספריית ה-PDF. בדוק חיבור אינטרנט.');
+    sc.onload=function(){_buildPDF();};
+    sc.onerror=function(){_buildPDF();};// ניסיון גם אם נכשל
     document.head.appendChild(sc);
-    showToast('⏳ טוען ספריית PDF...');
+    showToast('טוען...');
     return;
   }
   _buildPDF();
@@ -1255,93 +1255,111 @@ function genPDF(){
 
 function _buildPDF(){
   try{
-    const jsPDFLib=window.jspdf?.jsPDF || window.jsPDF;
-    if(!jsPDFLib){alert('שגיאה: ספריית PDF לא נטענה. נסה שוב.');return;}
-    const doc=new jsPDFLib({orientation:'p',unit:'mm',format:'a4'});
-    const pr=document.getElementById('pdfPer').value;
-    const dates=getDts(pr,'pdfS','pdfE');
-    const data=D.g(),s=D.gs(),pd=D.gp();
-    const name=document.getElementById('pdfNm').value||s.myName||'דוח';
-    const iH=document.getElementById('po1').classList.contains('on');
-    const iR=document.getElementById('po2').classList.contains('on');
-    const iN=document.getElementById('po4').classList.contains('on');
-    const iP=document.getElementById('po5').classList.contains('on')&&s.pairCode;
-    const today=new Date().toLocaleDateString('he-IL');
+    var pr=document.getElementById('pdfPer').value;
+    var dates=getDts(pr,'pdfS','pdfE');
+    var data=D.g(), s=D.gs(), pd=D.gp();
+    var name=document.getElementById('pdfNm').value||s.myName||'דוח';
+    var iH=document.getElementById('po1').classList.contains('on');
+    var iR=document.getElementById('po2').classList.contains('on');
+    var iN=document.getElementById('po4').classList.contains('on');
+    var iP=document.getElementById('po5').classList.contains('on')&&s.pairCode;
+    var today=new Date().toLocaleDateString('he-IL');
+    var th=0,tp=0,ptp=0;
 
-    // כותרת
-    doc.setFillColor(30,58,138);doc.rect(0,0,210,30,'F');
-    doc.setTextColor(255,255,255);doc.setFontSize(18);doc.setFont('helvetica','bold');
-    doc.text('Work Hours Report',105,13,{align:'center'});
-    doc.setFontSize(10);doc.setFont('helvetica','normal');
-    doc.text(`${name}   |   ${today}`,105,22,{align:'center'});
-    doc.setTextColor(30,30,30);
-
-    // כותרות עמודות
-    let y=40;
-    doc.setFillColor(219,234,254);doc.rect(10,y-5,190,9,'F');
-    doc.setFontSize(9);doc.setFont('helvetica','bold');
-    const cols=[];
-    cols.push({t:'תאריך',w:34});
-    if(iH)cols.push({t:'שעות',w:20});
-    if(iR)cols.push({t:'תעריף',w:22});
-    cols.push({t:'סה"כ',w:24});
-    if(iN)cols.push({t:'הערה',w:50});
-    if(iP)cols.push({t:'פרטנר',w:28});
-    let cx=12;
-    cols.forEach(c=>{doc.text(c.t,cx,y);cx+=c.w;});
-    y+=9;
-
-    // שורות
-    let th=0,tp=0,ptp=0;
-    doc.setFont('helvetica','normal');
-    let rowNum=0;
-    dates.forEach(d=>{
-      const k=fk(d);
-      if(!(data[k]?.hours>0))return;
-      const pp2=cp(data[k].hours,data[k].rate,data[k].bonuses);
-      th+=data[k].hours;tp+=pp2.total;
-      if(y>275){doc.addPage();y=20;}
-      if(rowNum%2===0){doc.setFillColor(248,250,255);doc.rect(10,y-5,190,8,'F');}
-      rowNum++;
-      cx=12;
-      const row=[];
-      row.push({t:k,w:34});
-      if(iH)row.push({t:data[k].hours.toFixed(1)+' ש',w:20});
-      if(iR)row.push({t:data[k].rate+'₪',w:22});
-      row.push({t:'₪'+Math.round(pp2.total).toLocaleString(),w:24});
-      if(iN)row.push({t:(data[k].note||'').substring(0,20),w:50});
+    // בנה HTML לדוח
+    var rows='';
+    dates.forEach(function(d){
+      var k=fk(d);
+      if(!(data[k]&&data[k].hours>0))return;
+      var pp=cp(data[k].hours,data[k].rate,data[k].bonuses);
+      th+=data[k].hours; tp+=pp.total;
+      var row='<tr>';
+      row+='<td>'+k+'</td>';
+      if(iH)row+='<td>'+data[k].hours.toFixed(1)+'</td>';
+      if(iR)row+='<td>'+data[k].rate+'</td>';
+      row+='<td><strong>'+Math.round(pp.total).toLocaleString('he-IL')+'</strong></td>';
+      if(iN)row+='<td>'+(data[k].note||'')+'</td>';
       if(iP){
-        const pp3=pd[k];
-        if(pp3?.hours>0){const pr3=cp(pp3.hours,pp3.rate||50,pp3.bonuses);ptp+=pr3.total;row.push({t:'₪'+Math.round(pr3.total).toLocaleString(),w:28});}
-        else row.push({t:'-',w:28});
+        var pp3=pd[k];
+        if(pp3&&pp3.hours>0){var pr3=cp(pp3.hours,pp3.rate||50,pp3.bonuses);ptp+=pr3.total;row+='<td>'+Math.round(pr3.total).toLocaleString('he-IL')+'</td>';}
+        else row+='<td>-</td>';
       }
-      row.forEach(r=>{try{doc.text(String(r.t),cx,y);}catch(e){}cx+=r.w;});
-      y+=8;
+      row+='</tr>';
+      rows+=row;
     });
 
-    // סיכום
-    y+=4;
-    doc.setFillColor(30,58,138);doc.rect(10,y-5,190,14,'F');
-    doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(9);
-    const line1=`סה"כ שעות: ${th.toFixed(1)}   |   ${name}: ₪${Math.round(tp).toLocaleString()}`;
-    const line2=iP?`פרטנר: ₪${Math.round(ptp).toLocaleString()}   |   יחד: ₪${Math.round(tp+ptp).toLocaleString()}`:'';
-    doc.text(line1,105,y+1,{align:'center'});
-    if(line2)doc.text(line2,105,y+6,{align:'center'});
+    var headers='<th>תאריך</th>';
+    if(iH)headers+='<th>שעות</th>';
+    if(iR)headers+='<th>תעריף</th>';
+    headers+='<th>סה"כ ₪</th>';
+    if(iN)headers+='<th>הערה</th>';
+    if(iP)headers+='<th>פרטנר ₪</th>';
 
-    const fileName=`hours_${name}_${today.replace(/\//g,'-')}.pdf`;
-    const pdfBlob=doc.output('blob');
-    // נסה לשמור לתיקיית מעקב שעות
-    _savePDFToFolder(pdfBlob, fileName);
-    closeM('mPDF');vib();
+    var summary='סה"כ: '+th.toFixed(1)+' שעות | '+name+': ₪'+Math.round(tp).toLocaleString('he-IL');
+    if(iP)summary+=' | פרטנר: ₪'+Math.round(ptp).toLocaleString('he-IL')+' | יחד: ₪'+Math.round(tp+ptp).toLocaleString('he-IL');
+
+    var html='<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="UTF-8">'
+      +'<meta name="viewport" content="width=device-width,initial-scale=1">'
+      +'<title>דוח שעות - '+name+'</title>'
+      +'<style>'
+      +'*{margin:0;padding:0;box-sizing:border-box}'
+      +'body{font-family:Arial,sans-serif;padding:20px;color:#0F172A;direction:rtl}'
+      +'.header{background:#1E3A8A;color:#fff;padding:20px;border-radius:12px;margin-bottom:20px;text-align:center}'
+      +'.header h1{font-size:22px;margin-bottom:4px}'
+      +'.header p{font-size:13px;opacity:.8}'
+      +'table{width:100%;border-collapse:collapse;margin-bottom:20px}'
+      +'th{background:#DBEAFE;color:#1E3A8A;padding:10px 8px;text-align:right;font-size:13px}'
+      +'td{padding:9px 8px;border-bottom:1px solid #E2E8F0;font-size:13px}'
+      +'tr:nth-child(even){background:#F8FAFF}'
+      +'.summary{background:#1E3A8A;color:#fff;padding:14px 20px;border-radius:10px;text-align:center;font-size:14px;font-weight:bold}'
+      +'.print-btn{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1E3A8A;color:#fff;border:none;padding:14px 32px;border-radius:50px;font-size:16px;font-weight:bold;cursor:pointer;box-shadow:0 4px 20px rgba(30,58,138,.4);z-index:999}'
+      +'@media print{.print-btn{display:none}}'
+      +'</style></head><body>'
+      +'<div class="header"><h1>דוח שעות עבודה</h1><p>'+name+' | '+today+'</p></div>'
+      +'<table><thead><tr>'+headers+'</tr></thead><tbody>'+rows+'</tbody></table>'
+      +'<div class="summary">'+summary+'</div>'
+      +'<button class="print-btn" onclick="window.print()">🖨️ הדפס / שמור PDF</button>'
+      +'</body></html>';
+
+    // פתח בחלון חדש
+    var win=window.open('','_blank','width=800,height=600');
+    if(win){
+      win.document.write(html);
+      win.document.close();
+      closeM('mPDF');
+      vib();
+    } else {
+      // אם חלון נחסם — הצג בתוך האפליקציה
+      _showReportInApp(html, 'pdf');
+    }
   }catch(e){
     console.error('PDF error:',e);
-    alert('שגיאה ביצירת PDF: '+e.message);
+    alert('שגיאה: '+e.message);
   }
 }
 
-function _savePDFToFolder(blob, fileName){
-  _saveFile(blob, fileName, 'application/pdf');
+function _showReportInApp(html, type){
+  // הצג את הדוח כ-overlay בתוך האפליקציה
+  var overlay=document.createElement('div');
+  overlay.id='reportOverlay';
+  overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:#fff;display:flex;flex-direction:column';
+  overlay.innerHTML='<div style="background:#1E3A8A;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">'
+    +'<span style="font-size:16px;font-weight:800">📄 דוח שעות</span>'
+    +'<div style="display:flex;gap:8px">'
+    +'<button onclick="window.frames[\'rFrame\'].print()" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">🖨️ הדפס/PDF</button>'
+    +'<button onclick="document.getElementById(\'reportOverlay\').remove()" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:8px 12px;border-radius:8px;font-size:16px;cursor:pointer">✕</button>'
+    +'</div></div>'
+    +'<iframe name="rFrame" id="rFrame" style="flex:1;border:none;width:100%"></iframe>';
+  document.body.appendChild(overlay);
+  // כתוב את ה-HTML לתוך ה-iframe
+  var frame=document.getElementById('rFrame');
+  frame.onload=function(){};
+  frame.contentDocument.open();
+  frame.contentDocument.write(html);
+  frame.contentDocument.close();
 }
+
+
 
 // ---- BACKUP ----
 // שמירת קובץ — עובד ב-APK וב-דפדפן
@@ -1382,47 +1400,119 @@ function _downloadFallback(blob, fileName){
   }
 }
 function expCSV(){
-  var d=D.g();
-  var lines=['﻿תאריך,שעות,תעריף,סה"כ,הערות'];
-  Object.keys(d).sort().forEach(function(k){
-    var r=d[k]; if(!(r.hours>0)) return;
-    var pr=cp(r.hours,r.rate,r.bonuses);
-    lines.push(k+','+r.hours+','+r.rate+','+pr.total.toFixed(2)+','+(r.note||'').replace(/,/g,' '));
-  });
-  var csv=lines.join('\r\n');
-  _saveFile(new Blob([csv],{type:'text/csv;charset=utf-8'}), 'hours.csv', 'text/csv');
+  _showTableReport(false);
 }
 function expXLSX(){
-  var d=D.g(),s=D.gs(),jobs=s.jobs||[];
-  var dayNames=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
-  var header=['תאריך','יום','שעות','תעריף','שעות רגילות','125%','150%','סה"כ','בונוסים','הערה','מקום עבודה'];
-  var rows=[header];
+  _showTableReport(true);
+}
+
+function _showTableReport(detailed){
+  var d=D.g(), s=D.gs(), jobs=s.jobs||[];
+  var dayNames=['\u05e8\u05d0\u05e9\u05d5\u05df','\u05e9\u05e0\u05d9','\u05e9\u05dc\u05d9\u05e9\u05d9','\u05e8\u05d1\u05d9\u05e2\u05d9','\u05d7\u05de\u05d9\u05e9\u05d9','\u05e9\u05d9\u05e9\u05d9','\u05e9\u05d1\u05ea'];
+  var today=new Date().toLocaleDateString('he-IL');
+  var totalH=0, totalP=0;
+  var rows='';
+
   Object.keys(d).sort().forEach(function(k){
-    var r=d[k];
-    if(!(r.hours>0))return;
+    var r=d[k]; if(!(r.hours>0))return;
     var pr=cp(r.hours,r.rate,r.bonuses);
     var dt=new Date(k);
-    var jobName=((jobs[r.jobIdx||0])||{}).name||'ראשי';
+    var jobName=((jobs[r.jobIdx||0])||{}).name||'\u05e8\u05d0\u05e9\u05d9';
     var bon=(r.bonuses||[]).reduce(function(s,b){return s+(parseFloat(b.amount)||0);},0);
-    rows.push([k,dayNames[dt.getDay()],r.hours,r.rate,
-      (pr.reg||r.hours).toFixed(2),(pr.ot1||0).toFixed(2),(pr.ot2||0).toFixed(2),
-      Math.round(pr.total),bon.toFixed(2),r.note||'',jobName]);
+    totalH+=r.hours; totalP+=pr.total;
+    rows+='<tr>';
+    rows+='<td>'+k+'</td>';
+    rows+='<td>'+dayNames[dt.getDay()]+'</td>';
+    rows+='<td>'+r.hours+'</td>';
+    if(detailed){
+      rows+='<td>'+r.rate+'</td>';
+      rows+='<td>'+(pr.reg||r.hours).toFixed(1)+'</td>';
+      rows+='<td>'+(pr.ot1||0).toFixed(1)+'</td>';
+      rows+='<td>'+(pr.ot2||0).toFixed(1)+'</td>';
+    }
+    rows+='<td><strong>\u20aa'+Math.round(pr.total).toLocaleString('he-IL')+'</strong></td>';
+    if(bon>0)rows+='<td>\u20aa'+bon.toFixed(0)+'</td>'; else rows+='<td>-</td>';
+    rows+='<td>'+(r.note||'')+'</td>';
+    rows+='<td>'+jobName+'</td>';
+    rows+='</tr>';
   });
-  rows.push([]);
-  var allH=Object.values(d).reduce(function(s,r){return s+(r.hours||0);},0);
-  var allP=Object.values(d).reduce(function(s,r){return s+cp(r.hours,r.rate,r.bonuses).total;},0);
-  rows.push(['סה"כ','',allH.toFixed(1),'','','','',Math.round(allP),'','','']);
-  var lines=rows.map(function(row){
-    return row.map(function(cell){
-      return '"'+String(cell).replace(/"/g,'""')+'"';
-    }).join(',');
+
+  var headerCols='<th>\u05ea\u05d0\u05e8\u05d9\u05da</th><th>\u05d9\u05d5\u05dd</th><th>\u05e9\u05e2\u05d5\u05ea</th>';
+  if(detailed)headerCols+='<th>\u05ea\u05e2\u05e8\u05d9\u05e3</th><th>\u05e8\u05d2\u05d9\u05dc\u05d5\u05ea</th><th>125%</th><th>150%</th>';
+  headerCols+='<th>\u05e1\u05d4"\u05db \u20aa</th><th>\u05d1\u05d5\u05e0\u05d5\u05e1</th><th>\u05d4\u05e2\u05e8\u05d4</th><th>\u05e2\u05d1\u05d5\u05d3\u05d4</th>';
+
+  var title=detailed?'\u05d3\u05d5\u05d7 \u05de\u05e4\u05d5\u05e8\u05d8 Excel':'\u05d3\u05d5\u05d7 CSV';
+
+  // בנה CSV לשיתוף
+  var csvLines=['\u05ea\u05d0\u05e8\u05d9\u05da,\u05d9\u05d5\u05dd,\u05e9\u05e2\u05d5\u05ea,'+(detailed?'\u05ea\u05e2\u05e8\u05d9\u05e3,\u05e8\u05d2\u05d9\u05dc\u05d5\u05ea,125%,150%,':'')+'\u05e1\u05d4"\u05db,\u05d1\u05d5\u05e0\u05d5\u05e1,\u05d4\u05e2\u05e8\u05d4,\u05e2\u05d1\u05d5\u05d3\u05d4'];
+  Object.keys(d).sort().forEach(function(k){
+    var r=d[k]; if(!(r.hours>0))return;
+    var pr=cp(r.hours,r.rate,r.bonuses);
+    var dt=new Date(k);
+    var jobName=((jobs[r.jobIdx||0])||{}).name||'\u05e8\u05d0\u05e9\u05d9';
+    var bon=(r.bonuses||[]).reduce(function(s,b){return s+(parseFloat(b.amount)||0);},0);
+    var cols=[k,dayNames[dt.getDay()],r.hours];
+    if(detailed)cols=cols.concat([r.rate,(pr.reg||r.hours).toFixed(1),(pr.ot1||0).toFixed(1),(pr.ot2||0).toFixed(1)]);
+    cols=cols.concat([Math.round(pr.total),bon.toFixed(0),r.note||'',jobName]);
+    csvLines.push(cols.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(','));
   });
-  var csv='\uFEFF'+lines.join('\r\n');
-  var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
-  var url=URL.createObjectURL(blob);
-  var fileName='hours_'+new Date().toISOString().slice(0,10)+'.csv';
-  _saveFile(blob, fileName, 'text/csv');
+  csvLines.push('');
+  csvLines.push('"\u05e1\u05d4"\u05db","","'+totalH.toFixed(1)+'","","","","","\u20aa'+Math.round(totalP).toLocaleString('he-IL')+'","","",""');
+  var csvText='\uFEFF'+csvLines.join('\r\n');
+
+  var html='<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="UTF-8">'
+    +'<meta name="viewport" content="width=device-width,initial-scale=1">'
+    +'<title>'+title+'</title>'
+    +'<style>'
+    +'*{margin:0;padding:0;box-sizing:border-box}'
+    +'body{font-family:Arial,sans-serif;font-size:13px;color:#0F172A;direction:rtl}'
+    +'.topbar{background:#1E3A8A;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}'
+    +'.topbar h2{font-size:16px}'
+    +'.actions{display:flex;gap:8px}'
+    +'.btn{background:rgba(255,255,255,.2);border:none;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer}'
+    +'.btn:active{background:rgba(255,255,255,.35)}'
+    +'.content{padding:12px;overflow-x:auto}'
+    +'table{width:100%;border-collapse:collapse;min-width:480px}'
+    +'th{background:#DBEAFE;color:#1E3A8A;padding:9px 8px;text-align:right;white-space:nowrap;font-size:12px;border-bottom:2px solid #BFDBFE}'
+    +'td{padding:8px;border-bottom:1px solid #E2E8F0;white-space:nowrap}'
+    +'tr:nth-child(even) td{background:#F8FAFF}'
+    +'.summary{background:#1E3A8A;color:#fff;padding:12px 16px;text-align:center;font-weight:bold;font-size:14px;margin-top:12px;border-radius:10px}'
+    +'@media print{.topbar .actions{display:none}}'
+    +'</style></head><body>'
+    +'<div class="topbar"><h2>'+title+'</h2>'
+    +'<div class="actions">'
+    +'<button class="btn" id="shareBtn">📤 \u05e9\u05ea\u05e3</button>'
+    +'<button class="btn" onclick="document.getElementById(\'reportOverlay\').remove()">\u2715</button>'
+    +'</div></div>'
+    +'<div class="content">'
+    +'<table><thead><tr>'+headerCols+'</tr></thead><tbody>'+rows+'</tbody></table>'
+    +'<div class="summary">\u05e1\u05d4"\u05db: '+totalH.toFixed(1)+' \u05e9\u05e2\u05d5\u05ea | \u20aa'+Math.round(totalP).toLocaleString('he-IL')+'</div>'
+    +'</div></body></html>';
+
+  var overlay=document.createElement('div');
+  overlay.id='reportOverlay';
+  overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:#fff;display:flex;flex-direction:column;overflow:hidden';
+  var iframe=document.createElement('iframe');
+  iframe.style.cssText='flex:1;border:none;width:100%';
+  overlay.appendChild(iframe);
+  document.body.appendChild(overlay);
+  iframe.contentDocument.open();
+  iframe.contentDocument.write(html);
+  iframe.contentDocument.close();
+
+  // כפתור שיתוף CSV
+  setTimeout(function(){
+    var btn=iframe.contentDocument.getElementById('shareBtn');
+    if(!btn)return;
+    btn.addEventListener('click',function(){
+      var blob=new Blob([csvText],{type:'text/csv;charset=utf-8'});
+      var fileName=(detailed?'hours_detailed':'hours')+'_'+new Date().toISOString().slice(0,10)+'.csv';
+      _saveFile(blob, fileName, 'text/csv');
+    });
+  },300);
 }
+
+
 function expJSON(){
   var data=JSON.stringify({workData:D.g(),settings:D.gs()},null,2);
   _saveFile(new Blob([data],{type:'application/json'}), 'backup.json', 'application/json');
