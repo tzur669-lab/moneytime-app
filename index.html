@@ -347,41 +347,15 @@ input[type=time].fi{text-align:center}
     <div class="trow"><div><div class="trow-lbl">סימון ימים חסרים ⚠️</div><div class="trow-sub">ימי חול ללא רישום</div></div><label class="toggle"><input type="checkbox" id="togMiss" onchange="setSetting('showMissing',this.checked)"><span class="tsl"></span></label></div>
   </div>
   <div class="set-sec-ttl">🎨 ערכת צבעים</div>
-  <div class="card" style="padding:14px">
-    <div class="tpick-row" onclick="setColor('blue')">
-      <div class="tpick-swatch" style="background:#1E3A8A;border-radius:10px;width:36px;height:36px;flex-shrink:0"></div>
-      <div class="tpick-info"><div class="tpick-name">🔵 כחול נייבי</div></div>
-      <div id="tc-blue" class="tpick sel" style="background:#1E3A8A"></div>
-    </div>
-    <div class="tpick-row" onclick="setColor('green')">
-      <div class="tpick-swatch" style="background:#166534;border-radius:10px;width:36px;height:36px;flex-shrink:0"></div>
-      <div class="tpick-info"><div class="tpick-name">🟢 ירוק יער</div></div>
-      <div id="tc-green" class="tpick" style="background:#166534"></div>
-    </div>
-    <div class="tpick-row" onclick="setColor('teal')">
-      <div class="tpick-swatch" style="background:#0D9488;border-radius:10px;width:36px;height:36px;flex-shrink:0"></div>
-      <div class="tpick-info"><div class="tpick-name">🩵 טורקיז</div></div>
-      <div id="tc-teal" class="tpick" style="background:#0D9488"></div>
-    </div>
-    <div class="tpick-row" onclick="setColor('purple')">
-      <div class="tpick-swatch" style="background:linear-gradient(135deg,#4C1D95,#7C3AED);border-radius:10px;width:36px;height:36px;flex-shrink:0"></div>
-      <div class="tpick-info"><div class="tpick-name">🟣 סגול מלכותי <span class="premium-badge">PREMIUM</span></div></div>
-      <div id="tc-purple" class="tpick" style="background:linear-gradient(135deg,#4C1D95,#7C3AED)"></div>
-    </div>
-    <div class="tpick-row" onclick="setColor('black')">
-      <div class="tpick-swatch" style="background:linear-gradient(135deg,#0F172A,#334155);border-radius:10px;width:36px;height:36px;flex-shrink:0;border:1px solid #334155"></div>
-      <div class="tpick-info"><div class="tpick-name">⚫ שחור פינטק <span class="premium-badge">PREMIUM</span></div></div>
-      <div id="tc-black" class="tpick" style="background:linear-gradient(135deg,#0F172A,#334155);border:1px solid #475569"></div>
-    </div>
-    <div class="tpick-row" onclick="setColor('orange')">
-      <div class="tpick-swatch" style="background:#C2410C;border-radius:10px;width:36px;height:36px;flex-shrink:0"></div>
-      <div class="tpick-info"><div class="tpick-name">🟠 כתום חם</div></div>
-      <div id="tc-orange" class="tpick" style="background:#C2410C"></div>
-    </div>
-    <div class="tpick-row" onclick="setColor('pink')">
-      <div class="tpick-swatch" style="background:#E11D48;border-radius:10px;width:36px;height:36px;flex-shrink:0"></div>
-      <div class="tpick-info"><div class="tpick-name">🌸 ורוד מודרני</div></div>
-      <div id="tc-pink" class="tpick" style="background:#E11D48"></div>
+  <div class="card" style="padding:16px">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:flex-start">
+      <div id="tc-blue" class="tpick sel" style="background:#1E3A8A" onclick="setColor('blue')" title="כחול נייבי"></div>
+      <div id="tc-green" class="tpick" style="background:#166534" onclick="setColor('green')" title="ירוק יער"></div>
+      <div id="tc-teal" class="tpick" style="background:#0D9488" onclick="setColor('teal')" title="טורקיז"></div>
+      <div id="tc-purple" class="tpick" style="background:linear-gradient(135deg,#4C1D95,#7C3AED)" onclick="setColor('purple')" title="סגול"></div>
+      <div id="tc-black" class="tpick" style="background:linear-gradient(135deg,#0F172A,#334155);border:1px solid #475569" onclick="setColor('black')" title="שחור"></div>
+      <div id="tc-orange" class="tpick" style="background:#C2410C" onclick="setColor('orange')" title="כתום"></div>
+      <div id="tc-pink" class="tpick" style="background:#E11D48" onclick="setColor('pink')" title="ורוד"></div>
     </div>
   </div>
 
@@ -1365,39 +1339,59 @@ function _buildPDF(){
   }
 }
 
-async function _savePDFToFolder(blob, fileName){
-  try{
-    var file=new File([blob], fileName, {type:'application/pdf'});
-    // APK + דפדפן מודרני — share sheet של אנדרואיד כולל "שמור ב-Downloads"
-    if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
-      await navigator.share({files:[file], title:'דוח שעות'});
-    } else {
-      // fallback לדפדפן רגיל
-      var url=URL.createObjectURL(blob);
-      var a=document.createElement('a');
-      a.href=url;
-      a.download=fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(function(){URL.revokeObjectURL(url);},1000);
-      showToast('PDF נשמר ב-Downloads');
-    }
-  }catch(e){
-    if(e.name!=='AbortError'){
-      // המשתמש ביטל את השיתוף — לא שגיאה
-      var url2=URL.createObjectURL(blob);
-      var a2=document.createElement('a');
-      a2.href=url2;
-      a2.download=fileName;
-      document.body.appendChild(a2);
-      a2.click();
-      document.body.removeChild(a2);
-    }
-  }
+function _savePDFToFolder(blob, fileName){
+  _saveFile(blob, fileName, 'application/pdf');
 }
 
 // ---- BACKUP ----
+// שמירת קובץ — עובד ב-APK וב-דפדפן
+function _saveFile(blob, fileName, mimeType){
+  try{
+    var file=new File([blob], fileName, {type:mimeType});
+    // נסה share API (APK אנדרואיד — פותח share sheet עם אפשרות "שמור")
+    if(window.navigator.share && window.navigator.canShare && window.navigator.canShare({files:[file]})){
+      window.navigator.share({
+        files:[file],
+        title:fileName
+      }).catch(function(err){
+        if(err.name!=='AbortError') _downloadFallback(blob, fileName);
+      });
+    } else {
+      _downloadFallback(blob, fileName);
+    }
+  }catch(e){
+    _downloadFallback(blob, fileName);
+  }
+}
+
+function _downloadFallback(blob, fileName){
+  try{
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.style.display='none';
+    a.href=url;
+    a.download=fileName;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    },2000);
+  }catch(e){
+    showToast('שגיאה בשמירת הקובץ');
+  }
+}
+function expCSV(){
+  var d=D.g();
+  var lines=['﻿תאריך,שעות,תעריף,סה"כ,הערות'];
+  Object.keys(d).sort().forEach(function(k){
+    var r=d[k]; if(!(r.hours>0)) return;
+    var pr=cp(r.hours,r.rate,r.bonuses);
+    lines.push(k+','+r.hours+','+r.rate+','+pr.total.toFixed(2)+','+(r.note||'').replace(/,/g,' '));
+  });
+  var csv=lines.join('\r\n');
+  _saveFile(new Blob([csv],{type:'text/csv;charset=utf-8'}), 'hours.csv', 'text/csv');
+}
 function expXLSX(){
   var d=D.g(),s=D.gs(),jobs=s.jobs||[];
   var dayNames=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
@@ -1426,29 +1420,31 @@ function expXLSX(){
   var csv='\uFEFF'+lines.join('\r\n');
   var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
   var url=URL.createObjectURL(blob);
-  var fileName='hours_'+new Date().toLocaleDateString('he-IL').replace(/[\/]/g,'-')+'.csv';
-  var file=new File([blob],fileName,{type:'text/csv;charset=utf-8'});
-  // APK — share sheet כולל "שמור ב-Downloads"
-  if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
-    navigator.share({files:[file],title:'דוח שעות'}).catch(function(e){
-      if(e.name!=='AbortError'){
-        var a=document.createElement('a');a.href=url;a.download=fileName;
-        document.body.appendChild(a);a.click();document.body.removeChild(a);
-      }
-    });
-  } else {
-    var a=document.createElement('a');
-    a.href=url;
-    a.download=fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(function(){URL.revokeObjectURL(url);},1000);
-    showToast('Excel נשמר ב-Downloads');
-  }
+  var fileName='hours_'+new Date().toISOString().slice(0,10)+'.csv';
+  _saveFile(blob, fileName, 'text/csv');
 }
-function expJSON(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({workData:D.g(),settings:D.gs()})],{type:'application/json'}));a.download='גיבוי.json';a.click();}
-function restoreData(e){const r=new FileReader();r.onload=ev=>{try{const p=JSON.parse(ev.target.result);if(p.workData)D.s(p.workData);if(p.settings)D.ss(p.settings);location.reload();}catch{alert('קובץ לא תקין');}};r.readAsText(e.target.files[0]);}
+function expJSON(){
+  var data=JSON.stringify({workData:D.g(),settings:D.gs()},null,2);
+  _saveFile(new Blob([data],{type:'application/json'}), 'backup.json', 'application/json');
+}
+function restoreData(e){
+  var file=e.target.files&&e.target.files[0];
+  if(!file){alert('לא נבחר קובץ');return;}
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      var p=JSON.parse(ev.target.result);
+      if(p.workData)D.s(p.workData);
+      if(p.settings)D.ss(p.settings);
+      showToast('שוחזר בהצלחה!');
+      setTimeout(function(){location.reload();},800);
+    }catch(err){
+      alert('קובץ לא תקין: '+err.message);
+    }
+  };
+  reader.onerror=function(){alert('שגיאה בקריאת הקובץ');};
+  reader.readAsText(file);
+}
 function execDel(){if(!confirm('האם אתה בטוח?'))return;const r=document.getElementById('delR').value;if(r==='all'){D.s({});location.reload();return;}let data=D.g();getDts(r,'delS','delE').forEach(d=>delete data[fk(d)]);D.s(data);closeM('mDel');renderCal();updRep();saveDr();vib();}
 
 // ---- MODALS ----
