@@ -1367,43 +1367,33 @@ function _buildPDF(){
 
 async function _savePDFToFolder(blob, fileName){
   try{
-    // ב-APK אנדרואיד — שמור + הצע שיתוף
-    if(navigator.share && navigator.canShare?.({files:[new File([blob],fileName,{type:'application/pdf'})]})){
-      const file=new File([blob],fileName,{type:'application/pdf'});
-      // שמור קודם (download)
-      const a=document.createElement('a');
-      a.href=URL.createObjectURL(blob);
-      a.download=fileName;
-      a.click();
-      // הצג אפשרות שיתוף
-      setTimeout(()=>{
-        const d=document.createElement('div');
-        d.style.cssText='position:fixed;bottom:90px;left:16px;right:16px;background:var(--s);border-radius:16px;padding:16px;box-shadow:var(--shl);z-index:999;border:1px solid var(--bd)';
-        d.innerHTML=`<div style="font-size:14px;font-weight:800;margin-bottom:12px">📄 ${fileName}</div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-p" style="flex:1" onclick="navigator.share({files:[new File([window._lastPDF],'${fileName}',{type:'application/pdf'})],title:'דוח שעות'}).catch(()=>{});this.closest('div').parentNode.remove()">📤 שתף</button>
-            <button class="btn btn-o" style="flex:1" onclick="this.closest('div').parentNode.remove()">סגור</button>
-          </div>`;
-        window._lastPDF=blob;
-        document.body.appendChild(d);
-        setTimeout(()=>d.remove(),8000);
-      },500);
+    var file=new File([blob], fileName, {type:'application/pdf'});
+    // APK + דפדפן מודרני — share sheet של אנדרואיד כולל "שמור ב-Downloads"
+    if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title:'דוח שעות'});
     } else {
-      // דפדפן רגיל
-      const a=document.createElement('a');
-      a.href=URL.createObjectURL(blob);
+      // fallback לדפדפן רגיל
+      var url=URL.createObjectURL(blob);
+      var a=document.createElement('a');
+      a.href=url;
       a.download=fileName;
+      document.body.appendChild(a);
       a.click();
-      showToast('✅ PDF נשמר ב-Downloads');
+      document.body.removeChild(a);
+      setTimeout(function(){URL.revokeObjectURL(url);},1000);
+      showToast('PDF נשמר ב-Downloads');
     }
   }catch(e){
-    // fallback
-    const doc2=new (window.jspdf?.jsPDF||window.jsPDF)();
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);
-    a.download=fileName;
-    a.click();
-    showToast('✅ PDF נשמר!');
+    if(e.name!=='AbortError'){
+      // המשתמש ביטל את השיתוף — לא שגיאה
+      var url2=URL.createObjectURL(blob);
+      var a2=document.createElement('a');
+      a2.href=url2;
+      a2.download=fileName;
+      document.body.appendChild(a2);
+      a2.click();
+      document.body.removeChild(a2);
+    }
   }
 }
 
@@ -1436,11 +1426,26 @@ function expXLSX(){
   var csv='\uFEFF'+lines.join('\r\n');
   var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
   var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  a.href=url;
-  a.download='hours_'+new Date().toLocaleDateString('he-IL').replace(/[\/]/g,'-')+'.csv';
-  a.click();
-  showToast('קובץ Excel נוצר בהצלחה');
+  var fileName='hours_'+new Date().toLocaleDateString('he-IL').replace(/[\/]/g,'-')+'.csv';
+  var file=new File([blob],fileName,{type:'text/csv;charset=utf-8'});
+  // APK — share sheet כולל "שמור ב-Downloads"
+  if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+    navigator.share({files:[file],title:'דוח שעות'}).catch(function(e){
+      if(e.name!=='AbortError'){
+        var a=document.createElement('a');a.href=url;a.download=fileName;
+        document.body.appendChild(a);a.click();document.body.removeChild(a);
+      }
+    });
+  } else {
+    var a=document.createElement('a');
+    a.href=url;
+    a.download=fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){URL.revokeObjectURL(url);},1000);
+    showToast('Excel נשמר ב-Downloads');
+  }
 }
 function expJSON(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({workData:D.g(),settings:D.gs()})],{type:'application/json'}));a.download='גיבוי.json';a.click();}
 function restoreData(e){const r=new FileReader();r.onload=ev=>{try{const p=JSON.parse(ev.target.result);if(p.workData)D.s(p.workData);if(p.settings)D.ss(p.settings);location.reload();}catch{alert('קובץ לא תקין');}};r.readAsText(e.target.files[0]);}
