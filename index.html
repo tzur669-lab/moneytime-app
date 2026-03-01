@@ -8,6 +8,8 @@
 <meta name="apple-mobile-web-app-title" content="מעקב שעות">
 <meta name="theme-color" content="#1E3A8A" id="metaTC">
 <link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
 <title>מעקב שעות Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1148,14 +1150,17 @@ function connPair(){
   if(!pc||pc.length<4){alert('הזן קוד פרטנר תקין');return;}
   const s=D.gs();
   const myCode=s.myCode||genCode();
-  s.pairCode=myCode;      // הקוד שלי
-  s.partnerCode=pc;       // הקוד של הפרטנר
+  // pairCode = SHARED namespace = sorted combination so both sides match
+  // e.g. A=ABC123, B=XYZ456 → pairCode = "ABC123_XYZ456" (sorted alphabetically)
+  const codes=[myCode,pc].sort();
+  s.pairCode=codes[0]+'_'+codes[1];  // shared path in Firebase
+  s.partnerCode=pc;                   // partner's personal code
   s.myCode=myCode;
   s.myUID=myCode;
   s.myName=document.getElementById('myNmN')?.value||s.myName||'אני';
   s.partnerName=document.getElementById('pNmN')?.value||s.partnerName||'פרטנר';
   D.ss(s);closeM('mPair');renderCouple();saveDr();
-  showToast('✅ הזוג חובר!');
+  showToast('הזוג חובר!');
 }
 function savePairSet(){const s=D.gs();s.myName=document.getElementById('myNm')?.value||'אני';s.partnerName=document.getElementById('pNm')?.value||'פרטנר';D.ss(s);closeM('mPair');renderCouple();flash();vib();}
 function setMC(c,el){el.closest('div').querySelectorAll('.cdot').forEach(d=>d.classList.remove('sel'));el.classList.add('sel');const s=D.gs();s.myColor=c;D.ss(s);}
@@ -1263,23 +1268,25 @@ function handleClock(){
 
 // ---- GOOGLE DRIVE ----
 function checkPairLink(){
-  // בדוק אם הגיע עם ?pair=MYCODE בURL
   try{
     const params=new URLSearchParams(window.location.search);
     const partnerCode=params.get('pair');
     if(!partnerCode)return;
-    // נקה URL
     history.replaceState(null,'',location.pathname);
     const s=D.gs();
     if(s.pairCode)return; // כבר מחובר
-    // הכנס את קוד הפרטנר אוטומטית
     if(!s.myCode){s.myCode=genCode();}
-    s.pairCode=s.myCode;
-    s.partnerCode=partnerCode.toUpperCase();
-    s.myUID=s.myCode;
+    const myCode=s.myCode;
+    const pc=partnerCode.toUpperCase();
+    // אותו חישוב של pairCode משותף
+    const codes=[myCode,pc].sort();
+    s.pairCode=codes[0]+'_'+codes[1];
+    s.partnerCode=pc;
+    s.myUID=myCode;
     D.ss(s);
     setTimeout(function(){
-      showToast('✅ חובר לפרטנר אוטומטית!');
+      showToast('חובר לפרטנר אוטומטית!');
+      saveDr();
       renderSettings();
       if(document.getElementById('pg-couple').classList.contains('active'))renderCouple();
     },500);
@@ -1448,51 +1455,57 @@ async function driveRead(fileName, isShared){
 
 async function saveDr(){
   const s=D.gs();
-  const uid=s.myUID||'solo';
   try{
-    // תמיד שמור ב-Firebase אם בזוג
+    // שמור ל-Firebase בשקט (אוטומטי)
     if(s.pairCode&&s.myCode){
       await syncPairToFirebase();
     }
-    // שמור גם ב-Drive אם מחובר
+    // גיבוי אישי ל-Drive
     if(aToken){
       await driveUpsert('moneytime_solo.json', JSON.stringify({workData:D.g(),settings:s,timestamp:Date.now()}), false);
     }
     setSyncDot(true);
-  }catch(e){console.error(e);setSyncDot(false);}
+  }catch(e){setSyncDot(false);}
+  // טען פרטנר בשקט
+  if(s.pairCode&&s.partnerCode){
+    try{
+      const got=await loadPartnerFromFirebase();
+      if(got&&document.getElementById('pg-couple').classList.contains('active'))renderCouple();
+    }catch(e){}
+  }
 }
 
 async function loadDr(){
   const s=D.gs();
   try{
-    // טען נתוני פרטנר מ-Firebase (עובד עם כל מייל!)
-    if(s.pairCode&&s.partnerCode){
-      const got=await loadPartnerFromFirebase();
-      if(got)renderCouple();
-    }
-    // שמור נתונים שלי ל-Firebase
-    if(s.pairCode&&s.myCode){
-      await syncPairToFirebase();
-    }
-    // Drive — נתונים אישיים בלבד
+    if(s.pairCode&&s.myCode) await syncPairToFirebase();
+    if(s.pairCode&&s.partnerCode) await loadPartnerFromFirebase();
     if(aToken){
       const data=await driveRead('moneytime_solo.json', false);
       if(data){
         const cTs=data.timestamp||0, lTs=parseInt(localStorage.getItem('wdts'))||0;
-        if(cTs>lTs||lTs===0){if(data.workData){D.s(data.workData);}}
-        else{await driveUpsert('moneytime_solo.json', JSON.stringify({workData:D.g(),settings:s,timestamp:Date.now()}), false);}
+        if(cTs>lTs||lTs===0){if(data.workData)D.s(data.workData);}
+        else await driveUpsert('moneytime_solo.json', JSON.stringify({workData:D.g(),settings:s,timestamp:Date.now()}), false);
       }
     }
-  }catch(e){console.error(e);}
+  }catch(e){}
   renderCal();updRep();
 }
+
 async function manualSync(){
   vib();
+  const s=D.gs();
   try{
-    await saveDr();
-    await loadDr();
+    // שמור ל-Firebase
+    if(s.pairCode&&s.myCode) await syncPairToFirebase();
+    // טען פרטנר
+    if(s.pairCode&&s.partnerCode){
+      const got=await loadPartnerFromFirebase();
+      if(got)renderCouple();
+    }
+    // Drive backup
+    if(aToken) await driveUpsert('moneytime_solo.json', JSON.stringify({workData:D.g(),settings:s,timestamp:Date.now()}), false);
     renderCal();
-    if(document.getElementById('pg-couple').classList.contains('active'))renderCouple();
     showToast('סנכרון הושלם');
   }catch(e){showToast('שגיאה בסנכרון');}
 }
