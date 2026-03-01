@@ -17,6 +17,9 @@
       "launchShowDuration": 2000,
       "backgroundColor": "#1E3A8A",
       "showSpinner": false
+    },
+    "Browser": {
+      "presentationStyle": "fullscreen"
     }
   }
 }
