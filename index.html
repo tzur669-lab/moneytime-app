@@ -17,19 +17,21 @@
 window.CapFS = null;
 window.CapShare = null;
 window.CapBrowser = null;
+window.CapApp = null;
 document.addEventListener('deviceready', function(){
   if(window.Capacitor){
     try{ window.CapFS = Capacitor.Plugins.Filesystem; }catch(e){}
     try{ window.CapShare = Capacitor.Plugins.Share; }catch(e){}
     try{ window.CapBrowser = Capacitor.Plugins.Browser; }catch(e){}
+    try{ window.CapApp = Capacitor.Plugins.App; }catch(e){}
   }
 }, false);
-// גם בלי deviceready — נסה ישירות
 setTimeout(function(){
   if(window.Capacitor && window.Capacitor.Plugins){
     window.CapFS = window.CapFS || Capacitor.Plugins.Filesystem;
     window.CapShare = window.CapShare || Capacitor.Plugins.Share;
     window.CapBrowser = window.CapBrowser || Capacitor.Plugins.Browser;
+    window.CapApp = window.CapApp || Capacitor.Plugins.App;
   }
 }, 500);
 </script>
@@ -1091,28 +1093,37 @@ function startGoogleAuth(){
     + '&scope=' + encodeURIComponent(SCOPES)
     + '&prompt=select_account';
 
-  if(window.CapBrowser){
-    // הסר listener ישן אם יש
+  if(window.CapApp || window.CapBrowser){
+    // האזן ל-deep link — אנדרואיד יקרא לאפליקציה עם URL
+    // com.tzur669.moneytime://oauth#access_token=XXX
+    var _appUrlHandler = null;
+    if(window.CapApp){
+      _appUrlHandler = window.CapApp.addListener('appUrlOpen', function(data){
+        _appUrlHandler.remove();
+        try{ window.CapBrowser && window.CapBrowser.close(); }catch(e){}
+        // חלץ token מה-URL
+        var url2 = data.url || '';
+        var hashIdx = url2.indexOf('#');
+        if(hashIdx !== -1){
+          var params = new URLSearchParams(url2.substring(hashIdx+1));
+          var token = params.get('access_token');
+          if(token){ _onTokenReceived(token); return; }
+        }
+        // fallback — בדוק localStorage
+        handleOAuthReturn();
+      });
+    }
+
+    // הסר listeners ישנים
     try{ window.CapBrowser.removeAllListeners(); }catch(e){}
-
-    // האזן להודעת postMessage מ-callback.html
-    window._oauthMsgHandler = function(event){
-      if(event.data && event.data.type === 'oauth_token' && event.data.token){
-        window.removeEventListener('message', window._oauthMsgHandler);
-        try{ window.CapBrowser.close(); }catch(e){}
-        _onTokenReceived(event.data.token);
-      }
-    };
-    window.addEventListener('message', window._oauthMsgHandler);
-
-    // פתח Chrome חיצוני
+    // פתח דפדפן
     window.CapBrowser.open({url: url, presentationStyle: 'fullscreen'});
-
-    // fallback: כשהדפדפן נסגר — בדוק localStorage
+    // כשהדפדפן נסגר ידנית בלי token
     window.CapBrowser.addListener('browserFinished', function(){
-      window.removeEventListener('message', window._oauthMsgHandler);
+      if(_appUrlHandler){ try{_appUrlHandler.remove();}catch(e){} }
       handleOAuthReturn();
     });
+
   } else {
     // דפדפן רגיל — redirect רגיל
     window.location.href = url;
@@ -1120,6 +1131,7 @@ function startGoogleAuth(){
 }
 
 function _onTokenReceived(token){
+  if(!token)return;
   aToken = token;
   localStorage.setItem('gtoken', token);
   localStorage.setItem('syen', '1');
