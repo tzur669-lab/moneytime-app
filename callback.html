@@ -14,41 +14,32 @@ p{font-size:16px;opacity:.8}
 <div class="spinner"></div>
 <p>מחבר את חשבון Google...</p>
 <script>
-var hash = window.location.hash;
-var params = new URLSearchParams(hash.substring(1));
+var hash = window.location.hash || window.location.search;
+var params = new URLSearchParams(hash.replace(/^[#?]/,''));
 var token = params.get('access_token');
 
 if(token){
-  // שמור ב-localStorage (fallback לדפדפן רגיל)
+  document.querySelector('p').textContent = 'מחובר! חוזר לאפליקציה...';
+
+  // שמור ב-localStorage כ-fallback
   try{
     localStorage.setItem('gtoken', token);
     localStorage.setItem('syen', '1');
     localStorage.setItem('oauth_done', Date.now().toString());
   }catch(e){}
 
-  // שלח postMessage לחלון ההורה (APK — Capacitor WebView)
-  try{
-    if(window.opener){
-      window.opener.postMessage({type:'oauth_token', token:token}, '*');
-    }
-  }catch(e){}
+  // פנה ל-deep link — אנדרואיד יפתח את האפליקציה
+  // ה-App plugin יאזין ל-appUrlOpen עם ה-token
+  var deepLink = 'com.tzur669.moneytime://oauth#access_token=' + encodeURIComponent(token);
 
-  // נסה גם דרך parent
-  try{
-    if(window.parent && window.parent !== window){
-      window.parent.postMessage({type:'oauth_token', token:token}, '*');
-    }
-  }catch(e){}
-
-  document.querySelector('p').textContent = 'מחובר! סוגר...';
-
-  // חזור לאפליקציה אחרי רגע קצר
   setTimeout(function(){
-    // נסה לסגור את הדפדפן
-    try{ window.close(); }catch(e){}
-    // fallback — redirect לדף הראשי
+    window.location.href = deepLink;
+  }, 300);
+
+  // fallback — אם deep link לא עובד, redirect לדף הראשי
+  setTimeout(function(){
     window.location.href = 'index.html';
-  }, 1200);
+  }, 2500);
 
 } else {
   document.querySelector('p').textContent = 'שגיאה בהתחברות. חוזר...';
