@@ -11,6 +11,28 @@
 <title>מעקב שעות Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Capacitor plugins — זמינים רק ב-APK, מוסתרים בדפדפן -->
+<script>
+// Capacitor plugin wrappers — עובדים ב-APK, fallback בדפדפן
+window.CapFS = null;
+window.CapShare = null;
+window.CapBrowser = null;
+document.addEventListener('deviceready', function(){
+  if(window.Capacitor){
+    try{ window.CapFS = Capacitor.Plugins.Filesystem; }catch(e){}
+    try{ window.CapShare = Capacitor.Plugins.Share; }catch(e){}
+    try{ window.CapBrowser = Capacitor.Plugins.Browser; }catch(e){}
+  }
+}, false);
+// גם בלי deviceready — נסה ישירות
+setTimeout(function(){
+  if(window.Capacitor && window.Capacitor.Plugins){
+    window.CapFS = window.CapFS || Capacitor.Plugins.Filesystem;
+    window.CapShare = window.CapShare || Capacitor.Plugins.Share;
+    window.CapBrowser = window.CapBrowser || Capacitor.Plugins.Browser;
+  }
+}, 500);
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <!-- Google auth handled via custom OAuth redirect — works in APK WebView -->
@@ -1061,17 +1083,26 @@ function initGD(){
 }
 
 function startGoogleAuth(){
-  // Redirect URI — חייב להיות מאושר ב-Google Console
-  const REDIRECT='https://tzur669-lab.github.io/moneytime-app/callback.html';
-  const url='https://accounts.google.com/o/oauth2/v2/auth'
-    +'?client_id='+encodeURIComponent(CID)
-    +'&redirect_uri='+encodeURIComponent(REDIRECT)
-    +'&response_type=token'
-    +'&scope='+encodeURIComponent(SCOPES)
-    +'&prompt=select_account'
-    +'&include_granted_scopes=true';
-  // נסה לפתוח — ב-APK יפתח דפדפן חיצוני, בדפדפן יעבד בטאב נוכחי
-  window.location.href=url;
+  var redirectUri = 'https://tzur669-lab.github.io/moneytime-app/callback.html';
+  var url = 'https://accounts.google.com/o/oauth2/v2/auth'
+    + '?client_id=' + CID
+    + '&redirect_uri=' + encodeURIComponent(redirectUri)
+    + '&response_type=token'
+    + '&scope=' + encodeURIComponent(SCOPES)
+    + '&prompt=select_account';
+
+  // APK — פתח דפדפן חיצוני (Chrome) דרך Capacitor Browser
+  if(window.CapBrowser){
+    window.CapBrowser.open({url: url, presentationStyle: 'fullscreen'});
+    // האזן לחזרה מה-OAuth
+    window.CapBrowser.addListener('browserFinished', function(){
+      // callback.html שמר את הטוקן ב-localStorage
+      handleOAuthReturn();
+    });
+  } else {
+    // דפדפן רגיל — redirect רגיל
+    window.location.href = url;
+  }
 }
 
 function handleOAuthReturn(){
@@ -1339,62 +1370,123 @@ function _buildPDF(){
 }
 
 function _showReportInApp(html, type){
-  // הצג את הדוח כ-overlay בתוך האפליקציה
+  // סגור overlay קיים אם יש
+  var existing=document.getElementById('reportOverlay');
+  if(existing)existing.remove();
+
   var overlay=document.createElement('div');
   overlay.id='reportOverlay';
-  overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:#fff;display:flex;flex-direction:column';
-  overlay.innerHTML='<div style="background:#1E3A8A;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">'
-    +'<span style="font-size:16px;font-weight:800">📄 דוח שעות</span>'
-    +'<div style="display:flex;gap:8px">'
-    +'<button onclick="window.frames[\'rFrame\'].print()" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">🖨️ הדפס/PDF</button>'
-    +'<button onclick="document.getElementById(\'reportOverlay\').remove()" style="background:rgba(255,255,255,.15);border:none;color:#fff;padding:8px 12px;border-radius:8px;font-size:16px;cursor:pointer">✕</button>'
-    +'</div></div>'
-    +'<iframe name="rFrame" id="rFrame" style="flex:1;border:none;width:100%"></iframe>';
+  overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:#fff;display:flex;flex-direction:column;overflow:hidden';
+
+  // כותרת עם כפתורים
+  var topbar=document.createElement('div');
+  topbar.style.cssText='background:#1E3A8A;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;gap:8px';
+
+  var title=document.createElement('span');
+  title.style.cssText='font-size:15px;font-weight:800;flex:1';
+  title.textContent='📄 דוח שעות';
+
+  var btnPrint=document.createElement('button');
+  btnPrint.style.cssText='background:rgba(255,255,255,.22);border:none;color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap';
+  btnPrint.textContent='🖨️ הדפס/PDF';
+
+  var btnClose=document.createElement('button');
+  btnClose.style.cssText='background:rgba(239,68,68,.8);border:none;color:#fff;padding:9px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap';
+  btnClose.textContent='✕ סגור';
+
+  topbar.appendChild(title);
+  topbar.appendChild(btnPrint);
+  topbar.appendChild(btnClose);
+
+  // iframe לתוכן
+  var frame=document.createElement('iframe');
+  frame.id='rFrame';
+  frame.style.cssText='flex:1;border:none;width:100%;background:#fff';
+
+  overlay.appendChild(topbar);
+  overlay.appendChild(frame);
   document.body.appendChild(overlay);
-  // כתוב את ה-HTML לתוך ה-iframe
-  var frame=document.getElementById('rFrame');
-  frame.onload=function(){};
-  frame.contentDocument.open();
-  frame.contentDocument.write(html);
-  frame.contentDocument.close();
+
+  // אירועי כפתורים
+  btnClose.addEventListener('click', function(){
+    var el=document.getElementById('reportOverlay');
+    if(el)el.remove();
+  });
+  btnPrint.addEventListener('click', function(){
+    try{ frame.contentWindow.print(); }
+    catch(e){ window.print(); }
+  });
+
+  // כתוב HTML לתוך iframe
+  try{
+    frame.contentDocument.open();
+    frame.contentDocument.write(html);
+    frame.contentDocument.close();
+  }catch(e){
+    // fallback ל-srcdoc
+    frame.srcdoc=html;
+  }
 }
 
 
 
 // ---- BACKUP ----
-// שמירת קובץ — עובד ב-APK וב-דפדפן
-function _saveFile(blob, fileName, mimeType){
-  try{
-    var file=new File([blob], fileName, {type:mimeType});
-    // נסה share API (APK אנדרואיד — פותח share sheet עם אפשרות "שמור")
-    if(window.navigator.share && window.navigator.canShare && window.navigator.canShare({files:[file]})){
-      window.navigator.share({
-        files:[file],
-        title:fileName
-      }).catch(function(err){
-        if(err.name!=='AbortError') _downloadFallback(blob, fileName);
+// המרת Blob ל-base64
+function _blobToBase64(blob){
+  return new Promise(function(resolve, reject){
+    var reader = new FileReader();
+    reader.onloadend = function(){ resolve(reader.result.split(',')[1]); };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+// שמירה + שיתוף — Capacitor ב-APK, fallback בדפדפן
+async function _saveFile(blob, fileName, mimeType){
+  // APK — Capacitor Filesystem + Share
+  if(window.CapFS && window.CapShare){
+    try{
+      var b64 = await _blobToBase64(blob);
+      // שמור לתיקיית Documents
+      await window.CapFS.writeFile({
+        path: fileName,
+        data: b64,
+        directory: 'DOCUMENTS',
+        recursive: true
       });
-    } else {
-      _downloadFallback(blob, fileName);
+      // שתף מיד
+      var uriRes = await window.CapFS.getUri({
+        path: fileName,
+        directory: 'DOCUMENTS'
+      });
+      await window.CapShare.share({
+        title: fileName,
+        url: uriRes.uri,
+        dialogTitle: 'שמור או שתף'
+      });
+      return;
+    }catch(e){
+      console.log('Capacitor save failed, trying fallback:', e);
     }
-  }catch(e){
-    _downloadFallback(blob, fileName);
   }
+  // fallback — דפדפן רגיל
+  _downloadFallback(blob, fileName);
 }
 
 function _downloadFallback(blob, fileName){
   try{
-    var url=URL.createObjectURL(blob);
-    var a=document.createElement('a');
-    a.style.display='none';
-    a.href=url;
-    a.download=fileName;
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = fileName;
     document.body.appendChild(a);
     a.click();
     setTimeout(function(){
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    },2000);
+    }, 2000);
+    showToast('הקובץ הורד');
   }catch(e){
     showToast('שגיאה בשמירת הקובץ');
   }
@@ -1460,56 +1552,78 @@ function _showTableReport(detailed){
   csvLines.push('"\u05e1\u05d4"\u05db","","'+totalH.toFixed(1)+'","","","","","\u20aa'+Math.round(totalP).toLocaleString('he-IL')+'","","",""');
   var csvText='\uFEFF'+csvLines.join('\r\n');
 
-  var html='<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="UTF-8">'
+  var htmlContent='<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="UTF-8">'
     +'<meta name="viewport" content="width=device-width,initial-scale=1">'
     +'<title>'+title+'</title>'
     +'<style>'
     +'*{margin:0;padding:0;box-sizing:border-box}'
-    +'body{font-family:Arial,sans-serif;font-size:13px;color:#0F172A;direction:rtl}'
-    +'.topbar{background:#1E3A8A;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}'
-    +'.topbar h2{font-size:16px}'
-    +'.actions{display:flex;gap:8px}'
-    +'.btn{background:rgba(255,255,255,.2);border:none;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer}'
-    +'.btn:active{background:rgba(255,255,255,.35)}'
-    +'.content{padding:12px;overflow-x:auto}'
-    +'table{width:100%;border-collapse:collapse;min-width:480px}'
+    +'body{font-family:Arial,sans-serif;font-size:13px;color:#0F172A;direction:rtl;padding:12px;overflow-x:auto}'
+    +'table{width:100%;border-collapse:collapse;min-width:460px;margin-bottom:16px}'
     +'th{background:#DBEAFE;color:#1E3A8A;padding:9px 8px;text-align:right;white-space:nowrap;font-size:12px;border-bottom:2px solid #BFDBFE}'
-    +'td{padding:8px;border-bottom:1px solid #E2E8F0;white-space:nowrap}'
+    +'td{padding:8px;border-bottom:1px solid #E2E8F0;white-space:nowrap;font-size:12px}'
     +'tr:nth-child(even) td{background:#F8FAFF}'
-    +'.summary{background:#1E3A8A;color:#fff;padding:12px 16px;text-align:center;font-weight:bold;font-size:14px;margin-top:12px;border-radius:10px}'
-    +'@media print{.topbar .actions{display:none}}'
+    +'.summary{background:#1E3A8A;color:#fff;padding:12px 16px;text-align:center;font-weight:bold;font-size:14px;border-radius:10px}'
     +'</style></head><body>'
-    +'<div class="topbar"><h2>'+title+'</h2>'
-    +'<div class="actions">'
-    +'<button class="btn" id="shareBtn">📤 \u05e9\u05ea\u05e3</button>'
-    +'<button class="btn" onclick="document.getElementById(\'reportOverlay\').remove()">\u2715</button>'
-    +'</div></div>'
-    +'<div class="content">'
     +'<table><thead><tr>'+headerCols+'</tr></thead><tbody>'+rows+'</tbody></table>'
     +'<div class="summary">\u05e1\u05d4"\u05db: '+totalH.toFixed(1)+' \u05e9\u05e2\u05d5\u05ea | \u20aa'+Math.round(totalP).toLocaleString('he-IL')+'</div>'
-    +'</div></body></html>';
+    +'</body></html>';
 
+  // סגור overlay קיים
+  var existing=document.getElementById('reportOverlay');
+  if(existing)existing.remove();
+
+  // בנה overlay זהה ל-PDF
   var overlay=document.createElement('div');
   overlay.id='reportOverlay';
   overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:#fff;display:flex;flex-direction:column;overflow:hidden';
-  var iframe=document.createElement('iframe');
-  iframe.style.cssText='flex:1;border:none;width:100%';
-  overlay.appendChild(iframe);
+
+  var topbar=document.createElement('div');
+  topbar.style.cssText='background:#166534;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;gap:8px';
+
+  var titleEl=document.createElement('span');
+  titleEl.style.cssText='font-size:15px;font-weight:800;flex:1';
+  titleEl.textContent=(detailed?'📗':'📊')+' '+title;
+
+  var btnShare=document.createElement('button');
+  btnShare.style.cssText='background:rgba(255,255,255,.22);border:none;color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap';
+  btnShare.textContent='\uD83D\uDCE4 \u05e9\u05ea\u05e3';
+
+  var btnClose=document.createElement('button');
+  btnClose.style.cssText='background:rgba(239,68,68,.8);border:none;color:#fff;padding:9px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap';
+  btnClose.textContent='\u2715 \u05e1\u05d2\u05d5\u05e8';
+
+  topbar.appendChild(titleEl);
+  topbar.appendChild(btnShare);
+  topbar.appendChild(btnClose);
+
+  var frame=document.createElement('iframe');
+  frame.style.cssText='flex:1;border:none;width:100%;background:#fff';
+
+  overlay.appendChild(topbar);
+  overlay.appendChild(frame);
   document.body.appendChild(overlay);
-  iframe.contentDocument.open();
-  iframe.contentDocument.write(html);
-  iframe.contentDocument.close();
+
+  // כפתור סגירה — נשלט מהדוקומנט הראשי (לא מתוך iframe)
+  btnClose.addEventListener('click',function(){
+    var el=document.getElementById('reportOverlay');
+    if(el)el.remove();
+  });
 
   // כפתור שיתוף CSV
-  setTimeout(function(){
-    var btn=iframe.contentDocument.getElementById('shareBtn');
-    if(!btn)return;
-    btn.addEventListener('click',function(){
-      var blob=new Blob([csvText],{type:'text/csv;charset=utf-8'});
-      var fileName=(detailed?'hours_detailed':'hours')+'_'+new Date().toISOString().slice(0,10)+'.csv';
-      _saveFile(blob, fileName, 'text/csv');
-    });
-  },300);
+  btnShare.addEventListener('click',function(){
+    var blob=new Blob([csvText],{type:'text/csv;charset=utf-8'});
+    var fileName=(detailed?'hours_detailed':'hours')+'_'+new Date().toISOString().slice(0,10)+'.csv';
+    _saveFile(blob,fileName,'text/csv');
+  });
+
+  // כתוב HTML לתוך iframe
+  try{
+    frame.contentDocument.open();
+    frame.contentDocument.write(htmlContent);
+    frame.contentDocument.close();
+  }catch(e){
+    frame.srcdoc=htmlContent;
+  }
 }
 
 
