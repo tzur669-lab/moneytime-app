@@ -1,6 +1,6 @@
 {
   "name": "moneytime-app",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "מעקב שעות Pro - Native Android App",
   "scripts": {
     "build": "echo 'Web assets ready'",
@@ -10,6 +10,7 @@
   "dependencies": {
     "@capacitor/android": "^5.7.0",
     "@capacitor/core": "^5.7.0",
+    "@capacitor/app": "^5.0.7",
     "@capacitor/filesystem": "^5.2.1",
     "@capacitor/share": "^5.0.7",
     "@capacitor/browser": "^5.2.0"
