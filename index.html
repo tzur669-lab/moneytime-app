@@ -395,12 +395,18 @@ input[type=time].fi{text-align:center}
   <div class="set-sec-ttl">💾 גיבוי וייצוא</div>
   <div class="card">
     <button class="btn btn-o" onclick="expCSV()">📊 ייצוא CSV</button>
-    <button class="btn btn-o" onclick="expXLSX()" style="margin-top:8px">📗 ייצוא Excel (.xlsx)</button>
+    <button class="btn btn-o" onclick="expXLSX()" style="margin-top:8px">📗 ייצוא Excel</button>
     <button class="btn btn-o" onclick="expJSON()" style="margin-top:8px">📦 ייצוא JSON (גיבוי מלא)</button>
-    <button class="btn btn-g" onclick="openM('mPDF')" style="margin-top:8px">📄 ייצוא PDF מותאם</button>
-    <div class="div"></div>
-    <label class="btn btn-o" style="cursor:pointer">📂 שחזור מ-JSON<input type="file" accept=".json" onchange="restoreData(event)" style="display:none"></label>
-    <button class="btn btn-d" onclick="openM('mDel')" style="margin-top:8px">🗑️ מחיקת נתונים</button>
+    <button class="btn btn-g" onclick="openM('mPDF')" style="margin-top:8px">📄 ייצוא PDF</button>
+  </div>
+  <div class="set-sec-ttl">📂 שחזור נתונים</div>
+  <div class="card">
+    <button class="btn btn-o" onclick="triggerRestore('json')">📦 שחזור מ-JSON</button>
+    <button class="btn btn-o" onclick="triggerRestore('csv')" style="margin-top:8px">📊 שחזור מ-CSV</button>
+    <button class="btn btn-o" onclick="restoreFromDrive()" style="margin-top:8px">☁️ שחזור מ-Google Drive</button>
+    <div id="restore-status" style="margin-top:10px;font-size:13px;color:var(--t2);display:none"></div>
+    <input type="file" id="restoreFileInput" accept=".json,.csv" style="display:none" onchange="restoreData(event)">
+    <button class="btn btn-d" onclick="openM('mDel')" style="margin-top:12px">🗑️ מחיקת נתונים</button>
   </div>
 </div>
 
@@ -1659,23 +1665,134 @@ function expJSON(){
   var data=JSON.stringify({workData:D.g(),settings:D.gs()},null,2);
   _saveFile(new Blob([data],{type:'application/json'}), 'backup.json', 'application/json');
 }
+
+// פתח בורר קבצים — עובד ב-APK
+function triggerRestore(type){
+  var input=document.getElementById('restoreFileInput');
+  input.accept = type==='csv' ? '.csv' : '.json';
+  // איפוס ערך כדי שonchange יירה גם על אותו קובץ
+  input.value='';
+  // ב-APK — צריך להוסיף לדום ולהקליק
+  input.style.display='block';
+  input.style.position='fixed';
+  input.style.top='-100px';
+  input.click();
+  setTimeout(function(){ input.style.display='none'; input.style.position=''; input.style.top=''; }, 500);
+}
+
+function setRestoreStatus(msg, isErr){
+  var el=document.getElementById('restore-status');
+  if(!el)return;
+  el.style.display='block';
+  el.style.color=isErr?'var(--r)':'var(--g)';
+  el.textContent=msg;
+  if(!isErr)setTimeout(function(){el.style.display='none';},3000);
+}
+
 function restoreData(e){
   var file=e.target.files&&e.target.files[0];
-  if(!file){alert('לא נבחר קובץ');return;}
+  if(!file){setRestoreStatus('לא נבחר קובץ',true);return;}
+
+  var ext=file.name.split('.').pop().toLowerCase();
   var reader=new FileReader();
+
+  reader.onerror=function(){setRestoreStatus('שגיאה בקריאת הקובץ',true);};
+
   reader.onload=function(ev){
+    var text=ev.target.result;
     try{
-      var p=JSON.parse(ev.target.result);
-      if(p.workData)D.s(p.workData);
-      if(p.settings)D.ss(p.settings);
-      showToast('שוחזר בהצלחה!');
-      setTimeout(function(){location.reload();},800);
+      if(ext==='json'){
+        _restoreFromJSON(text);
+      } else if(ext==='csv'){
+        _restoreFromCSV(text);
+      } else {
+        // נסה JSON גם אם הסיומת לא מוכרת
+        _restoreFromJSON(text);
+      }
     }catch(err){
-      alert('קובץ לא תקין: '+err.message);
+      setRestoreStatus('שגיאה: '+err.message, true);
     }
   };
-  reader.onerror=function(){alert('שגיאה בקריאת הקובץ');};
-  reader.readAsText(file);
+
+  reader.readAsText(file, 'utf-8');
+}
+
+function _restoreFromJSON(text){
+  // נקה BOM אם יש
+  text=text.replace(/^﻿/,'');
+  var p=JSON.parse(text);
+  var restoredDays=0, restoredSettings=false;
+
+  if(p.workData && typeof p.workData==='object'){
+    D.s(p.workData);
+    restoredDays=Object.keys(p.workData).length;
+  } else if(p.hours !== undefined){
+    // פורמט ישן — נתוני יום בודד
+    setRestoreStatus('פורמט לא נתמך',true);
+    return;
+  }
+
+  if(p.settings && typeof p.settings==='object'){
+    // שמור הגדרות אבל אל תמחק token קיים
+    var cur=D.gs();
+    var merged=Object.assign({},p.settings);
+    if(cur.myUID)merged.myUID=cur.myUID; // שמור UID
+    D.ss(merged);
+    restoredSettings=true;
+  }
+
+  if(restoredDays===0 && !restoredSettings){
+    setRestoreStatus('הקובץ ריק או לא תקין',true);
+    return;
+  }
+
+  setRestoreStatus('✅ שוחזרו '+restoredDays+' ימים'+( restoredSettings?' + הגדרות':''));
+  setTimeout(function(){location.reload();},1000);
+}
+
+function _restoreFromCSV(text){
+  // נקה BOM
+  text=text.replace(/^﻿/,'');
+  var lines=text.split(/\r?\n/).filter(function(l){return l.trim();});
+  if(lines.length<2){setRestoreStatus('קובץ CSV ריק',true);return;}
+
+  // זהה עמודת תאריך (עמודה ראשונה בדרך כלל)
+  var existing=D.g();
+  var count=0;
+
+  for(var i=1;i<lines.length;i++){
+    var cols=lines[i].split(',').map(function(c){return c.replace(/^"|"$/g,'').trim();});
+    var dateStr=cols[0];
+    // ודא שזה תאריך תקין YYYY-MM-DD
+    if(!dateStr||!/^\d{4}-\d{2}-\d{2}$/.test(dateStr))continue;
+    var hours=parseFloat(cols[2])||0;
+    var rate=parseFloat(cols[3])||50;
+    if(hours<=0)continue;
+    existing[dateStr]={hours:hours, rate:rate, note:cols[9]||cols[4]||''};
+    count++;
+  }
+
+  if(count===0){setRestoreStatus('לא נמצאו נתונים תקינים ב-CSV',true);return;}
+  D.s(existing);
+  setRestoreStatus('✅ שוחזרו '+count+' ימים מ-CSV');
+  setTimeout(function(){location.reload();},1000);
+}
+
+// שחזור מ-Google Drive
+async function restoreFromDrive(){
+  if(!aToken){
+    alert('חבר תחילה את חשבון Google Drive');
+    return;
+  }
+  setRestoreStatus('מחפש גיבוי ב-Drive...');
+  document.getElementById('restore-status').style.display='block';
+  try{
+    await loadDr();
+    setRestoreStatus('✅ שוחזר מ-Google Drive בהצלחה!');
+    setTimeout(function(){location.reload();},1000);
+  }catch(e){
+    setRestoreStatus('שגיאה: '+e.message,true);
+  }
 }
 function execDel(){if(!confirm('האם אתה בטוח?'))return;const r=document.getElementById('delR').value;if(r==='all'){D.s({});location.reload();return;}let data=D.g();getDts(r,'delS','delE').forEach(d=>delete data[fk(d)]);D.s(data);closeM('mDel');renderCal();updRep();saveDr();vib();}
 
