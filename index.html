@@ -1091,12 +1091,26 @@ function startGoogleAuth(){
     + '&scope=' + encodeURIComponent(SCOPES)
     + '&prompt=select_account';
 
-  // APK — פתח דפדפן חיצוני (Chrome) דרך Capacitor Browser
   if(window.CapBrowser){
+    // הסר listener ישן אם יש
+    try{ window.CapBrowser.removeAllListeners(); }catch(e){}
+
+    // האזן להודעת postMessage מ-callback.html
+    window._oauthMsgHandler = function(event){
+      if(event.data && event.data.type === 'oauth_token' && event.data.token){
+        window.removeEventListener('message', window._oauthMsgHandler);
+        try{ window.CapBrowser.close(); }catch(e){}
+        _onTokenReceived(event.data.token);
+      }
+    };
+    window.addEventListener('message', window._oauthMsgHandler);
+
+    // פתח Chrome חיצוני
     window.CapBrowser.open({url: url, presentationStyle: 'fullscreen'});
-    // האזן לחזרה מה-OAuth
+
+    // fallback: כשהדפדפן נסגר — בדוק localStorage
     window.CapBrowser.addListener('browserFinished', function(){
-      // callback.html שמר את הטוקן ב-localStorage
+      window.removeEventListener('message', window._oauthMsgHandler);
       handleOAuthReturn();
     });
   } else {
@@ -1105,35 +1119,39 @@ function startGoogleAuth(){
   }
 }
 
+function _onTokenReceived(token){
+  aToken = token;
+  localStorage.setItem('gtoken', token);
+  localStorage.setItem('syen', '1');
+  localStorage.removeItem('oauth_done');
+  setTimeout(function(){
+    fetchEmail().then(function(){
+      renderSettings();
+      setSyncDot(true);
+      loadDr();
+      showToast('✅ חובר ל-Google Drive בהצלחה!');
+    });
+  }, 300);
+}
+
 function handleOAuthReturn(){
-  // בדוק אם callback.html שמר token
-  const oauthDone=localStorage.getItem('oauth_done');
-  const savedToken=localStorage.getItem('gtoken');
+  // בדוק localStorage — callback.html אולי שמר שם
+  var oauthDone = localStorage.getItem('oauth_done');
+  var savedToken = localStorage.getItem('gtoken');
   if(oauthDone && savedToken && !aToken){
     localStorage.removeItem('oauth_done');
-    aToken=savedToken;
-    setTimeout(()=>{
-      fetchEmail().then(()=>{renderSettings();setSyncDot(true);loadDr();
-        showToast('✅ חובר ל-Google Drive בהצלחה!');
-      });
-    },300);
+    _onTokenReceived(savedToken);
     return;
   }
-  // גיבוי — בדוק hash ישירות (אם הגיע ישר בלי callback)
-  const hash=window.location.hash;
-  if(!hash||!hash.includes('access_token'))return;
-  const params=new URLSearchParams(hash.substring(1));
-  const token=params.get('access_token');
-  if(token){
-    aToken=token;
-    localStorage.setItem('gtoken',token);
-    localStorage.setItem('syen','1');
-    history.replaceState(null,'',location.pathname);
-    setTimeout(()=>{
-      fetchEmail().then(()=>{renderSettings();setSyncDot(true);loadDr();
-        showToast('✅ חובר ל-Google Drive בהצלחה!');
-      });
-    },300);
+  // בדוק hash — אם הדף עצמו קיבל את ה-redirect
+  var hash = window.location.hash;
+  if(hash && hash.includes('access_token')){
+    var params = new URLSearchParams(hash.substring(1));
+    var token = params.get('access_token');
+    if(token){
+      history.replaceState(null,'',location.pathname);
+      _onTokenReceived(token);
+    }
   }
 }
 
