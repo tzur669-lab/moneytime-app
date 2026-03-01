@@ -37,6 +37,61 @@ setTimeout(function(){
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+// Firebase Realtime Database — pair sync
+// Database URL: https://moneytime-app-default-rtdb.firebaseio.com/
+const FB_URL='https://moneytime-app-f5a15-default-rtdb.firebaseio.com';
+
+async function fbWrite(path,data){
+  try{
+    const r=await fetch(`${FB_URL}/${path}.json`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(data)
+    });
+    return r.ok;
+  }catch(e){return false;}
+}
+
+async function fbRead(path){
+  try{
+    const r=await fetch(`${FB_URL}/${path}.json`);
+    if(!r.ok)return null;
+    const d=await r.json();
+    return d;
+  }catch(e){return null;}
+}
+
+async function syncPairToFirebase(){
+  const s=D.gs();
+  if(!s.pairCode||!s.myCode)return;
+  const payload={
+    workData:D.g(),
+    myName:s.myName,
+    myColor:s.myColor,
+    timestamp:Date.now()
+  };
+  await fbWrite(`pairs/${s.pairCode}/${s.myCode}`,payload);
+}
+
+async function loadPartnerFromFirebase(){
+  const s=D.gs();
+  if(!s.pairCode||!s.partnerCode)return false;
+  const data=await fbRead(`pairs/${s.pairCode}/${s.partnerCode}`);
+  if(data&&data.workData){
+    D.sp(data.workData);
+    // עדכן שם/צבע פרטנר אם קיים
+    if(data.myName){
+      const ss=D.gs();
+      if(!ss.partnerName||ss.partnerName==='פרטנר')ss.partnerName=data.myName;
+      if(data.myColor)ss.partnerColor=data.myColor;
+      D.ss(ss);
+    }
+    return true;
+  }
+  return false;
+}
+</script>
 <!-- Google auth handled via custom OAuth redirect — works in APK WebView -->
 <style>
 :root{
@@ -89,11 +144,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t);min-heig
 .ni::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:0;height:3px;background:var(--b8);border-radius:0 0 4px 4px;transition:width .3s}
 [data-theme=dark] .ni::before{background:var(--b5)}
 .ni.active::before{width:28px}
-.page{display:none;padding:14px;max-width:580px;margin:0 auto;animation:pgIn .25s ease}
+.page{display:none;padding:0 0 20px;max-width:580px;margin:0 auto;animation:pgIn .25s ease}
 .page.active{display:block}
 @keyframes pgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .card{background:var(--s);border-radius:var(--r1);padding:16px;box-shadow:var(--sh);border:1px solid var(--bd);margin-bottom:12px}
-.clk-card{background:linear-gradient(135deg,var(--b8),var(--b6));border-radius:var(--r1);padding:12px 16px;margin-bottom:12px;color:#fff;box-shadow:var(--shl);border:none;display:flex;align-items:center;gap:14px}
+.clk-card{background:linear-gradient(135deg,var(--b8),var(--b6));border-radius:var(--r1);padding:12px 14px;margin-bottom:12px;color:#fff;box-shadow:var(--shl);border:none;display:flex;align-items:center;gap:10px;min-height:80px}
 .clk-left{flex:1}
 .clk-label{font-size:8px;font-weight:400;opacity:.65;letter-spacing:2px;text-transform:uppercase}
 .clk-time{font-size:42px;font-weight:100;letter-spacing:0px;font-variant-numeric:tabular-nums;line-height:1;margin:2px 0}
@@ -104,7 +159,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t);min-heig
 .clk-ring-fill{fill:none;stroke:rgba(255,255,255,.85);stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset .5s linear}
 .clk-ring-inner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column}
 .clk-ring-icon{font-size:22px;line-height:1}
-.btn-clk{padding:9px 16px;border-radius:10px;border:none;font-family:'Inter',sans-serif;font-size:12px;font-weight:300;cursor:pointer;transition:all .2s;background:rgba(255,255,255,.18);color:#fff;white-space:nowrap;flex-shrink:0}
+.btn-clk{padding:10px 12px;border-radius:10px;border:none;font-family:'Inter',sans-serif;font-size:11px;font-weight:300;cursor:pointer;transition:all .2s;background:rgba(255,255,255,.18);color:#fff;white-space:normal;flex-shrink:0;max-width:80px;text-align:center;line-height:1.3}
 .btn-clk.on{background:rgba(239,68,68,.8)}
 .btn-clk:active{transform:scale(.98)}
 .qa{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
@@ -124,8 +179,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t);min-heig
 .cc.today{border-color:var(--b6);box-shadow:0 0 0 2px var(--b1)}
 .cc.has-data{background:var(--b0);border-color:var(--b1)}
 [data-theme=dark] .cc.has-data{background:rgba(30,58,138,.25);border-color:var(--b1)}
-.cc.missing{background:transparent;border:2px solid #FDE047;}
-[data-theme=dark] .cc.missing{background:transparent;border-color:rgba(250,204,21,.6);}
+.cc.missing{background:transparent;border:1px solid rgba(253,224,71,.6);}
+[data-theme=dark] .cc.missing{background:transparent;border-color:rgba(250,204,21,.35);}
 [data-color=green] .cc.missing{background:transparent;border-color:#FDE047;}
 [data-color=teal] .cc.missing{background:transparent;border-color:#FDE047;}
 [data-color=purple] .cc.missing{background:transparent;border-color:#FDBA74;}
@@ -259,6 +314,7 @@ input[type=time].fi{text-align:center}
 .pdfchk{width:22px;height:22px;border-radius:6px;border:2px solid var(--bd);background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;transition:all .15s}
 .pdfchk.on{background:var(--b8);border-color:var(--b8);color:#fff}
 .pdfopt-lbl{font-size:13px;font-weight:300}
+.page-footer{text-align:center;padding:16px 0 4px;font-size:10px;font-weight:300;color:var(--t3);letter-spacing:.5px}
 .sf{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:var(--g);color:#fff;border-radius:50%;width:76px;height:76px;display:flex;align-items:center;justify-content:center;font-size:32px;z-index:999;pointer-events:none;transition:all .3s cubic-bezier(.34,1.56,.64,1)}
 .sf.show{transform:translate(-50%,-50%) scale(1)}
 .sf.bye{transform:translate(-50%,-50%) scale(0);opacity:0}
@@ -317,14 +373,14 @@ input[type=time].fi{text-align:center}
   </div>
   <div class="card">
     <div class="cal-nav">
-      <button class="btn-nav" onclick="navMonth(-1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg></button>
+      <button class="btn-nav" onclick="navMonth(-1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,18 15,12 9,6"/></svg></button>
       <div style="text-align:center">
         <div class="cal-title" id="calTitle"></div>
         <div id="calYear" style="font-size:11px;color:var(--t3);line-height:1;margin-top:1px"></div>
       </div>
       <div style="display:flex;gap:6px">
         <button class="btn-today" onclick="goToday()">היום</button>
-        <button class="btn-nav" onclick="navMonth(1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,18 15,12 9,6"/></svg></button>
+        <button class="btn-nav" onclick="navMonth(1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg></button>
       </div>
     </div>
     <div class="jump-row">
@@ -963,14 +1019,80 @@ function renderCouple(){
     <div class="pbar-wrap" style="margin-top:10px"><div class="pbar-fill" style="width:${pPct}%;background:${s.partnerColor}"></div></div>
     <div style="font-size:11px;color:var(--t3);margin-top:4px">${pPct}% מסה"כ</div>
   </div>
-  <div class="card"><div class="csummary"><span>השוואה ביניכם החודש</span></div><div class="cwrap"><canvas id="cplCh"></canvas></div></div>
   <div class="card">
-    <div style="font-size:12px;color:var(--t2);margin-bottom:10px">קוד זוג: <strong style="font-size:16px;letter-spacing:3px;color:var(--b8)">${s.pairCode}</strong></div>
-    <button class="btn btn-g" onclick="manualSync()" style="margin-bottom:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> סנכרן נתוני פרטנר</button>
-    <button class="btn btn-o" onclick="openPair()" style="font-size:13px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> הגדרות זוג</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-size:11px;color:var(--t2)">השוואה</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <select id="cplViewSel" onchange="renderCoupleChart()" style="padding:4px 8px;border-radius:6px;border:1px solid var(--bd);background:var(--s2);color:var(--t);font-family:'Inter',sans-serif;font-size:11px">
+          <option value="month">חודש נוכחי</option>
+          <option value="custom_month">בחר חודש</option>
+          <option value="year">שנה נוכחית</option>
+          <option value="custom_year">בחר שנה</option>
+        </select>
+        <select id="cplMonthSel" onchange="renderCoupleChart()" style="display:none;padding:4px 8px;border-radius:6px;border:1px solid var(--bd);background:var(--s2);color:var(--t);font-family:'Inter',sans-serif;font-size:11px">
+          ${MN.map((m,i)=>'<option value="'+i+'">'+m+'</option>').join('')}
+        </select>
+        <select id="cplYearSel" onchange="renderCoupleChart()" style="display:none;padding:4px 8px;border-radius:6px;border:1px solid var(--bd);background:var(--s2);color:var(--t);font-family:'Inter',sans-serif;font-size:11px">
+          ${Array.from({length:new Date().getFullYear()-2014},(_,i)=>new Date().getFullYear()-i).map(y=>'<option value="'+y+'">'+y+'</option>').join('')}
+        </select>
+      </div>
+    </div>
+    <div class="cwrap"><canvas id="cplCh"></canvas></div>
+  </div>
+  <div class="card">
+    <div style="font-size:10px;color:var(--t3);margin-bottom:8px">קוד זוג: <strong style="letter-spacing:2px;color:var(--b8)">${s.pairCode}</strong></div>
+    <button class="btn btn-g" onclick="manualSync()" style="margin-bottom:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> סנכרן פרטנר</button>
+    <button class="btn btn-o" onclick="openPair()" style="font-size:12px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> הגדרות זוג</button>
   </div>`;
+  renderCoupleChart();
+}
+
+function renderCoupleChart(){
+  const s=D.gs();
+  const sel=document.getElementById('cplViewSel');
+  if(!sel)return;
+  const view=sel.value;
+  const mSel=document.getElementById('cplMonthSel');
+  const ySel=document.getElementById('cplYearSel');
+  if(mSel)mSel.style.display=view==='custom_month'?'block':'none';
+  if(ySel)ySel.style.display=view==='custom_year'?'block':'none';
+  const myD=D.g(),pd=D.gp(),now=new Date();
+  const dk=document.body.getAttribute('data-theme')==='dark';
+  let labels=[],myVals=[],pVals=[];
+  if(view==='month'||view==='custom_month'){
+    const m=view==='custom_month'&&mSel?parseInt(mSel.value):now.getMonth();
+    const y=now.getFullYear();
+    const days=new Date(y,m+1,0).getDate();
+    const weeks=[{l:'ש1',my:0,p:0},{l:'ש2',my:0,p:0},{l:'ש3',my:0,p:0},{l:'ש4',my:0,p:0}];
+    for(let d=1;d<=days;d++){
+      const k=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+      const wi=Math.min(Math.floor((d-1)/7),3);
+      if(myD[k])weeks[wi].my+=cp(myD[k].hours,myD[k].rate,myD[k].bonuses).total;
+      if(pd[k])weeks[wi].p+=cp(pd[k].hours,pd[k].rate||50,pd[k].bonuses).total;
+    }
+    labels=weeks.map(w=>w.l);myVals=weeks.map(w=>Math.round(w.my));pVals=weeks.map(w=>Math.round(w.p));
+  } else {
+    const y=(view==='year'?now.getFullYear():(ySel?parseInt(ySel.value):now.getFullYear()));
+    labels=MN.map(n=>n.substring(0,3));
+    myVals=Array(12).fill(0);pVals=Array(12).fill(0);
+    Object.keys(myD).forEach(k=>{
+      if(!k.startsWith(String(y)))return;
+      const mi=parseInt(k.split('-')[1])-1;
+      if(mi>=0&&mi<12)myVals[mi]+=cp(myD[k].hours,myD[k].rate,myD[k].bonuses).total;
+    });
+    Object.keys(pd).forEach(k=>{
+      if(!k.startsWith(String(y)))return;
+      const mi=parseInt(k.split('-')[1])-1;
+      if(mi>=0&&mi<12)pVals[mi]+=cp(pd[k].hours,pd[k].rate||50,pd[k].bonuses).total;
+    });
+    myVals=myVals.map(v=>Math.round(v));pVals=pVals.map(v=>Math.round(v));
+  }
   if(cplCh)cplCh.destroy();
-  cplCh=new Chart(document.getElementById('cplCh'),{type:'bar',data:{labels:[s.myName,s.partnerName],datasets:[{data:[Math.round(myP),Math.round(pP)],backgroundColor:[s.myColor,s.partnerColor],borderRadius:10,borderSkipped:false}]},options:cOpts(dk)});
+  const canvas=document.getElementById('cplCh');if(!canvas)return;
+  cplCh=new Chart(canvas,{type:'bar',data:{labels,datasets:[
+    {label:s.myName,data:myVals,backgroundColor:s.myColor+'CC',borderRadius:6,borderSkipped:false},
+    {label:s.partnerName,data:pVals,backgroundColor:s.partnerColor+'CC',borderRadius:6,borderSkipped:false}
+  ]},options:{...cOpts(dk),plugins:{legend:{display:true,labels:{font:{size:10,family:'Inter'},boxWidth:10,padding:10}}}}});
 }
 
 // ---- PAIR MODAL ----
@@ -1325,16 +1447,15 @@ async function driveRead(fileName, isShared){
 }
 
 async function saveDr(){
-  if(!aToken)return;
   const s=D.gs();
   const uid=s.myUID||'solo';
   try{
-    if(s.pairCode){
-      // מצב זוגי — שמור קובץ ב-Drive הרגיל עם שם ייחודי לזוג+משתמש
-      const fn=`moneytime_${s.pairCode}_${uid}.json`;
-      await driveUpsert(fn, JSON.stringify({workData:D.g(),myName:s.myName,myColor:s.myColor,timestamp:Date.now()}), true);
-    } else {
-      // מצב יחיד — שמור ב-appDataFolder פרטי
+    // תמיד שמור ב-Firebase אם בזוג
+    if(s.pairCode&&s.myCode){
+      await syncPairToFirebase();
+    }
+    // שמור גם ב-Drive אם מחובר
+    if(aToken){
       await driveUpsert('moneytime_solo.json', JSON.stringify({workData:D.g(),settings:s,timestamp:Date.now()}), false);
     }
     setSyncDot(true);
@@ -1342,55 +1463,38 @@ async function saveDr(){
 }
 
 async function loadDr(){
-  if(!aToken)return;
   const s=D.gs();
-  const uid=s.myUID||'solo';
   try{
-    if(s.pairCode){
-      // טען את הנתונים שלי
-      const myFn=`moneytime_${s.pairCode}_${uid}.json`;
-      const mine=await driveRead(myFn, true);
-      if(mine){
-        const cTs=mine.timestamp||0, lTs=parseInt(localStorage.getItem('wdts'))||0;
-        if(cTs>lTs||lTs===0){if(mine.workData)D.s(mine.workData);}
-        else{await saveDr();}
-      } else {
-        await saveDr(); // העלה לראשונה
-      }
-      // טען את נתוני הפרטנר (חפש כל קובץ של הזוג שאינו שלי)
-      if(s.partnerUID){
-        const pFn=`moneytime_${s.pairCode}_${s.partnerUID}.json`;
-        const partner=await driveRead(pFn, true);
-        if(partner?.workData) D.sp(partner.workData);
-      } else {
-        // חפש קובץ של הפרטנר לפי קוד הזוג
-        const q=encodeURIComponent(`name contains 'moneytime_${s.pairCode}_' and trashed=false`);
-        const all=await(await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive&fields=files(id,name)`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
-        const pFile=all.files?.find(f=>!f.name.includes(uid));
-        if(pFile){
-          // שמור את ה-UID של הפרטנר
-          const pUID=pFile.name.replace(`moneytime_${s.pairCode}_`,'').replace('.json','');
-          s.partnerUID=pUID; D.ss(s);
-          const pc=await(await fetch(`https://www.googleapis.com/drive/v3/files/${pFile.id}?alt=media`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
-          if(pc?.workData) D.sp(pc.workData);
-        }
-      }
-    } else {
-      // מצב יחיד
+    // טען נתוני פרטנר מ-Firebase (עובד עם כל מייל!)
+    if(s.pairCode&&s.partnerCode){
+      const got=await loadPartnerFromFirebase();
+      if(got)renderCouple();
+    }
+    // שמור נתונים שלי ל-Firebase
+    if(s.pairCode&&s.myCode){
+      await syncPairToFirebase();
+    }
+    // Drive — נתונים אישיים בלבד
+    if(aToken){
       const data=await driveRead('moneytime_solo.json', false);
       if(data){
         const cTs=data.timestamp||0, lTs=parseInt(localStorage.getItem('wdts'))||0;
-        if(cTs>lTs||lTs===0){if(data.workData)D.s(data.workData);}
-        else{await saveDr();}
+        if(cTs>lTs||lTs===0){if(data.workData){D.s(data.workData);}}
+        else{await driveUpsert('moneytime_solo.json', JSON.stringify({workData:D.g(),settings:s,timestamp:Date.now()}), false);}
       }
     }
   }catch(e){console.error(e);}
   renderCal();updRep();
 }
 async function manualSync(){
-  vib();if(!aToken){alert('לא מחובר ל-Google Drive');return;}
-  try{await loadDr();await saveDr();renderCal();if(document.getElementById('pg-couple').classList.contains('active'))renderCouple();alert('✅ סנכרון הושלם!');}
-  catch(e){alert('שגיאה בסנכרון');}
+  vib();
+  try{
+    await saveDr();
+    await loadDr();
+    renderCal();
+    if(document.getElementById('pg-couple').classList.contains('active'))renderCouple();
+    showToast('סנכרון הושלם');
+  }catch(e){showToast('שגיאה בסנכרון');}
 }
 function disconnDrive(){if(confirm('לנתק?')){aToken=null;localStorage.removeItem('syen');localStorage.removeItem('gtoken');renderSettings();setSyncDot(false);}}
 function setSyncDot(on){const d=document.getElementById('sdot');if(d)d.className='sdot'+(on?'':' off');}
@@ -1483,7 +1587,7 @@ function _buildPDF(){
       +'<table><thead><tr>'+headers+'</tr></thead><tbody>'+rows+'</tbody></table>'
       +'<div class="summary">'+summary+'</div>'
       +'<button class="print-btn" onclick="window.print()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6,9 6,2 18,2 18,9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> הדפס / שמור PDF</button>'
-      +'</body></html>';
+      +'<p style="text-align:center;font-size:10px;color:#94A3B8;padding:8px">tzur669@gmail.com</p></body></html>';
 
     // תמיד הצג בתוך האפליקציה (window.open נחסם ב-APK)
     closeM('mPDF');
@@ -1702,7 +1806,7 @@ function _showTableReport(detailed){
     +'</style></head><body>'
     +'<table><thead><tr>'+headerCols+'</tr></thead><tbody>'+rows+'</tbody></table>'
     +'<div class="summary">\u05e1\u05d4"\u05db: '+totalH.toFixed(1)+' \u05e9\u05e2\u05d5\u05ea | \u20aa'+Math.round(totalP).toLocaleString('he-IL')+'</div>'
-    +'</body></html>';
+    +'<p style="text-align:center;font-size:10px;color:#94A3B8;padding:8px">tzur669@gmail.com</p></body></html>';
 
   // סגור overlay קיים
   var existing=document.getElementById('reportOverlay');
@@ -2007,5 +2111,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   initClock();renderCal();setSyncDot(false);initGD();renderSettings();checkPairLink();
 });
 </script>
+<div class="page-footer">tzur669@gmail.com</div>
 </body>
 </html>
