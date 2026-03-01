@@ -44,10 +44,19 @@ jobs:
       - name: Patch AndroidManifest
         run: |
           MANIFEST="android/app/src/main/AndroidManifest.xml"
+          
+          # cleartext traffic
           sed -i 's/android:usesCleartextTraffic="false"/android:usesCleartextTraffic="true"/' $MANIFEST || true
+          
+          # הרשאות קבצים
           sed -i 's|</manifest>|<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29"/><uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/></manifest>|' $MANIFEST || true
+          
+          # deep link intent-filter — חייב להיות בתוך <activity>
+          # מוסיף לפני </activity> הראשון
           sed -i 's|</activity>|<intent-filter><action android:name="android.intent.action.VIEW"/><category android:name="android.intent.category.DEFAULT"/><category android:name="android.intent.category.BROWSABLE"/><data android:scheme="com.tzur669.moneytime" android:host="oauth"/></intent-filter></activity>|' $MANIFEST || true
-          echo "Manifest patched"
+          
+          echo "=== AndroidManifest after patch ==="
+          cat $MANIFEST
 
       - name: Patch Android resources
         run: |
