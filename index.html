@@ -1352,17 +1352,10 @@ function _buildPDF(){
       +'<button class="print-btn" onclick="window.print()">🖨️ הדפס / שמור PDF</button>'
       +'</body></html>';
 
-    // פתח בחלון חדש
-    var win=window.open('','_blank','width=800,height=600');
-    if(win){
-      win.document.write(html);
-      win.document.close();
-      closeM('mPDF');
-      vib();
-    } else {
-      // אם חלון נחסם — הצג בתוך האפליקציה
-      _showReportInApp(html, 'pdf');
-    }
+    // תמיד הצג בתוך האפליקציה (window.open נחסם ב-APK)
+    closeM('mPDF');
+    vib();
+    _showReportInApp(html, 'pdf');
   }catch(e){
     console.error('PDF error:',e);
     alert('שגיאה: '+e.message);
@@ -1388,7 +1381,7 @@ function _showReportInApp(html, type){
 
   var btnPrint=document.createElement('button');
   btnPrint.style.cssText='background:rgba(255,255,255,.22);border:none;color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap';
-  btnPrint.textContent='🖨️ הדפס/PDF';
+  btnPrint.textContent='📤 שתף';
 
   var btnClose=document.createElement('button');
   btnClose.style.cssText='background:rgba(239,68,68,.8);border:none;color:#fff;padding:9px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap';
@@ -1413,9 +1406,14 @@ function _showReportInApp(html, type){
     if(el)el.remove();
   });
   btnPrint.addEventListener('click', function(){
-    try{ frame.contentWindow.print(); }
-    catch(e){ window.print(); }
+    // שתף את הדוח כקובץ HTML (נפתח ב-Chrome ונשמר/משותף)
+    var blob=new Blob([_pdfHtml],{type:'text/html;charset=utf-8'});
+    var fileName='hours_report_'+new Date().toISOString().slice(0,10)+'.html';
+    _saveFile(blob, fileName, 'text/html');
   });
+
+  // שמור ה-HTML לשיתוף
+  _pdfHtml=html;
 
   // כתוב HTML לתוך iframe
   try{
@@ -1423,10 +1421,10 @@ function _showReportInApp(html, type){
     frame.contentDocument.write(html);
     frame.contentDocument.close();
   }catch(e){
-    // fallback ל-srcdoc
     frame.srcdoc=html;
   }
 }
+var _pdfHtml='';
 
 
 
