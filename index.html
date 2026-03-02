@@ -275,7 +275,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t);min-heig
 .jname:focus{outline:none;border-bottom-color:var(--b6)}
 .jnums{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
 .crow{display:flex;gap:8px;flex-wrap:wrap}
-.cdot{width:14px;height:14px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s;flex-shrink:0}
+.cdot{width:14px;height:14px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15px;flex-shrink:0}
 .cdot.sel{border-color:var(--t);transform:scale(1.2)}
 .btn-del-j{position:absolute;top:10px;left:10px;background:none;border:none;color:var(--t3);font-size:16px;cursor:pointer}
 .fg{margin-bottom:13px}
@@ -734,7 +734,6 @@ function renderCal(){
     c.onclick=()=>{vib();openDay(k);};
     let html='';
     if(data[k]?.note||(data[k]?.bonuses?.length>0)){const col=s.jobs?.[data[k]?.jobIdx||0]?.color||'#1E3A8A';html+=`<div class="cc-dot" style="background:${col}"></div>`;}
-    // no icon for missing days — border only
     html+=`<div class="cc-top"><div class="cc-num">${d}</div></div><div class="cc-heb">${HC.f(dt)}</div>`;
     const bars=[];
     if(hasMe){const col=s.jobs?.[data[k]?.jobIdx||0]?.color||'#1E3A8A';bars.push(`<div class="cc-bar" style="background:${col}"></div>`);}
@@ -753,7 +752,6 @@ function goToday(){vib();curDt=new Date();renderCal();}
 function jumpDate(){const v=document.getElementById('jDate').value;if(v){curDt=new Date(v);renderCal();}}
 function updHdrSub(){
   const data=D.g(),s=D.gs();
-  // השתמש ב-curDt (החודש שמוצג בלוח) ולא תמיד החודש הנוכחי
   const mk=`${curDt.getFullYear()}-${String(curDt.getMonth()+1).padStart(2,'0')}`;
   const now=new Date();
   const isCurrentMonth=mk===`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
@@ -900,13 +898,11 @@ function renderArc(cont){
   const sorted=Object.keys(months).sort().reverse();
   if(!sorted.length){cont.innerHTML=`<div class="card"><div class="empty"><div class="empty-ico" style="font-size:0"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="empty-ttl">אין נתונים עדיין</div></div></div>`;return;}
 
-  // חישוב סטטיסטיקות שנתיות
   const years={};
   sorted.forEach(mk=>{const y=mk.substring(0,4);if(!years[y])years[y]={h:0,p:0,months:0,best:{p:0,mk:''}};years[y].h+=months[mk].h;years[y].p+=months[mk].p;years[y].months++;if(months[mk].p>years[y].best.p)years[y].best={p:months[mk].p,mk};});
 
   let html='';
 
-  // כרטיס סטטיסטיקות שנתיות
   Object.keys(years).sort().reverse().forEach(y=>{
     const yr=years[y];
     const avgM=yr.months>0?Math.round(yr.p/yr.months):0;
@@ -927,7 +923,6 @@ function renderArc(cont){
     </div>`;
   });
 
-  // ארכיון חודשים
   html+='<div class="card"><div style="font-size:13px;font-weight:400;color:var(--t2);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--bd)">ארכיון חודשי</div>';
   sorted.forEach(mk=>{const[y,m]=mk.split('-');const maxP=Math.max(...Object.values(months).map(x=>x.p));const pct=maxP>0?Math.round(months[mk].p/maxP*100):0;
     html+=`<div class="arc-row"><div style="flex:1"><div class="arc-m">${MN[parseInt(m)-1]} ${y}</div><div class="pbar-wrap" style="margin-top:4px;height:4px"><div class="pbar-fill" style="width:${pct}%;background:var(--b6)"></div></div></div><div class="arc-h">${months[mk].h.toFixed(1)} ש'</div><div class="arc-p">₪${Math.round(months[mk].p).toLocaleString('he-IL')}</div></div>`;
@@ -940,8 +935,6 @@ function renderArc(cont){
 function renderYear(cont,selectedYear){
   const data=D.g();
   const now=new Date();
-  // מצא את כל השנים שיש בהן נתונים
-  // רשימת שנים: מ-2020 עד השנה הנוכחית
   const thisYear=now.getFullYear();
   const allYears=[];
   for(let y=thisYear;y>=2015;y--)allYears.push(String(y));
@@ -991,7 +984,6 @@ function renderYear(cont,selectedYear){
     <div style="font-size:13px;font-weight:400;margin-bottom:10px">פירוט חודשי ${curY}</div>
     ${months.map((m,i)=>m.days>0?'<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--bd)"><div style="font-size:13px;font-weight:'+(i===bestM?'800':'600')+';color:'+(i===bestM?'var(--g)':'var(--t)')+'">'+(MN[i])+(i===bestM?' ★':'')+' </div><div style="text-align:left"><div style="font-size:13px;font-weight:400;color:var(--g)">&#8362;'+Math.round(m.p).toLocaleString('he-IL')+'</div><div style="font-size:10px;color:var(--t3)">'+m.h.toFixed(1)+' '+String.fromCharCode(1513)+"'"+' · '+m.days+' ימים</div></div></div>':'').join('')}
   </div>`;
-  // גרף הכנסות שנתי — setTimeout מבטיח שה-DOM מוכן
   const bgColors=vals.map((_,i)=>i===bestM?'#10B981':'#2563EB');
   setTimeout(()=>{
     if(window.yrInCh){try{window.yrInCh.destroy();}catch(e){}}
@@ -1011,7 +1003,6 @@ function renderCouple(){
     return;
   }
   const myD=D.g(),pd=D.gp();
-  // חישוב לפי view נוכחי — יעודכן ע"י renderCoupleStats
   const dk=document.body.getAttribute('data-theme')==='dark';
   cont.innerHTML=`
   <div id="cplStats">
@@ -1028,18 +1019,6 @@ function renderCouple(){
       <div class="pbar-wrap" style="margin-top:10px"><div class="pbar-fill" id="cplPBar" style="width:50%;background:${s.partnerColor}"></div></div>
       <div style="font-size:11px;color:var(--t3);margin-top:4px" id="cplPPct">50% מסה"כ</div>
     </div>
-  </div>
-  <div class="ucard" style="background:${s.myColor}18;border-color:${s.myColor}">
-    <div class="uc-top"><div class="uc-av" style="background:${s.myColor}">${s.myName.charAt(0)}</div><div><div class="uc-name" style="color:${s.myColor}">${s.myName}</div><div class="uc-h">${myH.toFixed(1)} שעות</div></div></div>
-    <div class="uc-money" style="color:${s.myColor}">₪${Math.round(myP).toLocaleString('he-IL')}</div>
-    <div class="pbar-wrap" style="margin-top:10px"><div class="pbar-fill" style="width:${myPct}%;background:${s.myColor}"></div></div>
-    <div style="font-size:11px;color:var(--t3);margin-top:4px">${myPct}% מסה"כ</div>
-  </div>
-  <div class="ucard" style="background:${s.partnerColor}18;border-color:${s.partnerColor}">
-    <div class="uc-top"><div class="uc-av" style="background:${s.partnerColor}">${s.partnerName.charAt(0)}</div><div><div class="uc-name" style="color:${s.partnerColor}">${s.partnerName}</div><div class="uc-h">${pH.toFixed(1)} שעות</div></div></div>
-    <div class="uc-money" style="color:${s.partnerColor}">₪${Math.round(pP).toLocaleString('he-IL')}</div>
-    <div class="pbar-wrap" style="margin-top:10px"><div class="pbar-fill" style="width:${pPct}%;background:${s.partnerColor}"></div></div>
-    <div style="font-size:11px;color:var(--t3);margin-top:4px">${pPct}% מסה"כ</div>
   </div>
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -1071,7 +1050,6 @@ function renderCouple(){
 }
 
 function getCplPeriodData(){
-  // מחזיר {myH,myP,pH,pP,labels,myVals,pVals,periodLabel}
   const s=D.gs();
   const sel=document.getElementById('cplViewSel');
   const view=sel?sel.value:'month';
@@ -1147,7 +1125,6 @@ function renderCoupleChart(){
   const ySel=document.getElementById('cplYearSel');
   if(mSel)mSel.style.display=view==='custom_month'?'block':'none';
   if(ySel)ySel.style.display=view==='custom_year'?'block':'none';
-  // עדכן כרטיסי נתונים למעלה
   renderCoupleStats();
   const {labels,myVals,pVals}=getCplPeriodData();
   const dk=document.body.getAttribute('data-theme')==='dark';
@@ -1162,12 +1139,10 @@ function renderCoupleChart(){
 // ---- PAIR MODAL ----
 function openPair(){
   const s=D.gs(),cont=document.getElementById('pairCont');
-  // קוד קבוע — נוצר פעם אחת ונשמר ב-settings
   if(!s.myCode){const ss=D.gs();ss.myCode=genCode();D.ss(ss);}
   const myCode=D.gs().myCode;
 
   if(s.pairCode){
-    // כבר מחובר — הצג הגדרות
     cont.innerHTML=`
     <div class="pair-box"><div class="pair-lbl">הקוד שלי (קבוע)</div><div class="pair-val">${myCode}</div>
     <div class="pair-acts">
@@ -1183,7 +1158,6 @@ function openPair(){
     <button class="btn btn-d" onclick="unpair()" style="margin-top:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> נתק מהזוג</button>`;
     setTimeout(()=>{try{new QRCode(document.getElementById('qrB'),{text:myCode,width:130,height:130,colorDark:'#1E3A8A',colorLight:'#fff'});}catch(e){}},100);
   } else {
-    // לא מחובר — הצג קוד קבוע + שדה להזנת קוד פרטנר
     const pairLink='https://tzur669-lab.github.io/moneytime-app/?pair='+myCode;
     cont.innerHTML=`
     <p style="font-size:13px;color:var(--t2);margin-bottom:14px;line-height:1.6">שלח לפרטנר את <strong>הקישור</strong> — הוא יחבר אתכם אוטומטית. או שלח את <strong>הקוד</strong> שלך והפרטנר יזין אותו ידנית.</p>
@@ -1249,27 +1223,20 @@ function setColor(c){
 }
 
 function applyColorTheme(c){
-  // Remove previous color
   document.documentElement.removeAttribute('data-color');
-  // Remove any forced dark from previous black selection
   const savedTheme=D.gs().theme||'light';
   document.body.setAttribute('data-theme', savedTheme==='dark'?'dark':'');
   if(!savedTheme||savedTheme==='light') document.body.removeAttribute('data-theme');
-  // Apply new color
   if(c && c!=='blue') document.documentElement.setAttribute('data-color',c);
-  // Black forces dark mode visually via CSS vars only — no data-theme manipulation
-  // Update picker highlight
   document.querySelectorAll('.tpick').forEach(el=>el.classList.remove('sel'));
   const el=document.getElementById('tc-'+c);
   if(el) el.classList.add('sel');
-  // Update status bar color
   const colors={blue:'#1E3A8A',green:'#166534',purple:'#4C1D95',black:'#0F172A',orange:'#C2410C',pink:'#9F1239',teal:'#134E4A'};
   document.getElementById('metaTC').content=colors[c]||'#1E3A8A';
 }
 
 function renderSettings(){
   const s=D.gs();
-  // Sync color picker
   const c=s.colorTheme||'blue';
   document.querySelectorAll('.tpick').forEach(el=>el.classList.remove('sel'));
   document.getElementById('tc-'+c)?.classList.add('sel');
@@ -1299,17 +1266,14 @@ function addJob(){const s=D.gs();if((s.jobs||[]).length>=3)return;s.jobs.push({n
 function delJob(i){const s=D.gs();s.jobs.splice(i,1);D.ss(s);renderJobsCont();}
 function updJ(i,f,v){const s=D.gs();s.jobs[i][f]=f==='name'?v:(parseFloat(v)||0);D.ss(s);}
 function updJC(i,col,el){
-  // עדכן badge במיידי ללא רנדר מחדש (שלא נאבד focus)
   el.closest('.crow').querySelectorAll('.cdot').forEach(d=>d.classList.remove('sel'));
   el.classList.add('sel');
   const s=D.gs();
   if(s.jobs&&s.jobs[i]){
     s.jobs[i].color=col;
     D.ss(s);
-    // עדכן badge
     const card=el.closest('.jcard');
     if(card){const badge=card.querySelector('.jcbadge');if(badge)badge.style.background=col;}
-    // עדכן border
     if(card)card.style.borderRightColor=col;
   }
 }
@@ -1328,7 +1292,6 @@ function tickC(){
   const s=parseInt(localStorage.getItem('cit'));if(!s)return;
   const d=Math.floor((Date.now()-s)/1000);
   document.getElementById('clkTime').textContent=`${String(Math.floor(d/3600)).padStart(2,'0')}:${String(Math.floor(d%3600/60)).padStart(2,'0')}:${String(d%60).padStart(2,'0')}`;
-  // עדכן טבעת — 8 שעות = מחזור מלא (circumference=201)
   const circ=201,maxSec=8*3600;
   const pct=Math.min(d/maxSec,1);
   const ring=document.getElementById('clkRing');
@@ -1364,7 +1327,6 @@ function checkPairLink(){
     const s=D.gs();
     const pc=partnerCode.toUpperCase();
     if(s.pairCode&&s.partnerCode===pc){
-      // כבר מחובר לאותו פרטנר - נווט לביחד
       setTimeout(function(){_navToCouple();renderCouple();},400);
       return;
     }
@@ -1396,18 +1358,14 @@ function _navToCouple(){
 }
 
 function initGD(){
-  // בדוק אם חזרנו מ-OAuth (חייב להיות ראשון!)
   handleOAuthReturn();
-  // בדוק אם יש token שמור
   const saved=localStorage.getItem('gtoken');
   if(saved){
     aToken=saved;
-    // בדוק שה-token עדיין תקף
     fetch('https://www.googleapis.com/oauth2/v3/tokeninfo?access_token='+saved)
       .then(r=>r.json())
       .then(info=>{
         if(info.error){
-          // Token פג תוקף
           localStorage.removeItem('gtoken');localStorage.removeItem('syen');
           aToken=null;setSyncDot(false);renderSettings();
         } else {
@@ -1428,14 +1386,11 @@ function startGoogleAuth(){
     + '&prompt=select_account';
 
   if(window.CapApp || window.CapBrowser){
-    // האזן ל-deep link — אנדרואיד יקרא לאפליקציה עם URL
-    // com.tzur669.moneytime://oauth#access_token=XXX
     var _appUrlHandler = null;
     if(window.CapApp){
       _appUrlHandler = window.CapApp.addListener('appUrlOpen', function(data){
         _appUrlHandler.remove();
         try{ window.CapBrowser && window.CapBrowser.close(); }catch(e){}
-        // חלץ token מה-URL
         var url2 = data.url || '';
         var hashIdx = url2.indexOf('#');
         if(hashIdx !== -1){
@@ -1443,23 +1398,18 @@ function startGoogleAuth(){
           var token = params.get('access_token');
           if(token){ _onTokenReceived(token); return; }
         }
-        // fallback — בדוק localStorage
         handleOAuthReturn();
       });
     }
 
-    // הסר listeners ישנים
     try{ window.CapBrowser.removeAllListeners(); }catch(e){}
-    // פתח דפדפן
     window.CapBrowser.open({url: url, presentationStyle: 'fullscreen'});
-    // כשהדפדפן נסגר ידנית בלי token
     window.CapBrowser.addListener('browserFinished', function(){
       if(_appUrlHandler){ try{_appUrlHandler.remove();}catch(e){} }
       handleOAuthReturn();
     });
 
   } else {
-    // דפדפן רגיל — redirect רגיל
     window.location.href = url;
   }
 }
@@ -1481,7 +1431,6 @@ function _onTokenReceived(token){
 }
 
 function handleOAuthReturn(){
-  // בדוק localStorage — callback.html אולי שמר שם
   var oauthDone = localStorage.getItem('oauth_done');
   var savedToken = localStorage.getItem('gtoken');
   if(oauthDone && savedToken && !aToken){
@@ -1489,7 +1438,6 @@ function handleOAuthReturn(){
     _onTokenReceived(savedToken);
     return;
   }
-  // בדוק hash — אם הדף עצמו קיבל את ה-redirect
   var hash = window.location.hash;
   if(hash && hash.includes('access_token')){
     var params = new URLSearchParams(hash.substring(1));
@@ -1509,12 +1457,9 @@ function showToast(msg){
   setTimeout(()=>t.remove(),3000);
 }
 async function fetchEmail(){try{const r=await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:`Bearer ${aToken}`}});const i=await r.json();if(i.email)document.getElementById('drEmail').textContent=`מחובר: ${i.email}`;}catch(e){}}
-// ---- DRIVE HELPERS ----
-// Solo: שומר ב-appDataFolder (פרטי)
-// Pair: שומר ב-Drive הרגיל עם שם ייחודי שהפרטנר יכול לקרוא
 
+// ---- DRIVE HELPERS ----
 async function driveUpsert(fileName, body, isShared){
-  // isShared=true → Drive רגיל (שניהם יכולים לקרוא), false → appDataFolder (פרטי)
   const space = isShared ? 'drive' : 'appDataFolder';
   const q = encodeURIComponent(`name='${fileName}' and trashed=false`);
   const listUrl = `https://www.googleapis.com/drive/v3/files?q=${q}&spaces=${space}&fields=files(id)`;
@@ -1529,7 +1474,6 @@ async function driveUpsert(fileName, body, isShared){
       body:JSON.stringify(meta)
     })).json();
     fid = cr.id;
-    // אם shared — הפוך לציבורי (קריאה לכולם עם קישור)
     if(isShared && fid){
       await fetch(`https://www.googleapis.com/drive/v3/files/${fid}/permissions`,{
         method:'POST',
@@ -1558,17 +1502,14 @@ async function driveRead(fileName, isShared){
 async function saveDr(){
   const s=D.gs();
   try{
-    // שמור ל-Firebase בשקט (אוטומטי)
     if(s.pairCode&&s.myCode){
       await syncPairToFirebase();
     }
-    // גיבוי אישי ל-Drive
     if(aToken){
       await driveUpsert('moneytime_solo.json', JSON.stringify({workData:D.g(),settings:s,timestamp:Date.now()}), false);
     }
     setSyncDot(true);
   }catch(e){setSyncDot(false);}
-  // טען פרטנר בשקט
   if(s.pairCode&&s.partnerCode){
     try{
       const got=await loadPartnerFromFirebase();
@@ -1598,14 +1539,11 @@ async function manualSync(){
   vib();
   const s=D.gs();
   try{
-    // שמור ל-Firebase
     if(s.pairCode&&s.myCode) await syncPairToFirebase();
-    // טען פרטנר
     if(s.pairCode&&s.partnerCode){
       const got=await loadPartnerFromFirebase();
       if(got)renderCouple();
     }
-    // Drive backup
     if(aToken) await driveUpsert('moneytime_solo.json', JSON.stringify({workData:D.g(),settings:s,timestamp:Date.now()}), false);
     renderCal();
     showToast('סנכרון הושלם');
@@ -1614,26 +1552,22 @@ async function manualSync(){
 function disconnDrive(){if(confirm('לנתק?')){aToken=null;localStorage.removeItem('syen');localStorage.removeItem('gtoken');renderSettings();setSyncDot(false);}}
 function setSyncDot(on){const d=document.getElementById('sdot');if(d)d.className='sdot'+(on?'':' off');}
 window.addEventListener('online',()=>{
-  // חזרנו לאינטרנט — סנכרן בשקט
   const s=D.gs();
   if(s.pairCode&&s.myCode) syncPairToFirebase();
   if(aToken) driveUpsert('moneytime_solo.json', JSON.stringify({workData:D.g(),settings:s,timestamp:Date.now()}), false).catch(()=>{});
 });
-// גיבוי אוטומטי כשסוגרים/מחליפים טאב
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&aToken)saveDr();});
 window.addEventListener('beforeunload',()=>{if(aToken)saveDr();});
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&aToken)saveDr();});
 window.addEventListener('pagehide',()=>{if(aToken)saveDr();});
 
 // ---- PDF ----
 function tpdf(id){const el=document.getElementById(id);el.classList.toggle('on');el.textContent=el.classList.contains('on')?'✓':'';}
 function genPDF(){
-  // טען jsPDF אם צריך, אחר כך בנה
   if(!window.jspdf && !window.jsPDF){
     var sc=document.createElement('script');
     sc.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
     sc.onload=function(){_buildPDF();};
-    sc.onerror=function(){_buildPDF();};// ניסיון גם אם נכשל
+    sc.onerror=function(){_buildPDF();};
     document.head.appendChild(sc);
     showToast('טוען...');
     return;
@@ -1654,7 +1588,6 @@ function _buildPDF(){
     var today=new Date().toLocaleDateString('he-IL');
     var th=0,tp=0,ptp=0;
 
-    // בנה HTML לדוח
     var rows='';
     dates.forEach(function(d){
       var k=fk(d);
@@ -1700,16 +1633,13 @@ function _buildPDF(){
       +'td{padding:9px 8px;border-bottom:1px solid #E2E8F0;font-size:13px}'
       +'tr:nth-child(even){background:#F8FAFF}'
       +'.summary{background:#1E3A8A;color:#fff;padding:14px 20px;border-radius:10px;text-align:center;font-size:14px;font-weight:bold}'
-      +'.print-btn{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1E3A8A;color:#fff;border:none;padding:14px 32px;border-radius:50px;font-size:16px;font-weight:bold;cursor:pointer;box-shadow:0 4px 20px rgba(30,58,138,.4);z-index:999}'
-      +'@media print{.print-btn{display:none}}'
+      +'@media print{.no-print{display:none}}'
       +'</style></head><body>'
       +'<div class="header"><h1>דוח שעות עבודה</h1><p>'+name+' | '+today+'</p></div>'
       +'<table><thead><tr>'+headers+'</tr></thead><tbody>'+rows+'</tbody></table>'
       +'<div class="summary">'+summary+'</div>'
-
       +'<p style="text-align:center;font-size:10px;color:#94A3B8;padding:8px">tzur669@gmail.com</p></body></html>';
 
-    // תמיד הצג בתוך האפליקציה (window.open נחסם ב-APK)
     closeM('mPDF');
     vib();
     _showReportInApp(html, 'pdf');
@@ -1720,7 +1650,6 @@ function _buildPDF(){
 }
 
 function _showReportInApp(html, type){
-  // סגור overlay קיים אם יש
   var existing=document.getElementById('reportOverlay');
   if(existing)existing.remove();
 
@@ -1728,7 +1657,6 @@ function _showReportInApp(html, type){
   overlay.id='reportOverlay';
   overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:#fff;display:flex;flex-direction:column;overflow:hidden';
 
-  // כותרת עם כפתורים
   var topbar=document.createElement('div');
   topbar.style.cssText='background:#1E3A8A;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;gap:8px';
 
@@ -1736,19 +1664,18 @@ function _showReportInApp(html, type){
   title.style.cssText='font-size:14px;font-weight:400;flex:1';
   title.textContent='דוח שעות';
 
-  var btnPrint=document.createElement('button');
-  btnPrint.style.cssText='background:rgba(255,255,255,.22);border:none;color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap';
-  btnPrint.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> שתף`;
+  var btnShare=document.createElement('button');
+  btnShare.style.cssText='background:rgba(255,255,255,.22);border:none;color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap';
+  btnShare.innerHTML='📤 שתף';
 
   var btnClose=document.createElement('button');
   btnClose.style.cssText='background:rgba(239,68,68,.8);border:none;color:#fff;padding:9px 14px;border-radius:8px;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap';
-  btnClose.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> סגור`;
+  btnClose.innerHTML='✕ סגור';
 
   topbar.appendChild(title);
-  topbar.appendChild(btnPrint);
+  topbar.appendChild(btnShare);
   topbar.appendChild(btnClose);
 
-  // iframe לתוכן
   var frame=document.createElement('iframe');
   frame.id='rFrame';
   frame.style.cssText='flex:1;border:none;width:100%;background:#fff';
@@ -1757,22 +1684,20 @@ function _showReportInApp(html, type){
   overlay.appendChild(frame);
   document.body.appendChild(overlay);
 
-  // אירועי כפתורים
   btnClose.addEventListener('click', function(){
     var el=document.getElementById('reportOverlay');
     if(el)el.remove();
   });
-  btnPrint.addEventListener('click', function(){
-    // שתף את הדוח כקובץ HTML (נפתח ב-Chrome ונשמר/משותף)
-    var blob=new Blob([_pdfHtml],{type:'text/html;charset=utf-8'});
-    var fileName='hours_report_'+new Date().toISOString().slice(0,10)+'.html';
-    _saveFile(blob, fileName, 'text/html');
-  });
 
-  // שמור ה-HTML לשיתוף
+  // שמור HTML לשיתוף
   _pdfHtml=html;
 
-  // כתוב HTML לתוך iframe
+  btnShare.addEventListener('click', function(){
+    var blob=new Blob([_pdfHtml],{type:'text/html;charset=utf-8'});
+    var fileName='hours_report_'+new Date().toISOString().slice(0,10)+'.html';
+    _shareFile(blob, fileName);
+  });
+
   try{
     frame.contentDocument.open();
     frame.contentDocument.write(html);
@@ -1783,9 +1708,8 @@ function _showReportInApp(html, type){
 }
 var _pdfHtml='';
 
+// ---- SHARE FUNCTIONS (תמיד שיתוף, אף פעם לא הורדה) ----
 
-
-// ---- BACKUP ----
 // המרת Blob ל-base64
 function _blobToBase64(blob){
   return new Promise(function(resolve, reject){
@@ -1796,61 +1720,80 @@ function _blobToBase64(blob){
   });
 }
 
-// שמירה + שיתוף — Capacitor ב-APK, fallback בדפדפן
-async function _saveFile(blob, fileName, mimeType){
-  // APK — Capacitor Filesystem + Share
+// פונקציה ראשית — תמיד שיתוף
+async function _shareFile(blob, fileName){
+  // נסה Capacitor Share (APK)
   if(window.CapFS && window.CapShare){
     try{
       var b64 = await _blobToBase64(blob);
-      // שמור לתיקיית Documents
       await window.CapFS.writeFile({
         path: fileName,
         data: b64,
-        directory: 'DOCUMENTS',
+        directory: 'CACHE',
         recursive: true
       });
-      // שתף מיד
       var uriRes = await window.CapFS.getUri({
         path: fileName,
-        directory: 'DOCUMENTS'
+        directory: 'CACHE'
       });
       await window.CapShare.share({
         title: fileName,
         url: uriRes.uri,
-        dialogTitle: 'שמור או שתף'
+        dialogTitle: 'שתף דוח'
       });
       return;
     }catch(e){
-      console.log('Capacitor save failed, trying fallback:', e);
+      console.log('Capacitor share failed:', e);
     }
   }
-  // fallback — דפדפן רגיל
-  _downloadFallback(blob, fileName);
-}
 
-function _downloadFallback(blob, fileName){
-  // נסה navigator.share עם קובץ — עובד ב-Chrome אנדרואיד
+  // נסה Web Share API עם קובץ (Chrome Android, Safari iOS)
   try{
-    var file=new File([blob], fileName, {type:blob.type||'application/octet-stream'});
+    var file = new File([blob], fileName, {type: blob.type || 'application/octet-stream'});
     if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
-      navigator.share({files:[file], title:fileName})
-        .then(function(){showToast('שותף בהצלחה!');})
-        .catch(function(e){if(e.name!=='AbortError')_doDownload(blob,fileName);});
+      await navigator.share({
+        files: [file],
+        title: fileName
+      });
+      return;
+    }
+  }catch(e){
+    if(e.name === 'AbortError') return; // המשתמש ביטל — זה תקין
+    console.log('Web Share with file failed:', e);
+  }
+
+  // נסה Web Share API ללא קובץ (טקסט בלבד)
+  try{
+    if(navigator.share){
+      await navigator.share({
+        title: 'דוח שעות עבודה',
+        text: 'הדוח מוכן לשיתוף'
+      });
+      return;
+    }
+  }catch(e){
+    if(e.name === 'AbortError') return;
+  }
+
+  // fallback אחרון — clipboard
+  try{
+    // נסה להעתיק את תוכן ה-HTML כטקסט
+    if(navigator.clipboard){
+      await navigator.clipboard.writeText('הדוח מוכן. פתח את האפליקציה לצפייה.');
+      showToast('הדוח מוכן לצפייה בתוך האפליקציה');
       return;
     }
   }catch(e){}
-  _doDownload(blob, fileName);
+
+  showToast('שיתוף אינו נתמך בדפדפן זה');
 }
-function _doDownload(blob, fileName){
-  try{
-    var url=URL.createObjectURL(blob);
-    var a=document.createElement('a');
-    a.style.display='none'; a.href=url; a.download=fileName;
-    document.body.appendChild(a); a.click();
-    setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},2000);
-    showToast('הקובץ הורד');
-  }catch(e){showToast('שגיאה בשמירת הקובץ');}
+
+// עדכון: expJSON, expCSV, expXLSX משתמשים ב-_shareFile
+function expJSON(){
+  var data=JSON.stringify({workData:D.g(),settings:D.gs()},null,2);
+  _shareFile(new Blob([data],{type:'application/json'}), 'backup_'+new Date().toISOString().slice(0,10)+'.json');
 }
+
 function expCSV(){
   _showTableReport(false);
 }
@@ -1895,7 +1838,7 @@ function _showTableReport(detailed){
 
   var title=detailed?'\u05d3\u05d5\u05d7 \u05de\u05e4\u05d5\u05e8\u05d8 Excel':'\u05d3\u05d5\u05d7 CSV';
 
-  // בנה CSV לשיתוף
+  // CSV לשיתוף
   var csvLines=['\u05ea\u05d0\u05e8\u05d9\u05da,\u05d9\u05d5\u05dd,\u05e9\u05e2\u05d5\u05ea,'+(detailed?'\u05ea\u05e2\u05e8\u05d9\u05e3,\u05e8\u05d2\u05d9\u05dc\u05d5\u05ea,125%,150%,':'')+'\u05e1\u05d4"\u05db,\u05d1\u05d5\u05e0\u05d5\u05e1,\u05d4\u05e2\u05e8\u05d4,\u05e2\u05d1\u05d5\u05d3\u05d4'];
   Object.keys(d).sort().forEach(function(k){
     var r=d[k]; if(!(r.hours>0))return;
@@ -1928,11 +1871,9 @@ function _showTableReport(detailed){
     +'<div class="summary">\u05e1\u05d4"\u05db: '+totalH.toFixed(1)+' \u05e9\u05e2\u05d5\u05ea | \u20aa'+Math.round(totalP).toLocaleString('he-IL')+'</div>'
     +'<p style="text-align:center;font-size:10px;color:#94A3B8;padding:8px">tzur669@gmail.com</p></body></html>';
 
-  // סגור overlay קיים
   var existing=document.getElementById('reportOverlay');
   if(existing)existing.remove();
 
-  // בנה overlay זהה ל-PDF
   var overlay=document.createElement('div');
   overlay.id='reportOverlay';
   overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:#fff;display:flex;flex-direction:column;overflow:hidden';
@@ -1942,15 +1883,15 @@ function _showTableReport(detailed){
 
   var titleEl=document.createElement('span');
   titleEl.style.cssText='font-size:14px;font-weight:400;flex:1';
-  titleEl.innerHTML=(detailed?`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`)+' '+title;
+  titleEl.textContent=title;
 
   var btnShare=document.createElement('button');
   btnShare.style.cssText='background:rgba(255,255,255,.22);border:none;color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap';
-  btnShare.textContent='\uD83D\uDCE4 \u05e9\u05ea\u05e3';
+  btnShare.textContent='📤 שתף';
 
   var btnClose=document.createElement('button');
   btnClose.style.cssText='background:rgba(239,68,68,.8);border:none;color:#fff;padding:9px 14px;border-radius:8px;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap';
-  btnClose.textContent='\u2715 \u05e1\u05d2\u05d5\u05e8';
+  btnClose.textContent='✕ סגור';
 
   topbar.appendChild(titleEl);
   topbar.appendChild(btnShare);
@@ -1963,20 +1904,19 @@ function _showTableReport(detailed){
   overlay.appendChild(frame);
   document.body.appendChild(overlay);
 
-  // כפתור סגירה — נשלט מהדוקומנט הראשי (לא מתוך iframe)
   btnClose.addEventListener('click',function(){
     var el=document.getElementById('reportOverlay');
     if(el)el.remove();
   });
 
-  // כפתור שיתוף CSV
+  // כפתור שיתוף — תמיד שיתוף, אף פעם לא הורדה
   btnShare.addEventListener('click',function(){
-    var blob=new Blob([csvText],{type:'text/csv;charset=utf-8'});
+    var ext = detailed ? 'csv' : 'csv';
     var fileName=(detailed?'hours_detailed':'hours')+'_'+new Date().toISOString().slice(0,10)+'.csv';
-    _saveFile(blob,fileName,'text/csv');
+    var blob=new Blob([csvText],{type:'text/csv;charset=utf-8'});
+    _shareFile(blob, fileName);
   });
 
-  // כתוב HTML לתוך iframe
   try{
     frame.contentDocument.open();
     frame.contentDocument.write(htmlContent);
@@ -1986,19 +1926,11 @@ function _showTableReport(detailed){
   }
 }
 
-
-function expJSON(){
-  var data=JSON.stringify({workData:D.g(),settings:D.gs()},null,2);
-  _saveFile(new Blob([data],{type:'application/json'}), 'backup.json', 'application/json');
-}
-
-// פתח בורר קבצים — עובד ב-APK
+// ---- RESTORE ----
 function triggerRestore(type){
   var input=document.getElementById('restoreFileInput');
   input.accept = type==='csv' ? '.csv' : '.json';
-  // איפוס ערך כדי שonchange יירה גם על אותו קובץ
   input.value='';
-  // ב-APK — צריך להוסיף לדום ולהקליק
   input.style.display='block';
   input.style.position='fixed';
   input.style.top='-100px';
@@ -2032,7 +1964,6 @@ function restoreData(e){
       } else if(ext==='csv'){
         _restoreFromCSV(text);
       } else {
-        // נסה JSON גם אם הסיומת לא מוכרת
         _restoreFromJSON(text);
       }
     }catch(err){
@@ -2054,7 +1985,6 @@ function _restoreFromJSON(text){
   var defaultRate=((s.jobs&&s.jobs[0]&&s.jobs[0].rate)||50);
   var restoredDays=0, restoredSettings=false;
 
-  // פורמט 1: מערך [{date,hours,...}, ...]
   if(Array.isArray(p)){
     p.forEach(function(item){
       if(!item||!item.date)return;
@@ -2069,7 +1999,6 @@ function _restoreFromJSON(text){
       restoredDays++;
     });
 
-  // פורמט 2: {workData:{...}, settings:{...}} — ייצוא פנימי
   } else if(p.workData && typeof p.workData==='object'){
     Object.assign(existing, p.workData);
     restoredDays=Object.keys(p.workData).length;
@@ -2081,7 +2010,6 @@ function _restoreFromJSON(text){
       restoredSettings=true;
     }
 
-  // פורמט 3: {workData שטוח} — מפתחות הם תאריכים ישירות
   } else if(typeof p==='object'){
     var keys=Object.keys(p);
     var dateKeys=keys.filter(function(k){return /^\d{4}-\d{2}-\d{2}$/.test(k);});
@@ -2112,7 +2040,6 @@ function _restoreFromCSV(text){
   var lines=text.split(/\r?\n/).filter(function(l){return l.trim();});
   if(lines.length<2){setRestoreStatus('קובץ CSV ריק',true);return;}
 
-  // פרסר שורה — תומך ב-quoted fields
   function parseLine(line){
     var cols=[],cur='',inQ=false;
     for(var i=0;i<line.length;i++){
@@ -2125,7 +2052,6 @@ function _restoreFromCSV(text){
     return cols;
   }
 
-  // קרא כותרות — זהה עמודות לפי שם
   var headers=parseLine(lines[0]).map(function(h){
     return h.replace(/^"|"$/g,'').toLowerCase().trim();
   });
@@ -2143,7 +2069,6 @@ function _restoreFromCSV(text){
   var iRate =findCol('rate','תעריף');
   var iNote =findCol('note','הערה','notes');
 
-  // fallback: אם לא זוהו — עמודה 0=תאריך, 1=שעות
   if(iDate===-1) iDate=0;
   if(iHours===-1) iHours=1;
 
@@ -2180,8 +2105,6 @@ function _restoreFromCSV(text){
   setTimeout(function(){location.reload();},1000);
 }
 
-
-// שחזור מ-Google Drive
 async function restoreFromDrive(){
   if(!aToken){
     alert('חבר תחילה את חשבון Google Drive');
@@ -2197,6 +2120,7 @@ async function restoreFromDrive(){
     setRestoreStatus('שגיאה: '+e.message,true);
   }
 }
+
 function execDel(){if(!confirm('האם אתה בטוח?'))return;const r=document.getElementById('delR').value;if(r==='all'){D.s({});location.reload();return;}let data=D.g();getDts(r,'delS','delE').forEach(d=>delete data[fk(d)]);D.s(data);closeM('mDel');renderCal();updRep();saveDr();vib();}
 
 // ---- MODALS ----
@@ -2225,7 +2149,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   const s=D.gs();
   if(s.theme==='dark')toggleTheme(true);
   if(!s.myUID){s.myUID=Math.random().toString(36).substring(2,10);D.ss(s);}
-  // Apply saved color theme
   const savedColor=D.gs().colorTheme||'blue';
   applyColorTheme(savedColor);
   initClock();renderCal();setSyncDot(false);initGD();renderSettings();checkPairLink();
