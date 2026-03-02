@@ -9,6 +9,10 @@
 <meta name="theme-color" content="#1E3A8A" id="metaTC">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="שעות">
 <meta name="mobile-web-app-capable" content="yes">
 <title>מעקב שעות Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -941,7 +945,7 @@ function renderYear(cont,selectedYear){
   const curY=selectedYear||String(thisYear);
   const yearSel=`<div style="margin-bottom:14px;display:flex;align-items:center;gap:10px">
     <label style="font-size:12px;font-weight:600;color:var(--t2)">שנה:</label>
-    <select onchange="renderYear(document.getElementById('repCont'),this.value)" style="padding:7px 12px;border-radius:8px;border:1px solid var(--bd);background:var(--s);color:var(--t);font-family:'Inter',sans-serif;font-size:13px;font-weight:300;cursor:pointer;flex:1">
+    <select onchange="renderYear(document.getElementById('repContent'),this.value)" style="padding:7px 12px;border-radius:8px;border:1px solid var(--bd);background:var(--s);color:var(--t);font-family:'Inter',sans-serif;font-size:13px;font-weight:300;cursor:pointer;flex:1">
       ${allYears.map(y=>`<option value="${y}" ${y===curY?'selected':''} ${dataYears.has(y)?'':'style="color:var(--t3)"'}>${y}${dataYears.has(y)?' ✓':''}</option>`).join('')}
     </select>
   </div>`;
@@ -987,12 +991,16 @@ function renderYear(cont,selectedYear){
       <div style="text-align:left"><div style="font-size:13px;font-weight:400;color:var(--g)">₪${Math.round(m.p).toLocaleString('he-IL')}</div><div style="font-size:10px;color:var(--t3)">${m.h.toFixed(1)} ש' · ${m.days} ימים</div></div>
     </div>`:'').join('')}
   </div>`;
-  // גרף הכנסות שנתי
+  // גרף הכנסות שנתי — setTimeout מבטיח שה-DOM מוכן
   const bgColors=vals.map((_,i)=>i===bestM?'#10B981':'#2563EB');
-  if(window.yrInCh)window.yrInCh.destroy();
-  window.yrInCh=new Chart(document.getElementById('yrIncomeCh'),{type:'bar',data:{labels:lb,datasets:[{data:vals,backgroundColor:bgColors,borderRadius:6,borderSkipped:false}]},options:{...cOpts(dk),plugins:{legend:{display:false}}}});
-  if(window.yrHrCh)window.yrHrCh.destroy();
-  window.yrHrCh=new Chart(document.getElementById('yrHoursCh'),{type:'bar',data:{labels:lb,datasets:[{data:hvals,backgroundColor:'#3B82F6',borderRadius:4,borderSkipped:false}]},options:{...cOpts(dk),plugins:{legend:{display:false}}}});
+  setTimeout(()=>{
+    if(window.yrInCh){try{window.yrInCh.destroy();}catch(e){}}
+    const c1=document.getElementById('yrIncomeCh');
+    if(c1)window.yrInCh=new Chart(c1,{type:'bar',data:{labels:lb,datasets:[{data:vals,backgroundColor:bgColors,borderRadius:6,borderSkipped:false}]},options:{...cOpts(dk),plugins:{legend:{display:false}}}});
+    if(window.yrHrCh){try{window.yrHrCh.destroy();}catch(e){}}
+    const c2=document.getElementById('yrHoursCh');
+    if(c2)window.yrHrCh=new Chart(c2,{type:'bar',data:{labels:lb,datasets:[{data:hvals,backgroundColor:'#3B82F6',borderRadius:4,borderSkipped:false}]},options:{...cOpts(dk),plugins:{legend:{display:false}}}});
+  },20);
 }
 
 // ---- COUPLE PAGE ----
@@ -1002,13 +1010,25 @@ function renderCouple(){
     cont.innerHTML=`<div class="empty"><div class="empty-ico" style="font-size:0"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="empty-ttl">לא מחוברים לזוג</div><div class="empty-sub">חבר את עצמך לפרטנר כדי לראות הכנסות משותפות ולסנכרן בזמן אמת</div><button class="btn btn-p" style="width:auto;padding:12px 28px;margin:20px auto 0;display:block" onclick="openPair()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> חבר פרטנר</button></div>`;
     return;
   }
-  const myD=D.g(),pd=D.gp(),dates=getDts('month');
-  let myH=0,myP=0,pH=0,pP=0;
-  dates.forEach(d=>{const k=fk(d);if(myD[k]){myH+=myD[k].hours||0;myP+=cp(myD[k].hours,myD[k].rate,myD[k].bonuses).total;}if(pd[k]){pH+=pd[k].hours||0;pP+=cp(pd[k].hours,pd[k].rate||50,pd[k].bonuses).total;}});
-  const tot=myP+pP,myPct=tot>0?Math.round(myP/tot*100):50,pPct=100-myPct;
+  const myD=D.g(),pd=D.gp();
+  // חישוב לפי view נוכחי — יעודכן ע"י renderCoupleStats
   const dk=document.body.getAttribute('data-theme')==='dark';
   cont.innerHTML=`
-  <div class="couple-total"><div class="ct-lbl">💰 הכנסה משותפת החודש</div><div class="ct-val">₪${Math.round(tot).toLocaleString('he-IL')}</div><div class="ct-sub">${myH.toFixed(1)} + ${pH.toFixed(1)} שעות ביחד</div></div>
+  <div id="cplStats">
+    <div class="couple-total"><div class="ct-lbl" id="cplPeriodLbl">הכנסה משותפת החודש</div><div class="ct-val" id="cplTotVal">₪0</div><div class="ct-sub" id="cplHoursLbl">0 + 0 שעות ביחד</div></div>
+    <div class="ucard" id="cplMyCard" style="background:${s.myColor}18;border-color:${s.myColor}">
+      <div class="uc-top"><div class="uc-av" style="background:${s.myColor}">${s.myName.charAt(0)}</div><div><div class="uc-name" style="color:${s.myColor}">${s.myName}</div><div class="uc-h" id="cplMyH">0 שעות</div></div></div>
+      <div class="uc-money" id="cplMyP" style="color:${s.myColor}">₪0</div>
+      <div class="pbar-wrap" style="margin-top:10px"><div class="pbar-fill" id="cplMyBar" style="width:50%;background:${s.myColor}"></div></div>
+      <div style="font-size:11px;color:var(--t3);margin-top:4px" id="cplMyPct">50% מסה"כ</div>
+    </div>
+    <div class="ucard" id="cplPCard" style="background:${s.partnerColor}18;border-color:${s.partnerColor}">
+      <div class="uc-top"><div class="uc-av" style="background:${s.partnerColor}">${s.partnerName.charAt(0)}</div><div><div class="uc-name" style="color:${s.partnerColor}">${s.partnerName}</div><div class="uc-h" id="cplPH">0 שעות</div></div></div>
+      <div class="uc-money" id="cplPP" style="color:${s.partnerColor}">₪0</div>
+      <div class="pbar-wrap" style="margin-top:10px"><div class="pbar-fill" id="cplPBar" style="width:50%;background:${s.partnerColor}"></div></div>
+      <div style="font-size:11px;color:var(--t3);margin-top:4px" id="cplPPct">50% מסה"כ</div>
+    </div>
+  </div>
   <div class="ucard" style="background:${s.myColor}18;border-color:${s.myColor}">
     <div class="uc-top"><div class="uc-av" style="background:${s.myColor}">${s.myName.charAt(0)}</div><div><div class="uc-name" style="color:${s.myColor}">${s.myName}</div><div class="uc-h">${myH.toFixed(1)} שעות</div></div></div>
     <div class="uc-money" style="color:${s.myColor}">₪${Math.round(myP).toLocaleString('he-IL')}</div>
@@ -1047,6 +1067,75 @@ function renderCouple(){
     <button class="btn btn-o" onclick="openPair()" style="font-size:12px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> הגדרות זוג</button>
   </div>`;
   renderCoupleChart();
+  renderCoupleStats();
+}
+
+function getCplPeriodData(){
+  // מחזיר {myH,myP,pH,pP,labels,myVals,pVals,periodLabel}
+  const s=D.gs();
+  const sel=document.getElementById('cplViewSel');
+  const view=sel?sel.value:'month';
+  const mSel=document.getElementById('cplMonthSel');
+  const ySel=document.getElementById('cplYearSel');
+  const myD=D.g(),pd=D.gp(),now=new Date();
+  let myH=0,myP=0,pH=0,pP=0;
+  let labels=[],myVals=[],pVals=[],periodLabel='';
+  if(view==='month'||view==='custom_month'){
+    const m=view==='custom_month'&&mSel?parseInt(mSel.value):now.getMonth();
+    const y=now.getFullYear();
+    periodLabel='הכנסה משותפת — '+MN[m]+' '+y;
+    const days=new Date(y,m+1,0).getDate();
+    const weeks=[{l:'ש1',my:0,p:0,mH:0,pH2:0},{l:'ש2',my:0,p:0,mH:0,pH2:0},
+                 {l:'ש3',my:0,p:0,mH:0,pH2:0},{l:'ש4',my:0,p:0,mH:0,pH2:0}];
+    for(let d=1;d<=days;d++){
+      const k=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+      const wi=Math.min(Math.floor((d-1)/7),3);
+      if(myD[k]){const v=cp(myD[k].hours,myD[k].rate,myD[k].bonuses).total;weeks[wi].my+=v;myP+=v;myH+=myD[k].hours||0;weeks[wi].mH+=myD[k].hours||0;}
+      if(pd[k]){const v=cp(pd[k].hours,pd[k].rate||50,pd[k].bonuses).total;weeks[wi].p+=v;pP+=v;pH+=pd[k].hours||0;weeks[wi].pH2+=pd[k].hours||0;}
+    }
+    labels=weeks.map(w=>w.l);myVals=weeks.map(w=>Math.round(w.my));pVals=weeks.map(w=>Math.round(w.p));
+  } else {
+    const y=view==='year'?now.getFullYear():(ySel?parseInt(ySel.value):now.getFullYear());
+    periodLabel='הכנסה משותפת — '+y;
+    labels=MN.map(n=>n.substring(0,3));
+    myVals=Array(12).fill(0);pVals=Array(12).fill(0);
+    Object.keys(myD).forEach(k=>{
+      if(!k.startsWith(String(y)))return;
+      const d=myD[k],mi=parseInt(k.split('-')[1])-1;
+      if(mi<0||mi>11)return;
+      const v=cp(d.hours,d.rate,d.bonuses).total;
+      myVals[mi]+=v;myP+=v;myH+=d.hours||0;
+    });
+    Object.keys(pd).forEach(k=>{
+      if(!k.startsWith(String(y)))return;
+      const d=pd[k],mi=parseInt(k.split('-')[1])-1;
+      if(mi<0||mi>11)return;
+      const v=cp(d.hours,d.rate||50,d.bonuses).total;
+      pVals[mi]+=v;pP+=v;pH+=d.hours||0;
+    });
+    myVals=myVals.map(v=>Math.round(v));pVals=pVals.map(v=>Math.round(v));
+  }
+  return {myH,myP,pH,pP,labels,myVals,pVals,periodLabel};
+}
+
+function renderCoupleStats(){
+  const s=D.gs();
+  const {myH,myP,pH,pP,periodLabel}=getCplPeriodData();
+  const tot=myP+pP;
+  const myPct=tot>0?Math.round(myP/tot*100):50;
+  const pPct=100-myPct;
+  const el=id=>document.getElementById(id);
+  if(el('cplPeriodLbl'))el('cplPeriodLbl').textContent=periodLabel;
+  if(el('cplTotVal'))el('cplTotVal').textContent='₪'+Math.round(tot).toLocaleString('he-IL');
+  if(el('cplHoursLbl'))el('cplHoursLbl').textContent=myH.toFixed(1)+' + '+pH.toFixed(1)+' שעות ביחד';
+  if(el('cplMyH'))el('cplMyH').textContent=myH.toFixed(1)+' שעות';
+  if(el('cplMyP'))el('cplMyP').textContent='₪'+Math.round(myP).toLocaleString('he-IL');
+  if(el('cplMyBar'))el('cplMyBar').style.width=myPct+'%';
+  if(el('cplMyPct'))el('cplMyPct').textContent=myPct+'% מסה"כ';
+  if(el('cplPH'))el('cplPH').textContent=pH.toFixed(1)+' שעות';
+  if(el('cplPP'))el('cplPP').textContent='₪'+Math.round(pP).toLocaleString('he-IL');
+  if(el('cplPBar'))el('cplPBar').style.width=pPct+'%';
+  if(el('cplPPct'))el('cplPPct').textContent=pPct+'% מסה"כ';
 }
 
 function renderCoupleChart(){
@@ -1058,37 +1147,10 @@ function renderCoupleChart(){
   const ySel=document.getElementById('cplYearSel');
   if(mSel)mSel.style.display=view==='custom_month'?'block':'none';
   if(ySel)ySel.style.display=view==='custom_year'?'block':'none';
-  const myD=D.g(),pd=D.gp(),now=new Date();
+  // עדכן כרטיסי נתונים למעלה
+  renderCoupleStats();
+  const {labels,myVals,pVals}=getCplPeriodData();
   const dk=document.body.getAttribute('data-theme')==='dark';
-  let labels=[],myVals=[],pVals=[];
-  if(view==='month'||view==='custom_month'){
-    const m=view==='custom_month'&&mSel?parseInt(mSel.value):now.getMonth();
-    const y=now.getFullYear();
-    const days=new Date(y,m+1,0).getDate();
-    const weeks=[{l:'ש1',my:0,p:0},{l:'ש2',my:0,p:0},{l:'ש3',my:0,p:0},{l:'ש4',my:0,p:0}];
-    for(let d=1;d<=days;d++){
-      const k=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-      const wi=Math.min(Math.floor((d-1)/7),3);
-      if(myD[k])weeks[wi].my+=cp(myD[k].hours,myD[k].rate,myD[k].bonuses).total;
-      if(pd[k])weeks[wi].p+=cp(pd[k].hours,pd[k].rate||50,pd[k].bonuses).total;
-    }
-    labels=weeks.map(w=>w.l);myVals=weeks.map(w=>Math.round(w.my));pVals=weeks.map(w=>Math.round(w.p));
-  } else {
-    const y=(view==='year'?now.getFullYear():(ySel?parseInt(ySel.value):now.getFullYear()));
-    labels=MN.map(n=>n.substring(0,3));
-    myVals=Array(12).fill(0);pVals=Array(12).fill(0);
-    Object.keys(myD).forEach(k=>{
-      if(!k.startsWith(String(y)))return;
-      const mi=parseInt(k.split('-')[1])-1;
-      if(mi>=0&&mi<12)myVals[mi]+=cp(myD[k].hours,myD[k].rate,myD[k].bonuses).total;
-    });
-    Object.keys(pd).forEach(k=>{
-      if(!k.startsWith(String(y)))return;
-      const mi=parseInt(k.split('-')[1])-1;
-      if(mi>=0&&mi<12)pVals[mi]+=cp(pd[k].hours,pd[k].rate||50,pd[k].bonuses).total;
-    });
-    myVals=myVals.map(v=>Math.round(v));pVals=pVals.map(v=>Math.round(v));
-  }
   if(cplCh)cplCh.destroy();
   const canvas=document.getElementById('cplCh');if(!canvas)return;
   cplCh=new Chart(canvas,{type:'bar',data:{labels,datasets:[
@@ -1224,7 +1286,21 @@ function renderJobsCont(){
 function addJob(){const s=D.gs();if((s.jobs||[]).length>=3)return;s.jobs.push({name:`עבודה ${(s.jobs||[]).length+1}`,color:JC[(s.jobs||[]).length%JC.length],rate:50,fixed:0});D.ss(s);renderJobsCont();vib();}
 function delJob(i){const s=D.gs();s.jobs.splice(i,1);D.ss(s);renderJobsCont();}
 function updJ(i,f,v){const s=D.gs();s.jobs[i][f]=f==='name'?v:(parseFloat(v)||0);D.ss(s);}
-function updJC(i,c,el){el.closest('.crow').querySelectorAll('.cdot').forEach(d=>d.classList.remove('sel'));el.classList.add('sel');updJ(i,'color',c);renderJobsCont();}
+function updJC(i,col,el){
+  // עדכן badge במיידי ללא רנדר מחדש (שלא נאבד focus)
+  el.closest('.crow').querySelectorAll('.cdot').forEach(d=>d.classList.remove('sel'));
+  el.classList.add('sel');
+  const s=D.gs();
+  if(s.jobs&&s.jobs[i]){
+    s.jobs[i].color=col;
+    D.ss(s);
+    // עדכן badge
+    const card=el.closest('.jcard');
+    if(card){const badge=card.querySelector('.jcbadge');if(badge)badge.style.background=col;}
+    // עדכן border
+    if(card)card.style.borderRightColor=col;
+  }
+}
 
 // ---- CLOCK ----
 function initClock(){
@@ -1511,7 +1587,12 @@ async function manualSync(){
 }
 function disconnDrive(){if(confirm('לנתק?')){aToken=null;localStorage.removeItem('syen');localStorage.removeItem('gtoken');renderSettings();setSyncDot(false);}}
 function setSyncDot(on){const d=document.getElementById('sdot');if(d)d.className='sdot'+(on?'':' off');}
-window.addEventListener('online',()=>{if(aToken)saveDr();});
+window.addEventListener('online',()=>{
+  // חזרנו לאינטרנט — סנכרן בשקט
+  const s=D.gs();
+  if(s.pairCode&&s.myCode) syncPairToFirebase();
+  if(aToken) driveUpsert('moneytime_solo.json', JSON.stringify({workData:D.g(),settings:s,timestamp:Date.now()}), false).catch(()=>{});
+});
 // גיבוי אוטומטי כשסוגרים/מחליפים טאב
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&aToken)saveDr();});
 window.addEventListener('beforeunload',()=>{if(aToken)saveDr();});
@@ -1600,7 +1681,14 @@ function _buildPDF(){
       +'<table><thead><tr>'+headers+'</tr></thead><tbody>'+rows+'</tbody></table>'
       +'<div class="summary">'+summary+'</div>'
       +'<button class="print-btn" onclick="window.print()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6,9 6,2 18,2 18,9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> הדפס / שמור PDF</button>'
-      +'<p style="text-align:center;font-size:10px;color:#94A3B8;padding:8px">tzur669@gmail.com</p></body></html>';
+      +'<p style="text-align:center;font-size:10px;color:#94A3B8;padding:8px">tzur669@gmail.com</p>
+<script>
+// Service Worker לoffline support
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body></html>';
 
     // תמיד הצג בתוך האפליקציה (window.open נחסם ב-APK)
     closeM('mPDF');
@@ -1819,7 +1907,14 @@ function _showTableReport(detailed){
     +'</style></head><body>'
     +'<table><thead><tr>'+headerCols+'</tr></thead><tbody>'+rows+'</tbody></table>'
     +'<div class="summary">\u05e1\u05d4"\u05db: '+totalH.toFixed(1)+' \u05e9\u05e2\u05d5\u05ea | \u20aa'+Math.round(totalP).toLocaleString('he-IL')+'</div>'
-    +'<p style="text-align:center;font-size:10px;color:#94A3B8;padding:8px">tzur669@gmail.com</p></body></html>';
+    +'<p style="text-align:center;font-size:10px;color:#94A3B8;padding:8px">tzur669@gmail.com</p>
+<script>
+// Service Worker לoffline support
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body></html>';
 
   // סגור overlay קיים
   var existing=document.getElementById('reportOverlay');
@@ -2125,5 +2220,12 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 </script>
 <div class="page-footer">tzur669@gmail.com</div>
+
+<script>
+// Service Worker לoffline support
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
 </body>
 </html>
