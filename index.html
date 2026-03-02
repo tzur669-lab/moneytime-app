@@ -1354,30 +1354,32 @@ function checkPairLink(){
     history.replaceState(null,'',location.pathname);
     const s=D.gs();
     const pc=partnerCode.toUpperCase();
+
+    // כבר מחובר לאותו פרטנר — פשוט נווט לביחד
     if(s.pairCode&&s.partnerCode===pc){
       setTimeout(function(){_navToCouple();renderCouple();},400);
       return;
     }
-    if(!s.myCode){s.myCode=genCode();}
-    const myCode=s.myCode;
-    s.pairCode=calcPairCode(myCode,pc);
-    s.partnerCode=pc;
-    s.myUID=myCode;
-    D.ss(s);
-    showToast('מחבר לפרטנר...');
+
     // הסתר באנר אם קיים
     const pb=document.getElementById('pairBanner');if(pb)pb.style.display='none';
-    syncPairToFirebase().then(function(){
-      return loadPartnerFromFirebase();
-    }).then(function(got){
-      showToast(got?'חובר! נטענו נתוני הפרטנר':'חובר! ממתין לפרטנר...');
-      renderSettings();
-      setTimeout(function(){_navToCouple();renderCouple();},200);
-    }).catch(function(){
-      showToast('חובר לפרטנר');
-      renderSettings();
-      setTimeout(function(){_navToCouple();renderCouple();},200);
-    });
+
+    // פתח את מודאל החיבור עם הקוד כבר מוכן — המשתמש יראה ויאשר
+    setTimeout(function(){
+      const ss=D.gs();
+      if(!ss.myCode){ss.myCode=genCode();D.ss(ss);}
+      openPair();
+      setTimeout(function(){
+        const pCodeEl=document.getElementById('pCode');
+        if(pCodeEl){
+          pCodeEl.value=pc;
+          pCodeEl.style.background='rgba(16,185,129,0.12)';
+          pCodeEl.style.borderColor='var(--g)';
+        }
+        showToast('קוד הפרטנר מולא — הזן שמך ולחץ התחבר');
+      },300);
+    },500);
+
   }catch(e){console.error('checkPairLink',e);}
 }
 
