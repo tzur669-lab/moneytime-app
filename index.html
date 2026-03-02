@@ -17,6 +17,15 @@
 <title>מעקב שעות Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- שמירת pair param מוקדמת — לפני כל דבר, כדי שלא יאבד ב-Safari PWA -->
+<script>
+(function(){
+  try{
+    var p=new URLSearchParams(window.location.search).get('pair');
+    if(p) sessionStorage.setItem('pendingPair', p.toUpperCase());
+  }catch(e){}
+})();
+</script>
 <!-- Capacitor plugins — זמינים רק ב-APK, מוסתרים בדפדפן -->
 <script>
 // Capacitor plugin wrappers — עובדים ב-APK, fallback בדפדפן
@@ -375,6 +384,16 @@ input[type=time].fi{text-align:center}
     <button class="btn-clk" id="clkBtn" onclick="handleClock()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5,3 19,12 5,21"/></svg> התחל</button>
   </div>
   <div id="missBanner"></div>
+  <!-- באנר חיבור פרטנר — מוצג רק כשלא מחוברים ורק בדפדפן (לא APK) -->
+  <div id="pairBanner" style="display:none;background:linear-gradient(135deg,var(--b8),var(--b6));border-radius:var(--r1);padding:14px 16px;margin-bottom:12px;color:#fff;align-items:center;gap:12px">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:400;margin-bottom:2px">חבר פרטנר</div>
+      <div style="font-size:11px;opacity:.75">ראה הכנסות משולבות ועבוד ביחד</div>
+    </div>
+    <button onclick="openPair();document.getElementById('pairBanner').style.display='none'" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:8px 14px;border-radius:8px;font-family:'Inter',sans-serif;font-size:11px;font-weight:300;cursor:pointer;white-space:nowrap">חבר עכשיו</button>
+    <button onclick="document.getElementById('pairBanner').style.display='none';localStorage.setItem('pairBannerDismissed','1')" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:18px;cursor:pointer;padding:0 0 0 4px;line-height:1">×</button>
+  </div>
   <div class="qa">
     <button class="qab" onclick="openMulti('hours')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>שעות בתקופה</button>
     <button class="qab" onclick="openMulti('profit')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>רווח בתקופה</button>
@@ -746,6 +765,13 @@ function renderCal(){
   if(miss>0&&D.gs().showMissing){mb.innerHTML=`<div class="miss-banner"><span style="display:flex;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><div class="miss-banner-txt"><strong>${miss} ימים ללא רישום</strong>לחץ על יום מסומן לתיקון</div></div>`;}
   else{mb.innerHTML='';}
   updHdrSub();
+  // הצג באנר חיבור פרטנר אם לא מחוברים ולא נדחה
+  const pb=document.getElementById('pairBanner');
+  if(pb){
+    const sNow=D.gs();
+    const dismissed=localStorage.getItem('pairBannerDismissed');
+    pb.style.display=(!sNow.pairCode && !dismissed)?'flex':'none';
+  }
 }
 function navMonth(d){vib();curDt.setMonth(curDt.getMonth()+d);renderCal();}
 function goToday(){vib();curDt=new Date();renderCal();}
@@ -1321,8 +1347,10 @@ function handleClock(){
 function checkPairLink(){
   try{
     const params=new URLSearchParams(window.location.search);
-    const partnerCode=params.get('pair');
+    // קרא מ-URL או מ-sessionStorage (Safari PWA מאבד query params)
+    const partnerCode=params.get('pair') || sessionStorage.getItem('pendingPair');
     if(!partnerCode)return;
+    sessionStorage.removeItem('pendingPair');
     history.replaceState(null,'',location.pathname);
     const s=D.gs();
     const pc=partnerCode.toUpperCase();
@@ -1337,6 +1365,8 @@ function checkPairLink(){
     s.myUID=myCode;
     D.ss(s);
     showToast('מחבר לפרטנר...');
+    // הסתר באנר אם קיים
+    const pb=document.getElementById('pairBanner');if(pb)pb.style.display='none';
     syncPairToFirebase().then(function(){
       return loadPartnerFromFirebase();
     }).then(function(got){
