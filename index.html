@@ -1681,14 +1681,7 @@ function _buildPDF(){
       +'<table><thead><tr>'+headers+'</tr></thead><tbody>'+rows+'</tbody></table>'
       +'<div class="summary">'+summary+'</div>'
       +'<button class="print-btn" onclick="window.print()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6,9 6,2 18,2 18,9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> הדפס / שמור PDF</button>'
-      +'<p style="text-align:center;font-size:10px;color:#94A3B8;padding:8px">tzur669@gmail.com</p>
-<script>
-// Service Worker לoffline support
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
-}
-</script>
-</body></html>';
+      +'<p style="text-align:center;font-size:10px;color:#94A3B8;padding:8px">tzur669@gmail.com</p></body></html>';
 
     // תמיד הצג בתוך האפליקציה (window.open נחסם ב-APK)
     closeM('mPDF');
@@ -1907,14 +1900,7 @@ function _showTableReport(detailed){
     +'</style></head><body>'
     +'<table><thead><tr>'+headerCols+'</tr></thead><tbody>'+rows+'</tbody></table>'
     +'<div class="summary">\u05e1\u05d4"\u05db: '+totalH.toFixed(1)+' \u05e9\u05e2\u05d5\u05ea | \u20aa'+Math.round(totalP).toLocaleString('he-IL')+'</div>'
-    +'<p style="text-align:center;font-size:10px;color:#94A3B8;padding:8px">tzur669@gmail.com</p>
-<script>
-// Service Worker לoffline support
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
-}
-</script>
-</body></html>';
+    +'<p style="text-align:center;font-size:10px;color:#94A3B8;padding:8px">tzur669@gmail.com</p></body></html>';
 
   // סגור overlay קיים
   var existing=document.getElementById('reportOverlay');
