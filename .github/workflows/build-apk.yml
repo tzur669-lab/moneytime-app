@@ -44,18 +44,14 @@ jobs:
       - name: Patch AndroidManifest
         run: |
           MANIFEST="android/app/src/main/AndroidManifest.xml"
-          
-          # cleartext traffic
-          sed -i 's/android:usesCleartextTraffic="false"/android:usesCleartextTraffic="true"/' $MANIFEST || true
-          
-          # הרשאות קבצים
-          sed -i 's|</manifest>|<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29"/><uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/></manifest>|' $MANIFEST || true
-          
-          # deep link intent-filter — חייב להיות בתוך <activity>
-          # מוסיף לפני </activity> הראשון
+
+          # הכל HTTPS — אין צורך ב-cleartext
+          sed -i 's/android:usesCleartextTraffic="true"/android:usesCleartextTraffic="false"/' $MANIFEST || true
+
+          # deep link בלבד — ללא WRITE_EXTERNAL_STORAGE
           sed -i 's|</activity>|<intent-filter><action android:name="android.intent.action.VIEW"/><category android:name="android.intent.category.DEFAULT"/><category android:name="android.intent.category.BROWSABLE"/><data android:scheme="com.tzur669.moneytime" android:host="oauth"/></intent-filter></activity>|' $MANIFEST || true
-          
-          echo "=== AndroidManifest after patch ==="
+
+          echo "=== AndroidManifest ==="
           cat $MANIFEST
 
       - name: Patch Android resources
@@ -73,17 +69,31 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
-      - name: Build Debug APK
+      - name: Build Release APK
         run: |
           cd android
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          ./gradlew assembleRelease --no-daemon
         env:
           GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
 
-      - name: Copy APK
+      - name: Sign APK
         run: |
-          find android -name "*.apk" -type f
-          cp android/app/build/outputs/apk/debug/app-debug.apk moneytime-pro.apk
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > keystore.jks
+
+          $JAVA_HOME/bin/jarsigner \
+            -verbose \
+            -sigalg SHA256withRSA \
+            -digestalg SHA-256 \
+            -keystore keystore.jks \
+            -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
+            -keypass "${{ secrets.KEY_PASSWORD }}" \
+            android/app/build/outputs/apk/release/app-release-unsigned.apk \
+            "${{ secrets.KEY_ALIAS }}"
+
+          $ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | tail -1)/zipalign \
+            -v 4 \
+            android/app/build/outputs/apk/release/app-release-unsigned.apk \
+            moneytime-pro.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
