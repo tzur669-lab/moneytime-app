@@ -80,23 +80,36 @@ async function fbRead(path){
 async function syncPairToFirebase(){
   const s=D.gs();
   if(!s.pairCode||!s.myCode)return;
+  // השתמש ב-googleId אם קיים, אחרת myCode
+  const myKey=(s.googleId||s.myCode).replace(/[.#$\[\]]/g,'_');
   const payload={
     workData:D.g(),
     myName:s.myName,
     myColor:s.myColor,
-    timestamp:Date.now(),
-    pairInfo:{myCode:s.myCode,pairCode:s.pairCode,partnerCode:s.partnerCode,myName:s.myName,myColor:s.myColor}
+    myCode:s.myCode,
+    partnerCode:s.partnerCode,
+    timestamp:Date.now()
   };
-  await fbWrite(`pairs/${s.pairCode}/${s.myCode}`,payload);
+  await fbWrite(`pairs/${s.pairCode}/${myKey}`,payload);
 }
 
 async function loadPartnerFromFirebase(){
   const s=D.gs();
   if(!s.pairCode||!s.partnerCode)return false;
-  const data=await fbRead(`pairs/${s.pairCode}/${s.partnerCode}`);
+  // קרא את כל הרשומות תחת pairCode ומצא את הפרטנר לפי myCode שלו
+  const allEntries=await fbRead(`pairs/${s.pairCode}`);
+  if(!allEntries)return false;
+  // חפש רשומה שה-myCode שלה = partnerCode שלי
+  let data=null;
+  for(const key of Object.keys(allEntries)){
+    const entry=allEntries[key];
+    if(entry&&entry.myCode===s.partnerCode){
+      data=entry;
+      break;
+    }
+  }
   if(data&&data.workData){
     D.sp(data.workData);
-    // עדכן שם/צבע פרטנר אם קיים
     if(data.myName){
       const ss=D.gs();
       if(!ss.partnerName||ss.partnerName==='פרטנר')ss.partnerName=data.myName;
@@ -105,7 +118,7 @@ async function loadPartnerFromFirebase(){
     }
     return true;
   }
-  return false;
+  return false; // פרטנר עוד לא סנכרן
 }
 function calcPairCode(a,b){
   const arr=[a.toUpperCase(),b.toUpperCase()].sort();
@@ -113,6 +126,20 @@ function calcPairCode(a,b){
 }
 
 // שחזור חיבור זוג ממכשיר חדש — מחפש ב-Firebase לפי myCode
+// בדיקה אם פרטנר כבר חיבר מהצד שלו
+async function checkPartnerConnected(){
+  try{
+    const s=D.gs();
+    if(!s.pairCode||!s.partnerCode)return false;
+    const allEntries=await fbRead(`pairs/${s.pairCode}`);
+    if(!allEntries)return false;
+    for(const key of Object.keys(allEntries)){
+      if(allEntries[key]&&allEntries[key].myCode===s.partnerCode)return true;
+    }
+    return false;
+  }catch(e){return false;}
+}
+
 async function restorePairFromCloud(){
   try{
     const s=D.gs();
@@ -1155,7 +1182,32 @@ function renderCouple(){
         '</div>';
     }
     return;
-  }  const myD=D.g(),pd=D.gp();
+  }
+  // יש pairCode — בדוק אם פרטנר כבר חיבר
+  const myD=D.g(),pd=D.gp();
+  const partnerHasData=Object.keys(pd).length>0;
+  if(!partnerHasData){
+    // בדוק ב-Firebase
+    checkPartnerConnected().then(function(connected){
+      if(connected){
+        // פרטנר חיבר — טען נתונים
+        loadPartnerFromFirebase().then(function(got){
+          if(got){renderCouple();showToast('הפרטנר התחבר! נטענו הנתונים ✅');}
+        });
+      } else {
+        // פרטנר עוד לא חיבר — הצג הודעת המתנה
+        const cont2=document.getElementById('coupleContent');
+        if(cont2&&cont2.querySelector('.waiting-partner'))return;
+        const waitDiv=document.createElement('div');
+        waitDiv.className='waiting-partner';
+        waitDiv.style.cssText='background:var(--s);border:1px solid var(--bd);border-radius:14px;padding:20px;text-align:center;margin-bottom:12px';
+        waitDiv.innerHTML='<div style="font-size:28px;margin-bottom:8px">⏳</div>'
+          +'<div style="font-size:15px;font-weight:500;color:var(--t);margin-bottom:6px">ממתינים לפרטנר</div>'
+          +'<div style="font-size:12px;color:var(--t3)">שלח לפרטנר את הקישור שלך כדי שיתחבר מהצד שלו</div>';
+        if(cont2)cont2.insertBefore(waitDiv,cont2.firstChild);
+      }
+    });
+  }
   const dk=document.body.getAttribute('data-theme')==='dark';
   cont.innerHTML=`
   <div id="cplStats">
