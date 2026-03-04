@@ -578,9 +578,9 @@ input[type=time].fi{text-align:center}
 
   <div class="set-sec-ttl">יצירת קשר</div>
   <div class="card" style="padding:14px;text-align:center">
-    <a href="/cdn-cgi/l/email-protection#295d535c5b1f1f10694e44484045074a4644" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
+    <a href="mailto:tzur669@gmail.com" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
-      <span class="__cf_email__" data-cfemail="fd8987888fcbcbc4bd9a909c9491d39e9290">[email&#160;protected]</span>
+      tzur669@gmail.com
     </a>
     <div style="font-size:11px;color:var(--t3);margin-top:6px">לתמיכה, שאלות ומשוב</div>
   </div>
@@ -781,7 +781,7 @@ input[type=time].fi{text-align:center}
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 // ---- CONSTANTS ----
 const JC=['#1E3A8A','#2563EB','#10B981','#F59E0B','#EF4444','#8B5CF6'];
 const MN=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
@@ -1349,14 +1349,12 @@ function openPair(){
   const s=D.gs(),cont=document.getElementById('pairCont');
   if(!s.myCode){const ss=D.gs();ss.myCode=genCode();D.ss(ss);}
   const myCode=D.gs().myCode;
-  const myEffCode=s.googleId?s.googleId.replace(/[.#$\[\]]/g,'_'):myCode;
 
   if(s.pairCode){
     cont.innerHTML=`
-    <div class="pair-box"><div class="pair-lbl">הקוד שלי (קבוע)</div><div class="pair-val">${myEffCode}</div>
+    <div class="pair-box"><div class="pair-lbl">הקוד שלי (קבוע)</div><div class="pair-val">${myCode}</div>
     <div class="pair-acts">
-      <button class="pair-btn" onclick="navigator.clipboard?.writeText('${myEffCode}').then(()=>showToast('הועתק!'))"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> העתק</button>
-      <button class="pair-btn" onclick="navigator.share&&navigator.share({text:'קוד זוג: ${myEffCode}'})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> שתף</button>
+      <button class="pair-btn" onclick="navigator.clipboard?.writeText('${myCode}').then(()=>showToast('הועתק!'))"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> העתק</button>
     </div></div>
     <div id="qrB" style="display:flex;justify-content:center;padding:10px 0"></div>
     <div class="fg"><label class="fl">השם שלי</label><input type="text" class="fi" id="myNm" value="${s.myName}"></div>
@@ -1367,29 +1365,33 @@ function openPair(){
     <button class="btn btn-d" onclick="unpair()" style="margin-top:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> נתק מהזוג</button>`;
     setTimeout(()=>{try{new QRCode(document.getElementById('qrB'),{text:myCode,width:130,height:130,colorDark:'#1E3A8A',colorLight:'#fff'});}catch(e){}},100);
   } else {
-    const pairLink='https://tzur669-lab.github.io/moneytime-app/?pair='+myEffCode;
+    const pairLink='https://tzur669-lab.github.io/moneytime-app/?pair='+myCode;
     cont.innerHTML=`
-    <p style="font-size:13px;color:var(--t2);margin-bottom:14px;line-height:1.6">שלח לפרטנר את <strong>הקישור</strong> — הוא יחבר אתכם אוטומטית. או שלח את <strong>הקוד</strong> שלך והפרטנר יזין אותו ידנית.</p>
+    <p style="font-size:13px;color:var(--t2);margin-bottom:14px;line-height:1.6">העתק את <strong>הקוד</strong> שלך ושלח לפרטנר — הפרטנר יזין אותו ויתחברו.</p>
     <div class="pair-box">
       <div class="pair-lbl">הקוד שלי (קבוע)</div>
-      <div class="pair-val" style="font-size:26px;letter-spacing:6px">${myEffCode}</div>
+      <div class="pair-val" style="font-size:26px;letter-spacing:6px">${myCode}</div>
       <div class="pair-acts">
-        <button class="pair-btn" onclick="navigator.clipboard?.writeText('${myEffCode}').then(()=>showToast('הועתק!'))"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> קוד</button>
-        <button class="pair-btn" onclick="navigator.clipboard?.writeText('${pairLink}').then(()=>showToast('קישור הועתק!'))"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> קישור</button>
-        <button class="pair-btn" onclick="navigator.share&&navigator.share({title:'הצטרף לזוג שלי',text:'לחץ כדי להתחבר אליי:',url:'${pairLink}'})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> שתף</button>
+        <button class="pair-btn" onclick="navigator.clipboard?.writeText('${myCode}').then(()=>showToast('הועתק!'))"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> קוד</button>
+        
+        
       </div>
     </div>
-    <div id="qrB2" style="display:flex;justify-content:center;padding:8px 0"></div>
     <div class="div"></div>
     <div class="fg"><label class="fl">הזן קוד של הפרטנר (אם הפרטנר שלח לך קוד)</label><input type="text" class="fi" id="pCode" placeholder="קוד 6 ספרות" maxlength="6" style="text-align:center;font-size:20px;letter-spacing:8px;font-weight:200;text-transform:uppercase"></div>
     <div class="fg"><label class="fl">השם שלי</label><input type="text" class="fi" id="myNmN" placeholder="השם שלך" value="${s.myName}"></div>
     <div class="fg"><label class="fl">שם הפרטנר</label><input type="text" class="fi" id="pNmN" placeholder="שם הפרטנר" value="${s.partnerName}"></div>
     <button class="btn btn-p" onclick="connPair()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> התחבר עכשיו</button>`;
-    setTimeout(()=>{try{new QRCode(document.getElementById('qrB2'),{text:pairLink,width:120,height:120,colorDark:'#1E3A8A',colorLight:'#fff'});}catch(e){}},100);
+    
   }
   openM('mPair');
 }
-function genCode(){return Math.random().toString(36).substring(2,8).toUpperCase();}
+function genCode(){
+  var chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  var code='';
+  for(var i=0;i<6;i++)code+=chars[Math.floor(Math.random()*chars.length)];
+  return code;
+}
 function connPair(){
   const pcEl=document.getElementById('pCode');
   const pc=(pcEl?pcEl.value:'').trim().toUpperCase();
@@ -2263,7 +2265,7 @@ function _showTableReport(detailed,filterDates,xlsxOpts){
   var d=D.g(), s=D.gs(), jobs=s.jobs||[], pd=D.gp();
   var dayNames=['\u05e8\u05d0\u05e9\u05d5\u05df','\u05e9\u05e0\u05d9','\u05e9\u05dc\u05d9\u05e9\u05d9','\u05e8\u05d1\u05d9\u05e2\u05d9','\u05d7\u05de\u05d9\u05e9\u05d9','\u05e9\u05d9\u05e9\u05d9','\u05e9\u05d1\u05ea'];
   var today=new Date().toLocaleDateString('he-IL');
-  var totalH=0, totalP=0, totalPartner=0;
+  var totalH=0, totalP=0, totalBase=0, totalPartner=0;
   var rows='';
   var allKeys=Object.keys(d).sort();
   var activeSet=filterDates?new Set(filterDates.map(function(dt){return fk(dt);})):null;
@@ -2277,7 +2279,7 @@ function _showTableReport(detailed,filterDates,xlsxOpts){
     var dt=new Date(k);
     var jobName=((jobs[r.jobIdx||0])||{}).name||'\u05e8\u05d0\u05e9\u05d9';
     var bon=(r.bonuses||[]).reduce(function(s,b){return s+(parseFloat(b.amount)||0);},0);
-    totalH+=r.hours; totalP+=pr.total;
+    totalH+=r.hours; totalBase+=pr.base; totalP+=pr.total;
     rows+='<tr>';
     // תאריך — מודגש בשישי/שבת
     var dayIdx=dt.getDay();
@@ -2291,12 +2293,10 @@ function _showTableReport(detailed,filterDates,xlsxOpts){
       rows+='<td style="color:#F59E0B;font-weight:500">'+(pr.ot1||0).toFixed(1)+'</td>';
       rows+='<td style="color:#EF4444;font-weight:500">'+(pr.ot2||0).toFixed(1)+'</td>';
     }
-    // סה"כ — מודגש בירוק
+    // רווח עבודה / בונוס / סה"כ
+    rows+='<td style="font-weight:600;color:#1E3A8A;font-size:13px">\u20aa'+Math.round(pr.base).toLocaleString('he-IL')+'</td>';
+    rows+='<td style="color:#D97706;font-weight:500">'+(bon>0?'\u20aa'+bon.toFixed(0):'-')+'</td>';
     rows+='<td style="font-weight:700;color:#166534;font-size:13px">\u20aa'+Math.round(pr.total).toLocaleString('he-IL')+'</td>';
-    if(detailed&&ox.bonus){
-      if(bon>0) rows+='<td style="color:#D97706;font-weight:500">\u20aa'+bon.toFixed(0)+'</td>';
-      else rows+='<td style="color:#94A3B8">-</td>';
-    }
     if(detailed&&ox.note) rows+='<td style="color:#64748B">'+(r.note||'')+'</td>';
     if(detailed&&ox.job)  rows+='<td style="color:#475569">'+jobName+'</td>';
     if(detailed&&ox.partner){
@@ -2310,8 +2310,9 @@ function _showTableReport(detailed,filterDates,xlsxOpts){
   var headerCols='<th>\u05ea\u05d0\u05e8\u05d9\u05da</th><th>\u05d9\u05d5\u05dd</th><th>\u05e9\u05e2\u05d5\u05ea</th>';
   if(detailed&&ox.rate)  headerCols+='<th>\u05ea\u05e2\u05e8\u05d9\u05e3</th>';
   if(detailed&&ox.ot)    headerCols+='<th>\u05e8\u05d2\u05d9\u05dc\u05d5\u05ea</th><th>125%</th><th>150%</th>';
+  headerCols+='<th>\u05e2\u05d1\u05d5\u05d3\u05d4 \u20aa</th>';
+  headerCols+='<th>\u05d1\u05d5\u05e0\u05d5\u05e1 \u20aa</th>';
   headerCols+='<th>\u05e1\u05d4"\u05db \u20aa</th>';
-  if(detailed&&ox.bonus)  headerCols+='<th>\u05d1\u05d5\u05e0\u05d5\u05e1</th>';
   if(detailed&&ox.note)   headerCols+='<th>\u05d4\u05e2\u05e8\u05d4</th>';
   if(detailed&&ox.job)    headerCols+='<th>\u05e2\u05d1\u05d5\u05d3\u05d4</th>';
   if(detailed&&ox.partner)headerCols+='<th>\u05e4\u05e8\u05d8\u05e0\u05e8 \u20aa</th>';
@@ -2322,8 +2323,9 @@ function _showTableReport(detailed,filterDates,xlsxOpts){
   var hdr=['\u05ea\u05d0\u05e8\u05d9\u05da','\u05d9\u05d5\u05dd','\u05e9\u05e2\u05d5\u05ea'];
   if(detailed&&ox.rate)   hdr.push('\u05ea\u05e2\u05e8\u05d9\u05e3');
   if(detailed&&ox.ot)     hdr=hdr.concat(['\u05e8\u05d2\u05d9\u05dc\u05d5\u05ea','125%','150%']);
-  hdr.push('\u05e1\u05d4"\u05db');
-  if(detailed&&ox.bonus)  hdr.push('\u05d1\u05d5\u05e0\u05d5\u05e1');
+  hdr.push('\u05e2\u05d1\u05d5\u05d3\u05d4 \u20aa');
+  hdr.push('\u05d1\u05d5\u05e0\u05d5\u05e1 \u20aa');
+  hdr.push('\u05e1\u05d4"\u05db \u20aa');
   if(detailed&&ox.note)   hdr.push('\u05d4\u05e2\u05e8\u05d4');
   if(detailed&&ox.job)    hdr.push('\u05e2\u05d1\u05d5\u05d3\u05d4');
   if(detailed&&ox.partner)hdr.push('\u05e4\u05e8\u05d8\u05e0\u05e8');
@@ -2338,8 +2340,9 @@ function _showTableReport(detailed,filterDates,xlsxOpts){
     var cols=[k,dayNames[dt.getDay()],r.hours];
     if(detailed&&ox.rate)   cols.push(r.rate);
     if(detailed&&ox.ot)     cols=cols.concat([(pr.reg||r.hours).toFixed(1),(pr.ot1||0).toFixed(1),(pr.ot2||0).toFixed(1)]);
+    cols.push(Math.round(pr.base));
+    cols.push(bon.toFixed(0));
     cols.push(Math.round(pr.total));
-    if(detailed&&ox.bonus)  cols.push(bon.toFixed(0));
     if(detailed&&ox.note)   cols.push(r.note||'');
     if(detailed&&ox.job)    cols.push(jobName);
     if(detailed&&ox.partner){var pp=pd[k];cols.push(pp&&pp.hours>0?Math.round(cp(pp.hours,pp.rate||50,pp.bonuses).total):'');}
@@ -2364,7 +2367,7 @@ function _showTableReport(detailed,filterDates,xlsxOpts){
     +'.summary span{opacity:.8;font-weight:400;font-size:12px;display:block;margin-top:4px}'
     +'</style></head><body>'
     +'<table><thead><tr>'+headerCols+'</tr></thead><tbody>'+rows+'</tbody></table>'
-    +'<div class="summary">\u05e1\u05d4"\u05db: '+totalH.toFixed(1)+' \u05e9\u05e2\u05d5\u05ea | \u20aa'+Math.round(totalP).toLocaleString('he-IL')
+    +'<div class="summary">\u05e1\u05d4"\u05db: '+totalH.toFixed(1)+' \u05e9\u05e2\u05d5\u05ea | \u05e2\u05d1\u05d5\u05d3\u05d4: \u20aa'+Math.round(totalBase).toLocaleString('he-IL')+' | \u05d1\u05d5\u05e0\u05d5\u05e1: \u20aa'+Math.round(totalP-totalBase).toLocaleString('he-IL')+' | \u05e1\u05d4"\u05db: \u20aa'+Math.round(totalP).toLocaleString('he-IL')
     +(detailed&&ox.partner&&totalPartner>0?' | \u05d1\u05d9\u05d7\u05d3: \u20aa'+Math.round(totalP+totalPartner).toLocaleString('he-IL'):'')
     +'<span>'+today+'</span></div>'
     +'</body></html>';
