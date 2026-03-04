@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # הוספנו הרשאה כדי שהוא יוכל לשמור לך את קובץ ה-APK בסוף!
 
     steps:
       - name: Checkout code
@@ -73,7 +75,6 @@ jobs:
           # הוסף קריאת keystore.properties בראש הקובץ
           sed -i '1s|^|def keystoreProps = new Properties()\nkeystoreProps.load(new FileInputStream(rootProject.file("../keystore.properties")))\n\n|' $GRADLE
 
-          # החלף את buildTypes { release { ... } } עם signing מלא
           python3 - << 'PYEOF'
           import re
 
@@ -91,17 +92,17 @@ jobs:
               }
           """
 
-          # הוסף signingConfigs לפני buildTypes
-          if 'signingConfigs' not in content:
-              content = content.replace('    buildTypes {', signing_config + '\n    buildTypes {')
-
-          # הוסף signingConfig ל-release
+          # 1. קודם כל נוסיף את השורות של release בתוך buildTypes (לפני שנוסיף עוד מילים בשם release)
           content = re.sub(
               r'(release\s*\{)',
               r'\1\n            signingConfig signingConfigs.release\n            minifyEnabled false\n            shrinkResources false',
               content,
               count=1
           )
+
+          # 2. רק עכשיו בטוח להוסיף את בלוק ה-signingConfigs למעלה
+          if 'signingConfigs' not in content:
+              content = content.replace('    buildTypes {', signing_config + '\n    buildTypes {')
 
           with open("android/app/build.gradle", "w") as f:
               f.write(content)
@@ -123,7 +124,6 @@ jobs:
         run: |
           echo "=== APK files found ==="
           find android -name "*.apk" -type f
-          # release חתום ישירות מ-Gradle
           cp android/app/build/outputs/apk/release/app-release.apk moneytime-pro.apk
           ls -lh moneytime-pro.apk
 
