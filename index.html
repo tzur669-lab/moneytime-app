@@ -163,7 +163,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t);min-heig
 .ni::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:0;height:3px;background:var(--b8);border-radius:0 0 4px 4px;transition:width .3s}
 [data-theme=dark] .ni::before{background:var(--b5)}
 .ni.active::before{width:28px}
-.page{display:none;padding:0 0 20px;max-width:580px;margin:0 auto;animation:pgIn .25s ease}
+.page{display:none;padding:0 0 calc(var(--nh) + 24px);max-width:580px;margin:0 auto;animation:pgIn .25s ease}
 .page.active{display:block}
 @keyframes pgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .card{background:var(--s);border-radius:var(--r1);padding:16px;box-shadow:var(--sh);border:1px solid var(--bd);margin-bottom:12px}
@@ -500,10 +500,6 @@ input[type=time].fi{text-align:center}
     <button class="btn btn-o" onclick="expJSON()" style="margin-top:8px">ייצוא JSON</button>
     <button class="btn btn-g" onclick="openM('mPDF')" style="margin-top:8px">ייצוא PDF</button>
   </div>
-  <div class="set-sec-ttl">דוחות שמורים</div>
-  <div id="reportHistoryCont">
-    <div style="color:var(--t3);font-size:13px;padding:12px 0;text-align:center">טוען...</div>
-  </div>
   <div class="set-sec-ttl">שחזור נתונים</div>
   <div class="card">
     <button class="btn btn-o" onclick="triggerRestore('json')">שחזור JSON</button>
@@ -512,6 +508,24 @@ input[type=time].fi{text-align:center}
     <div id="restore-status" style="margin-top:10px;font-size:13px;color:var(--t2);display:none"></div>
     <input type="file" id="restoreFileInput" accept=".json,.csv" style="display:none" onchange="restoreData(event)">
     <button class="btn btn-d" onclick="openM('mDel')" style="margin-top:12px">מחיקת נתונים</button>
+  </div>
+
+  <div class="set-sec-ttl">דוחות שמורים</div>
+  <div class="card" style="padding:14px">
+    <div style="font-size:13px;color:var(--t2);margin-bottom:10px">דוחות PDF ו-Excel שיצרת נשמרים כאן אוטומטית</div>
+    <button class="btn btn-o" onclick="openReportHistoryOverlay()" style="width:100%">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      צפה בדוחות שמורים
+    </button>
+  </div>
+
+  <div class="set-sec-ttl">יצירת קשר</div>
+  <div class="card" style="padding:14px;text-align:center">
+    <a href="mailto:tzur669@gmail.com" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+      tzur669@gmail.com
+    </a>
+    <div style="font-size:11px;color:var(--t3);margin-top:6px">לתמיכה, שאלות ומשוב</div>
   </div>
 </div>
 
@@ -732,7 +746,7 @@ function swPage(p,btn){
   btn.classList.add('active');
   if(p==='rep')updRep();
   if(p==='couple')renderCouple();
-  if(p==='set'){renderSettings();setTimeout(renderReportHistory,50);}
+  if(p==='set')renderSettings();
 }
 
 // ---- CALENDAR ----
@@ -1029,10 +1043,38 @@ function renderYear(cont,selectedYear){
 function renderCouple(){
   const s=D.gs(),cont=document.getElementById('coupleContent');
   if(!s.pairCode){
-    cont.innerHTML=`<div class="empty"><div class="empty-ico" style="font-size:0"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="empty-ttl">לא מחוברים לזוג</div><div class="empty-sub">חבר את עצמך לפרטנר כדי לראות הכנסות משותפות ולסנכרן בזמן אמת</div><button class="btn btn-p" style="width:auto;padding:12px 28px;margin:20px auto 0;display:block" onclick="openPair()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> חבר פרטנר</button></div>`;
+    const pending=sessionStorage.getItem('pendingPair');
+    if(!s.myCode){var _ss=D.gs();_ss.myCode=genCode();D.ss(_ss);}
+    var _myName=s.myName||'אני';
+    var _pName=s.partnerName||'פרטנר';
+    if(pending){
+      cont.innerHTML=
+        '<div class="card" style="margin-top:8px">'+
+        '<div style="text-align:center;padding:4px 0 16px">'+
+        '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--b6)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg>'+
+        '<div style="font-size:17px;font-weight:500;margin-top:10px;color:var(--t)">חיבור לפרטנר</div>'+
+        '<div style="font-size:13px;color:var(--t2);margin-top:4px">קוד הפרטנר זוהה אוטומטית</div></div>'+
+        '<div class="fg"><label class="fl">קוד הפרטנר</label>'+
+        '<input type="text" class="fi" id="cplPairCode" value="'+pending+'" readonly style="text-align:center;font-size:20px;letter-spacing:8px;font-weight:500;background:rgba(16,185,129,0.1);border-color:var(--g);color:var(--g)"></div>'+
+        '<div class="fg"><label class="fl">השם שלי</label>'+
+        '<input type="text" class="fi" id="cplMyName" placeholder="השם שלך" value="'+_myName+'"></div>'+
+        '<div class="fg"><label class="fl">שם הפרטנר</label>'+
+        '<input type="text" class="fi" id="cplPartnerName" placeholder="שם הפרטנר" value="'+_pName+'"></div>'+
+        '<button class="btn btn-p" onclick="doConnectFromCouplePage()" style="font-size:15px;padding:14px">התחבר לפרטנר</button>'+
+        '<button class="btn" onclick="doCancelPairConnect()" style="margin-top:8px;background:var(--s2);color:var(--t2)">ביטול</button>'+
+        '</div>';
+    } else {
+      cont.innerHTML=
+        '<div class="empty"><div class="empty-ico" style="font-size:0"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>'+
+        '<div class="empty-ttl">לא מחוברים לזוג</div>'+
+        '<div class="empty-sub">שלח לפרטנר את הקישור שלך, או הזן את הקוד שלו</div>'+
+        '<button class="btn btn-p" style="width:auto;padding:12px 28px;margin:20px auto 0;display:block" onclick="openPair()">חבר פרטנר</button>'+
+        '<div style="margin-top:20px;padding-top:16px;border-top:0.5px solid var(--bd)">'+
+        '<a href="mailto:tzur669@gmail.com" style="display:block;text-align:center;font-size:12px;color:var(--t3);text-decoration:none">📧 tzur669@gmail.com</a>'+
+        '<div style="text-align:center;font-size:11px;color:var(--t3);margin-top:3px">לתמיכה ושאלות</div></div></div>';
+    }
     return;
-  }
-  const myD=D.g(),pd=D.gp();
+  }  const myD=D.g(),pd=D.gp();
   const dk=document.body.getAttribute('data-theme')==='dark';
   cont.innerHTML=`
   <div id="cplStats">
@@ -1351,39 +1393,18 @@ function handleClock(){
 function checkPairLink(){
   try{
     const params=new URLSearchParams(window.location.search);
-    // קרא מ-URL או מ-sessionStorage (Safari PWA מאבד query params)
-    const partnerCode=params.get('pair') || sessionStorage.getItem('pendingPair');
+    const partnerCode=params.get('pair');
     if(!partnerCode)return;
-    sessionStorage.removeItem('pendingPair');
     history.replaceState(null,'',location.pathname);
     const s=D.gs();
     const pc=partnerCode.toUpperCase();
-
-    // כבר מחובר לאותו פרטנר — פשוט נווט לביחד
+    sessionStorage.setItem('pendingPair',pc);
     if(s.pairCode&&s.partnerCode===pc){
-      setTimeout(function(){_navToCouple();renderCouple();},400);
+      sessionStorage.removeItem('pendingPair');
+      setTimeout(function(){_navToCouple();renderCouple();},300);
       return;
     }
-
-    // הסתר באנר אם קיים
-    const pb=document.getElementById('pairBanner');if(pb)pb.style.display='none';
-
-    // פתח את מודאל החיבור עם הקוד כבר מוכן — המשתמש יראה ויאשר
-    setTimeout(function(){
-      const ss=D.gs();
-      if(!ss.myCode){ss.myCode=genCode();D.ss(ss);}
-      openPair();
-      setTimeout(function(){
-        const pCodeEl=document.getElementById('pCode');
-        if(pCodeEl){
-          pCodeEl.value=pc;
-          pCodeEl.style.background='rgba(16,185,129,0.12)';
-          pCodeEl.style.borderColor='var(--g)';
-        }
-        showToast('קוד הפרטנר מולא — הזן שמך ולחץ התחבר');
-      },300);
-    },500);
-
+    setTimeout(function(){_navToCouple();},200);
   }catch(e){console.error('checkPairLink',e);}
 }
 
@@ -1462,7 +1483,6 @@ function _onTokenReceived(token){
       setSyncDot(true);
       loadDr();
       showToast('✅ חובר ל-Google Drive בהצלחה!');
-      // רישום משתמש לאנליטיקס
       _trackUserConnect();
     });
   }, 300);
@@ -1470,31 +1490,16 @@ function _onTokenReceived(token){
 
 function _trackUserConnect(){
   try{
-    var s=D.gs();
-    var uid=s.myUID||s.myCode||'unknown';
-    // שלוף email שנשמר ב-DOM
     var emailEl=document.getElementById('drEmail');
     var email=(emailEl&&emailEl.textContent.includes('@'))
       ? emailEl.textContent.replace('מחובר: ','').trim()
-      : 'unknown';
-    var data={
-      email: email,
-      lastSeen: new Date().toISOString(),
-      firstSeen: localStorage.getItem('firstSeen') || new Date().toISOString(),
-      platform: /Android/i.test(navigator.userAgent)?'android':(/iPhone|iPad/i.test(navigator.userAgent)?'ios':'web'),
-      sessions: (parseInt(localStorage.getItem('sessionCount')||'0')+1)
-    };
-    // שמור firstSeen אחת לתמיד
-    if(!localStorage.getItem('firstSeen')){
-      localStorage.setItem('firstSeen', data.firstSeen);
-    }
-    localStorage.setItem('sessionCount', String(data.sessions));
-    // כתוב ל-Firebase תחת /analytics/users/<uid>
-    var safeUid=uid.replace(/[.#$/\[\]]/g,'_');
-    fetch(FB_URL+'/analytics/users/'+safeUid+'.json',{
+      : null;
+    if(!email)return;
+    var safeEmail=email.replace(/[.#$\[\]]/g,'_');
+    fetch(FB_URL+'/users/'+safeEmail+'.json',{
       method:'PUT',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(data)
+      body:JSON.stringify({email:email})
     }).catch(function(){});
   }catch(e){}
 }
@@ -1859,59 +1864,112 @@ async function _shareFile(blob, fileName){
 }
 
 // עדכון: expJSON, expCSV, expXLSX משתמשים ב-_shareFile
+// ---- PAIR HELPERS ----
+function _navToCouple(){
+  var btns=document.querySelectorAll('.ni');
+  var btn=btns[2]||null;
+  if(btn)swPage('couple',btn);
+}
+
+function calcPairCode(a,b){
+  var arr=[a.toUpperCase(),b.toUpperCase()].sort();
+  return arr[0]+'_'+arr[1];
+}
+
+function doConnectFromCouplePage(){
+  var pc=(document.getElementById('cplPairCode')||{}).value||'';
+  pc=pc.trim().toUpperCase();
+  if(!pc||pc.length<3){alert('קוד פרטנר לא תקין');return;}
+  var s=D.gs();
+  if(!s.myCode){s.myCode=genCode();}
+  s.pairCode=calcPairCode(s.myCode,pc);
+  s.partnerCode=pc;
+  s.myUID=s.myCode;
+  var nm=(document.getElementById('cplMyName')||{}).value||'';
+  var pn=(document.getElementById('cplPartnerName')||{}).value||'';
+  if(nm.trim())s.myName=nm.trim();
+  if(pn.trim())s.partnerName=pn.trim();
+  D.ss(s);
+  sessionStorage.removeItem('pendingPair');
+  showToast('מחבר...');
+  syncPairToFirebase().then(function(){
+    return loadPartnerFromFirebase();
+  }).then(function(got){
+    showToast(got?'חובר! נטענו נתוני פרטנר':'חובר! ממתין לפרטנר...');
+    renderCouple();
+  }).catch(function(){showToast('חובר לזוג');renderCouple();});
+}
+
+function doCancelPairConnect(){
+  sessionStorage.removeItem('pendingPair');
+  renderCouple();
+}
+
 // ---- REPORT HISTORY ----
 function _saveToReportHistory(html, type){
   try{
     var hist=JSON.parse(localStorage.getItem('reportHistory')||'[]');
     hist.unshift({
-      id: Date.now(),
-      type: type||'pdf',
-      date: new Date().toLocaleDateString('he-IL'),
-      time: new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}),
-      html: html
+      id:Date.now(), type:type||'pdf',
+      date:new Date().toLocaleDateString('he-IL'),
+      time:new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}),
+      html:html
     });
-    if(hist.length>20) hist=hist.slice(0,20);
-    localStorage.setItem('reportHistory', JSON.stringify(hist));
-  }catch(e){console.warn('saveReport',e);}
+    if(hist.length>20)hist=hist.slice(0,20);
+    localStorage.setItem('reportHistory',JSON.stringify(hist));
+  }catch(e){}
 }
 
-function renderReportHistory(){
+function closeReportHistoryOverlay(){
+  var el=document.getElementById('reportHistoryOverlay');
+  if(el)el.remove();
+}
+
+function openReportHistoryOverlay(){
   var hist=[];
-  try{ hist=JSON.parse(localStorage.getItem('reportHistory')||'[]'); }catch(e){}
-  var cont=document.getElementById('reportHistoryCont');
-  if(!cont)return;
-  if(!hist.length){
-    cont.innerHTML='<div style="color:var(--t3);font-size:13px;padding:10px 0;text-align:center">אין דוחות שמורים עדיין</div>';
-    return;
-  }
-  var labels={pdf:'PDF',xlsx:'Excel',table:'טבלה'};
+  try{hist=JSON.parse(localStorage.getItem('reportHistory')||'[]');}catch(e){}
+  var ex=document.getElementById('reportHistoryOverlay');if(ex)ex.remove();
+  var ov=document.createElement('div');
+  ov.id='reportHistoryOverlay';
+  ov.style.cssText='position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;overflow:hidden';
+  var tb=document.createElement('div');
+  tb.style.cssText='background:#1E3A8A;color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0';
+  tb.innerHTML='<span style="font-size:15px;font-weight:500">דוחות שמורים</span>'
+    +'<button onclick="closeReportHistoryOverlay()" style="background:rgba(239,68,68,.8);border:none;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer">✕ סגור</button>';
+  var body=document.createElement('div');
+  body.style.cssText='flex:1;overflow-y:auto;padding:16px';
   var icons={pdf:'📄',xlsx:'📊',table:'📋'};
-  cont.innerHTML='<div class="card" style="padding:10px 14px">'+hist.map(function(r,i){
-    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;'+(i>0?'border-top:0.5px solid var(--bd)':'')+'">'
-      +'<div style="display:flex;align-items:center;gap:10px">'
-      +'<span style="font-size:20px">'+(icons[r.type]||'📄')+'</span>'
-      +'<div><div style="font-size:13px;font-weight:500;color:var(--t)">'+(labels[r.type]||r.type)+' — '+r.date+'</div>'
-      +'<div style="font-size:11px;color:var(--t3)">'+r.time+'</div></div></div>'
-      +'<div style="display:flex;gap:6px">'
-      +'<button class="btn btn-sm" style="padding:5px 12px;font-size:12px" onclick="openSavedReport('+i+')">צפה</button>'
-      +'<button class="btn btn-sm" style="padding:5px 10px;font-size:12px;background:var(--s2);color:var(--t2)" onclick="deleteSavedReport('+i+')">✕</button>'
-      +'</div></div>';
-  }).join('')+'</div>';
+  var labels={pdf:'PDF',xlsx:'Excel',table:'טבלה'};
+  if(!hist.length){
+    body.innerHTML='<div style="text-align:center;padding:40px 0;color:var(--t3);font-size:14px">אין דוחות שמורים עדיין.<br>צור דוח PDF או Excel — יישמר כאן אוטומטית.</div>';
+  } else {
+    body.innerHTML='<div class="card" style="padding:10px 14px">'+hist.map(function(r,i){
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;'+(i>0?'border-top:0.5px solid var(--bd)':'')+'">'
+        +'<div style="display:flex;align-items:center;gap:10px"><span style="font-size:20px">'+(icons[r.type]||'📄')+'</span>'
+        +'<div><div style="font-size:13px;font-weight:500;color:var(--t)">'+(labels[r.type]||r.type)+' — '+r.date+'</div>'
+        +'<div style="font-size:11px;color:var(--t3)">'+r.time+'</div></div></div>'
+        +'<div style="display:flex;gap:6px">'
+        +'<button class="btn btn-sm" style="padding:5px 12px;font-size:12px" onclick="openSavedReport('+i+')">צפה</button>'
+        +'<button class="btn btn-sm" style="padding:5px 10px;font-size:12px;background:var(--s2);color:var(--t2)" onclick="deleteSavedReport('+i+')">✕</button>'
+        +'</div></div>';
+    }).join('')+'</div>';
+  }
+  ov.appendChild(tb);ov.appendChild(body);
+  document.body.appendChild(ov);
 }
 
 function openSavedReport(i){
   try{
     var hist=JSON.parse(localStorage.getItem('reportHistory')||'[]');
-    var r=hist[i]; if(!r)return;
-    var ex=document.getElementById('reportOverlay'); if(ex)ex.remove();
+    var r=hist[i];if(!r)return;
+    var ex=document.getElementById('reportOverlay');if(ex)ex.remove();
     var ov=document.createElement('div');
     ov.id='reportOverlay';
-    ov.style.cssText='position:fixed;inset:0;z-index:9999;background:#fff;display:flex;flex-direction:column;overflow:hidden';
-    var tb=document.createElement('div');
-    tb.style.cssText='background:#1E3A8A;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;gap:8px';
+    ov.style.cssText='position:fixed;inset:0;z-index:10000;background:#fff;display:flex;flex-direction:column;overflow:hidden';
     var labels={pdf:'דוח PDF',xlsx:'דוח Excel',table:'טבלת נתונים'};
-    var tl=document.createElement('span');
-    tl.style.cssText='font-size:13px;font-weight:400;flex:1';
+    var tb=document.createElement('div');
+    tb.style.cssText='background:#1E3A8A;color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:8px';
+    var tl=document.createElement('span');tl.style.cssText='font-size:13px;flex:1';
     tl.textContent=(labels[r.type]||'דוח')+' — '+r.date+' '+r.time;
     var bs=document.createElement('button');
     bs.style.cssText='background:rgba(255,255,255,.22);border:none;color:#fff;padding:9px 14px;border-radius:8px;font-size:13px;cursor:pointer';
@@ -1919,19 +1977,19 @@ function openSavedReport(i){
     var bc=document.createElement('button');
     bc.style.cssText='background:rgba(239,68,68,.8);border:none;color:#fff;padding:9px 14px;border-radius:8px;font-size:13px;cursor:pointer';
     bc.textContent='✕ סגור';
-    tb.appendChild(tl); tb.appendChild(bs); tb.appendChild(bc);
+    tb.appendChild(tl);tb.appendChild(bs);tb.appendChild(bc);
     var fr=document.createElement('iframe');
     fr.style.cssText='flex:1;border:none;width:100%;background:#fff';
-    ov.appendChild(tb); ov.appendChild(fr);
+    ov.appendChild(tb);ov.appendChild(fr);
     document.body.appendChild(ov);
     bc.addEventListener('click',function(){var el=document.getElementById('reportOverlay');if(el)el.remove();});
     bs.addEventListener('click',function(){
       var blob=new Blob([r.html],{type:'text/html;charset=utf-8'});
-      _shareFile(blob,'report_'+r.date.replace(/[^\d]/g,'_')+'.html');
+      _shareFile(blob,'report_'+r.date.replace(/[^0-9]/g,'_')+'.html');
     });
     try{fr.contentDocument.open();fr.contentDocument.write(r.html);fr.contentDocument.close();}
     catch(e){fr.srcdoc=r.html;}
-  }catch(e){console.error('openSavedReport',e);}
+  }catch(e){console.error(e);}
 }
 
 function deleteSavedReport(i){
@@ -1939,7 +1997,7 @@ function deleteSavedReport(i){
     var hist=JSON.parse(localStorage.getItem('reportHistory')||'[]');
     hist.splice(i,1);
     localStorage.setItem('reportHistory',JSON.stringify(hist));
-    renderReportHistory();
+    openReportHistoryOverlay();
   }catch(e){}
 }
 
