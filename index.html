@@ -495,8 +495,8 @@ input[type=time].fi{text-align:center}
   </div>
   <div class="set-sec-ttl">גיבוי וייצוא</div>
   <div class="card">
-    <button class="btn btn-o" onclick="expCSV()">ייצוא CSV</button>
-    <button class="btn btn-o" onclick="expXLSX()" style="margin-top:8px">ייצוא Excel</button>
+    <button class="btn btn-o" onclick="openM('mCSV')">ייצוא CSV</button>
+    <button class="btn btn-o" onclick="openM('mXLSX')" style="margin-top:8px">ייצוא Excel</button>
     <button class="btn btn-o" onclick="expJSON()" style="margin-top:8px">ייצוא JSON</button>
     <button class="btn btn-g" onclick="openM('mPDF')" style="margin-top:8px">ייצוא PDF</button>
   </div>
@@ -611,6 +611,7 @@ input[type=time].fi{text-align:center}
     <div style="display:flex;justify-content:space-between;align-items:center"><div class="mttl">ייצוא PDF</div><button class="mclose" onclick="closeM('mPDF')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="fg"><label class="fl">תקופה</label>
       <select class="fi" id="pdfPer" onchange="document.getElementById('pdfCR').style.display=this.value==='custom'?'block':'none'">
+        <option value="all">כל הנתונים</option>
         <option value="week">השבוע</option><option value="month" selected>החודש</option>
         <option value="lastMonth">חודש קודם</option><option value="custom">טווח מותאם...</option>
       </select>
@@ -629,6 +630,52 @@ input[type=time].fi{text-align:center}
       <div class="pdfopt" onclick="tpdf('po5')"><div class="pdfchk" id="po5"></div><span class="pdfopt-lbl">נתוני פרטנר (אם מחובר)</span></div>
     </div>
     <button class="btn btn-p" onclick="genPDF()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg> צור PDF</button>
+    <div style="height:8px"></div>
+  </div>
+</div>
+
+<!-- MODAL: CSV -->
+<div class="modal" id="mCSV">
+  <div class="msh">
+    <div class="mhdl"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center"><div class="mttl">ייצוא CSV</div><button class="mclose" onclick="closeM('mCSV')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="fg"><label class="fl">תקופה</label>
+      <select class="fi" id="csvPer" onchange="document.getElementById('csvCR').style.display=this.value==='custom'?'block':'none'">
+        <option value="all">כל הנתונים</option>
+        <option value="week">השבוע</option>
+        <option value="month" selected>החודש</option>
+        <option value="lastMonth">חודש קודם</option>
+        <option value="custom">טווח מותאם...</option>
+      </select>
+    </div>
+    <div id="csvCR" style="display:none;margin-bottom:12px"><div style="display:flex;gap:10px">
+      <div style="flex:1"><label class="fl">מ</label><input type="date" class="fi" id="csvS"></div>
+      <div style="flex:1"><label class="fl">עד</label><input type="date" class="fi" id="csvE"></div>
+    </div></div>
+    <button class="btn btn-o" onclick="expCSV()">צור CSV</button>
+    <div style="height:8px"></div>
+  </div>
+</div>
+
+<!-- MODAL: XLSX -->
+<div class="modal" id="mXLSX">
+  <div class="msh">
+    <div class="mhdl"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center"><div class="mttl">ייצוא Excel</div><button class="mclose" onclick="closeM('mXLSX')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="fg"><label class="fl">תקופה</label>
+      <select class="fi" id="xlsxPer" onchange="document.getElementById('xlsxCR').style.display=this.value==='custom'?'block':'none'">
+        <option value="all">כל הנתונים</option>
+        <option value="week">השבוע</option>
+        <option value="month" selected>החודש</option>
+        <option value="lastMonth">חודש קודם</option>
+        <option value="custom">טווח מותאם...</option>
+      </select>
+    </div>
+    <div id="xlsxCR" style="display:none;margin-bottom:12px"><div style="display:flex;gap:10px">
+      <div style="flex:1"><label class="fl">מ</label><input type="date" class="fi" id="xlsxS"></div>
+      <div style="flex:1"><label class="fl">עד</label><input type="date" class="fi" id="xlsxE"></div>
+    </div></div>
+    <button class="btn btn-g" onclick="expXLSX()">צור Excel</button>
     <div style="height:8px"></div>
   </div>
 </div>
@@ -1069,9 +1116,7 @@ function renderCouple(){
         '<div class="empty-ttl">לא מחוברים לזוג</div>'+
         '<div class="empty-sub">שלח לפרטנר את הקישור שלך, או הזן את הקוד שלו</div>'+
         '<button class="btn btn-p" style="width:auto;padding:12px 28px;margin:20px auto 0;display:block" onclick="openPair()">חבר פרטנר</button>'+
-        '<div style="margin-top:20px;padding-top:16px;border-top:0.5px solid var(--bd)">'+
-        '<a href="mailto:tzur669@gmail.com" style="display:block;text-align:center;font-size:12px;color:var(--t3);text-decoration:none">📧 tzur669@gmail.com</a>'+
-        '<div style="text-align:center;font-size:11px;color:var(--t3);margin-top:3px">לתמיכה ושאלות</div></div></div>';
+        '</div>';
     }
     return;
   }  const myD=D.g(),pd=D.gp();
@@ -1483,23 +1528,21 @@ function _onTokenReceived(token){
       setSyncDot(true);
       loadDr();
       showToast('✅ חובר ל-Google Drive בהצלחה!');
-      _trackUserConnect();
+      _countUniqueUser();
     });
   }, 300);
 }
 
-function _trackUserConnect(){
+function _countUniqueUser(){
   try{
-    var emailEl=document.getElementById('drEmail');
-    var email=(emailEl&&emailEl.textContent.includes('@'))
-      ? emailEl.textContent.replace('מחובר: ','').trim()
-      : null;
-    if(!email)return;
-    var safeEmail=email.replace(/[.#$\[\]]/g,'_');
-    fetch(FB_URL+'/users/'+safeEmail+'.json',{
+    var s=D.gs();
+    var uid=s.myUID||s.myCode||null;
+    if(!uid)return;
+    var safe=uid.replace(/[.#$\[\]]/g,'_');
+    fetch(FB_URL+'/ucount/'+safe+'.json',{
       method:'PUT',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({email:email})
+      body:JSON.stringify({uid:uid})
     }).catch(function(){});
   }catch(e){}
 }
@@ -1652,7 +1695,16 @@ function genPDF(){
 function _buildPDF(){
   try{
     var pr=document.getElementById('pdfPer').value;
-    var dates=getDts(pr,'pdfS','pdfE');
+    var dates;
+    if(pr==='all'){
+      var allK=Object.keys(D.g()).sort();
+      if(!allK.length){showToast('אין נתונים');return;}
+      dates=[];
+      var s0=new Date(allK[0]),e0=new Date(allK[allK.length-1]);
+      for(var d0=new Date(s0);d0<=e0;d0.setDate(d0.getDate()+1))dates.push(new Date(d0));
+    }else{
+      dates=getDts(pr,'pdfS','pdfE');
+    }
     var data=D.g(), s=D.gs(), pd=D.gp();
     var name=document.getElementById('pdfNm').value||s.myName||'דוח';
     var iH=document.getElementById('po1').classList.contains('on');
@@ -2007,20 +2059,37 @@ function expJSON(){
 }
 
 function expCSV(){
-  _showTableReport(false);
+  var per=document.getElementById('csvPer')?document.getElementById('csvPer').value:'all';
+  var dates=null;
+  if(per!=='all'){
+    dates=getDts(per,'csvS','csvE');
+    if(!dates.length){showToast('בחר טווח תאריכים תקין');return;}
+  }
+  closeM('mCSV');
+  _showTableReport(false,dates);
 }
 function expXLSX(){
-  _showTableReport(true);
+  var per=document.getElementById('xlsxPer')?document.getElementById('xlsxPer').value:'all';
+  var dates=null;
+  if(per!=='all'){
+    dates=getDts(per,'xlsxS','xlsxE');
+    if(!dates.length){showToast('בחר טווח תאריכים תקין');return;}
+  }
+  closeM('mXLSX');
+  _showTableReport(true,dates);
 }
 
-function _showTableReport(detailed){
+function _showTableReport(detailed,filterDates){
   var d=D.g(), s=D.gs(), jobs=s.jobs||[];
   var dayNames=['\u05e8\u05d0\u05e9\u05d5\u05df','\u05e9\u05e0\u05d9','\u05e9\u05dc\u05d9\u05e9\u05d9','\u05e8\u05d1\u05d9\u05e2\u05d9','\u05d7\u05de\u05d9\u05e9\u05d9','\u05e9\u05d9\u05e9\u05d9','\u05e9\u05d1\u05ea'];
   var today=new Date().toLocaleDateString('he-IL');
   var totalH=0, totalP=0;
   var rows='';
+  var allKeys=Object.keys(d).sort();
+  var activeSet=filterDates?new Set(filterDates.map(function(dt){return fk(dt);})):null;
 
-  Object.keys(d).sort().forEach(function(k){
+  allKeys.forEach(function(k){
+    if(activeSet&&!activeSet.has(k))return;
     var r=d[k]; if(!(r.hours>0))return;
     var pr=cp(r.hours,r.rate,r.bonuses);
     var dt=new Date(k);
@@ -2052,7 +2121,8 @@ function _showTableReport(detailed){
 
   // CSV לשיתוף
   var csvLines=['\u05ea\u05d0\u05e8\u05d9\u05da,\u05d9\u05d5\u05dd,\u05e9\u05e2\u05d5\u05ea,'+(detailed?'\u05ea\u05e2\u05e8\u05d9\u05e3,\u05e8\u05d2\u05d9\u05dc\u05d5\u05ea,125%,150%,':'')+'\u05e1\u05d4"\u05db,\u05d1\u05d5\u05e0\u05d5\u05e1,\u05d4\u05e2\u05e8\u05d4,\u05e2\u05d1\u05d5\u05d3\u05d4'];
-  Object.keys(d).sort().forEach(function(k){
+  allKeys.forEach(function(k){
+    if(activeSet&&!activeSet.has(k))return;
     var r=d[k]; if(!(r.hours>0))return;
     var pr=cp(r.hours,r.rate,r.bonuses);
     var dt=new Date(k);
