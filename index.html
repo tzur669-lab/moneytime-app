@@ -226,6 +226,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t);min-heig
 .btn-clk:active{transform:scale(.98)}
 .qa{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .qab{padding:7px 8px;border-radius:var(--r2);border:1px solid var(--bd);background:var(--s);color:var(--t);font-family:'Inter',sans-serif;font-size:10px;font-weight:300;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s;box-shadow:var(--sh)}
+.qab-main{padding:11px 10px;font-size:11px;font-weight:400;flex-direction:column;gap:5px;min-height:56px;justify-content:center}
+.qab-main span{font-size:11px}
+.qab-sub{padding:8px 10px;font-size:11px;color:var(--t2);background:var(--s2);justify-content:center;gap:7px}
 .qab:active{transform:scale(.97);background:var(--b0)}
 [data-theme=dark] .qab:active{background:rgba(30,58,138,.3)}
 .qab .qi{font-size:13px}
@@ -437,11 +440,10 @@ input[type=time].fi{text-align:center}
     <button onclick="openPair();document.getElementById('pairBanner').style.display='none'" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:8px 14px;border-radius:8px;font-family:'Inter',sans-serif;font-size:11px;font-weight:300;cursor:pointer;white-space:nowrap">חבר עכשיו</button>
     <button onclick="document.getElementById('pairBanner').style.display='none';localStorage.setItem('pairBannerDismissed','1')" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:18px;cursor:pointer;padding:0 0 0 4px;line-height:1">×</button>
   </div>
-  <div class="qa">
-    <button class="qab" onclick="openMulti('hours')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>שעות בתקופה</button>
-    <button class="qab" onclick="openMulti('profit')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>רווח בתקופה</button>
-    <button class="qab" onclick="openMulti('rate')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>תעריף לשינוי</button>
-    <button class="qab" onclick="openMulti('job')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>שינוי עבודה</button>
+  <div class="qa" style="grid-template-columns:1fr 1fr;grid-template-rows:auto auto">
+    <button class="qab qab-main" onclick="openMulti('hours')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg><span>שעות בתקופה</span></button>
+    <button class="qab qab-main" onclick="openMulti('rate')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg><span>תעריף לשינוי</span></button>
+    <button class="qab qab-sub" onclick="openMulti('profit')" style="grid-column:1/-1"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>רווח בתקופה</span></button>
   </div>
   <div class="card">
     <div class="cal-nav">
@@ -578,9 +580,9 @@ input[type=time].fi{text-align:center}
 
   <div class="set-sec-ttl">יצירת קשר</div>
   <div class="card" style="padding:14px;text-align:center">
-    <a href="/cdn-cgi/l/email-protection#423638373074747b02252f232b2e6c212d2f" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
+    <a href="mailto:tzur669@gmail.com" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
-      <span class="__cf_email__" data-cfemail="3a4e404f480c0c037a5d575b535614595557">[email&#160;protected]</span>
+      tzur669@gmail.com
     </a>
     <div style="font-size:11px;color:var(--t3);margin-top:6px">לתמיכה, שאלות ומשוב</div>
   </div>
@@ -620,19 +622,19 @@ input[type=time].fi{text-align:center}
       <input type="number" class="fi" id="dH" step="0.25" placeholder="0.00">
     </div>
     <div class="fg"><label class="fl">תעריף שעתי (₪)</label><input type="number" class="fi" id="dR" placeholder="0"></div>
-    <div id="dBonCont" style="margin-bottom:13px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <span class="fl" style="margin:0">תוספות ובונוסים</span>
-        <button class="btn btn-g btn-sm" onclick="addB()" style="padding:5px 10px;font-size:11px">+ הוסף</button>
-      </div>
-      <div id="dBonList"></div>
-    </div>
     <div id="dExtraJobCont" style="margin-bottom:13px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <span class="fl" style="margin:0">עבודה נוספת ביום זה</span>
         <button class="btn btn-g btn-sm" onclick="addExtraJob()" style="padding:5px 10px;font-size:11px">+ הוסף עבודה</button>
       </div>
       <div id="dExtraJobList"></div>
+    </div>
+    <div id="dBonCont" style="margin-bottom:13px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span class="fl" style="margin:0">תוספות ובונוסים</span>
+        <button class="btn btn-g btn-sm" onclick="addB()" style="padding:5px 10px;font-size:11px">+ הוסף</button>
+      </div>
+      <div id="dBonList"></div>
     </div>
     <div class="fg"><label class="fl">הערה</label><input type="text" class="fi" id="dNote" placeholder="הערה אופציונלית..."></div>
     <div class="btn-row">
@@ -861,7 +863,7 @@ function getDts(r,sId,eId){
   if(r==='week'){st.setDate(t.getDate()-t.getDay());en.setDate(st.getDate()+6);}
   else if(r==='month'){st=new Date(t.getFullYear(),t.getMonth(),1);en=new Date(t.getFullYear(),t.getMonth()+1,0);}
   else if(r==='lastMonth'){st=new Date(t.getFullYear(),t.getMonth()-1,1);en=new Date(t.getFullYear(),t.getMonth(),0);}
-  else if(r==='custom'){const sv=document.getElementById(sId)?.value,ev=document.getElementById(eId)?.value;if(!sv||!ev)return[];st=new Date(sv);en=new Date(ev);}
+  else if(r==='custom'){const sv=document.getElementById(sId)?.value,ev=document.getElementById(eId)?.value;if(!sv||!ev)return[];const[sy,sm,sd]=sv.split('-').map(Number);const[ey,em,ed]=ev.split('-').map(Number);st=new Date(sy,sm-1,sd);en=new Date(ey,em-1,ed);}
   const res=[];for(let d=new Date(st);d<=en;d.setDate(d.getDate()+1))res.push(new Date(d));return res;
 }
 function getPerDts(p){
@@ -917,6 +919,7 @@ function renderCal(){
     html+=`<div class="cc-top"><div class="cc-num">${d}</div></div><div class="cc-heb">${HC.f(dt)}</div>`;
     const bars=[];
     if(hasMe){const col=s.jobs?.[data[k]?.jobIdx||0]?.color||'#1E3A8A';bars.push(`<div class="cc-bar" style="background:${col}"></div>`);}
+    if(hasMe&&(data[k].extraJobs||[]).length>0){(data[k].extraJobs||[]).forEach(ej=>{const ecol=s.jobs?.[ej.jobIdx||0]?.color||'#0EA5E9';bars.push(`<div class="cc-bar" style="background:${ecol}"></div>`);});}
     if(hasPrt)bars.push(`<div class="cc-bar" style="background:${s.partnerColor}"></div>`);
     if(bars.length)html+=`<div class="cc-bars">${bars.join('')}</div>`;
     else if(hasMe){const _eh=(data[k].extraJobs||[]).reduce((a,ej)=>a+(ej.hours||0),0);const _ah=((data[k].hours||0)+_eh);html+=`<div class="cc-h">${_ah%1===0?_ah:_ah.toFixed(1)}ש'</div>`;}
@@ -1026,21 +1029,41 @@ function navDay(delta){const d=new Date(selDt);d.setDate(d.getDate()+delta);clos
 // ---- MULTI MODAL ----
 function openMulti(type){
   mType=type;const s=D.gs();const body=document.getElementById('mMBody');
-  if(type==='hours'){document.getElementById('mMTtl').textContent='⏱️ החלת שעות קבועות';body.innerHTML=`<div class="fg"><label class="fl">מספר שעות</label><input type="number" class="fi" id="mV" step="0.25" placeholder="8"></div>`;}
-  else if(type==='profit'){document.getElementById('mMTtl').textContent='הוספת רווח קבוע';body.innerHTML=`<div class="fg"><label class="fl">סכום (₪)</label><input type="number" class="fi" id="mV"></div><div class="fg"><label class="fl">תיאור</label><input type="text" class="fi" id="mVD" placeholder="בונוס, נסיעות..."></div>`;}
-  else if(type==='rate'){document.getElementById('mMTtl').textContent='שינוי תעריף';body.innerHTML=`<div class="fg"><label class="fl">תעריף שעתי (₪)</label><input type="number" class="fi" id="mV"></div>`;}
-  else if(type==='job'){document.getElementById('mMTtl').textContent='שינוי מקום עבודה';body.innerHTML='<div class="fg"><label class="fl">מקום עבודה</label><select class="fi" id="mV">'+(s.jobs||[]).map((j,i)=>'<option value="'+i+'">'+j.name+'</option>').join('')+'</select></div>';}
+  const jobOpts=(s.jobs||[]).map((j,i)=>`<option value="${i}">${j.name}</option>`).join('');
+  const jobSel=`<div class="fg" style="margin-bottom:10px"><label class="fl">מקום עבודה</label><select class="fi" id="mJob">${jobOpts}</select></div>`;
+  if(type==='hours'){
+    document.getElementById('mMTtl').textContent='⏱️ שעות בתקופה';
+    body.innerHTML=jobSel+`<div class="fg"><label class="fl">מספר שעות</label><input type="number" class="fi" id="mV" step="0.25" placeholder="8"></div>`;
+  } else if(type==='profit'){
+    document.getElementById('mMTtl').textContent='💰 רווח בתקופה';
+    body.innerHTML=`<div class="fg"><label class="fl">סכום (₪)</label><input type="number" class="fi" id="mV"></div><div class="fg"><label class="fl">תיאור</label><input type="text" class="fi" id="mVD" placeholder="בונוס, נסיעות..."></div>`;
+  } else if(type==='rate'){
+    document.getElementById('mMTtl').textContent='📋 תעריף לשינוי';
+    body.innerHTML=jobSel+`<div class="fg"><label class="fl">תעריף שעתי חדש (₪)</label><input type="number" class="fi" id="mV" placeholder="0"></div>`;
+  }
   openM('mMulti');
 }
 function execMulti(){
   const val=document.getElementById('mV')?.value;if(val===''||val===null||val===undefined)return;
   const dates=getDts(document.getElementById('mRng').value,'mCS','mCE');if(!dates.length)return;
   const data=D.g(),s=D.gs();
-  dates.forEach(d=>{const k=fk(d);if(!data[k])data[k]={hours:0,rate:s.jobs?.[0]?.rate||50,bonuses:[],note:'',jobIdx:0};
-    if(mType==='hours')data[k].hours=parseFloat(val)||0;
-    else if(mType==='rate')data[k].rate=parseFloat(val)||0;
-    else if(mType==='job')data[k].jobIdx=parseInt(val)||0;
-    else if(mType==='profit'){if(!data[k].bonuses)data[k].bonuses=[];data[k].bonuses.push({desc:document.getElementById('mVD')?.value||'תוספת',amount:parseFloat(val)||0});}
+  const selJob=parseInt(document.getElementById('mJob')?.value||'0');
+  const jobRate=s.jobs?.[selJob]?.rate||50;
+  dates.forEach(d=>{const k=fk(d);
+    if(mType==='hours'){
+      if(!data[k])data[k]={hours:0,rate:jobRate,bonuses:[],note:'',jobIdx:selJob};
+      data[k].hours=parseFloat(val)||0;
+      data[k].jobIdx=selJob;
+      data[k].rate=jobRate;
+    } else if(mType==='rate'){
+      if(!data[k])data[k]={hours:0,rate:parseFloat(val)||0,bonuses:[],note:'',jobIdx:selJob};
+      data[k].rate=parseFloat(val)||0;
+      data[k].jobIdx=selJob;
+    } else if(mType==='profit'){
+      if(!data[k])data[k]={hours:0,rate:jobRate,bonuses:[],note:'',jobIdx:0};
+      if(!data[k].bonuses)data[k].bonuses=[];
+      data[k].bonuses.push({desc:document.getElementById('mVD')?.value||'תוספת',amount:parseFloat(val)||0});
+    }
   });
   D.s(data);closeM('mMulti');renderCal();updRep();saveDr();flash();vib();
 }
@@ -2025,8 +2048,20 @@ async function loadDr(){
       const data=await driveRead('moneytime_solo.json', false);
       if(data){
         const cTs=data.timestamp||0, lTs=parseInt(localStorage.getItem('wdts'))||0;
-        if(cTs>lTs||lTs===0){if(data.workData)D.s(data.workData);}
-        else await driveUpsert('moneytime_solo.json', JSON.stringify({workData:D.g(),settings:s,timestamp:Date.now()}), false);
+        if(cTs>lTs||lTs===0){
+          if(data.workData)D.s(data.workData);
+          // שחזר הגדרות עבודה מהגיבוי (שם עבודה, שכר קבוע, תעריף)
+          if(data.settings){
+            const cur=D.gs();
+            if(data.settings.jobs&&data.settings.jobs.length>0){
+              // עדכן jobs קיימים — שמור צבע מקומי אם לא שונה
+              cur.jobs=data.settings.jobs.map((rj,i)=>Object.assign({},cur.jobs?.[i]||{},rj));
+            }
+            if(data.settings.calcOvertime!==undefined) cur.calcOvertime=data.settings.calcOvertime;
+            if(data.settings.showMissing!==undefined) cur.showMissing=data.settings.showMissing;
+            D.ss(cur);
+          }
+        } else await driveUpsert('moneytime_solo.json', JSON.stringify({workData:D.g(),settings:s,timestamp:Date.now()}), false);
       }
     }
   }catch(e){}
@@ -2494,7 +2529,9 @@ function _showTableReport(detailed,filterDates,xlsxOpts){
   var maxExtra=0;
   allKeys.forEach(function(k){
     if(activeSet&&!activeSet.has(k))return;
-    var r=d[k]; if(!(r.hours>0))return;
+    var r=d[k];
+    var _b=(r.bonuses||[]).reduce(function(a,x){return a+(parseFloat(x.amount)||0);},0);
+    if(!(r.hours>0)&&!(_b>0))return;
     maxExtra=Math.max(maxExtra,(r.extraJobs||[]).length);
   });
 
@@ -2576,7 +2613,9 @@ function _showTableReport(detailed,filterDates,xlsxOpts){
   var csvLines=[hdr.join(',')];
   allKeys.forEach(function(k){
     if(activeSet&&!activeSet.has(k))return;
-    var r=d[k]; if(!(r.hours>0))return;
+    var r=d[k];
+    var bon=(r.bonuses||[]).reduce(function(s2,b){return s2+(parseFloat(b.amount)||0);},0);
+    if(!(r.hours>0)&&!(bon>0))return;
     var pr=cp(r.hours,r.rate,r.bonuses);
     var dayTot=cpDay(r);
     var dt=new Date(k);
