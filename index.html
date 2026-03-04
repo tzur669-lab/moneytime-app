@@ -534,6 +534,7 @@ input[type=time].fi{text-align:center}
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><span style="color:var(--g);display:flex"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg></span><div><div style="font-size:13px;font-weight:400;color:var(--g)">מחובר ומסונכרן</div><div id="drEmail" style="font-size:11px;color:var(--t2)"></div></div></div>
       <button class="btn btn-g" onclick="manualSync()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> סנכרן עכשיו</button>
       <button class="btn btn-o" onclick="disconnDrive()" style="margin-top:8px;color:var(--r);border-color:var(--r)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> נתק חשבון</button>
+      <button class="btn btn-o" onclick="deleteDriveBackup()" style="margin-top:8px;color:var(--r);border-color:var(--r);opacity:.75"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6"/><path d="M10,11v6"/><path d="M14,11v6"/><path d="M9,6V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/></svg> מחק גיבוי מ-Drive</button>
     </div>
   </div>
   <div class="set-sec-ttl">גיבוי וייצוא</div>
@@ -577,9 +578,9 @@ input[type=time].fi{text-align:center}
 
   <div class="set-sec-ttl">יצירת קשר</div>
   <div class="card" style="padding:14px;text-align:center">
-    <a href="mailto:tzur669@gmail.com" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
+    <a href="/cdn-cgi/l/email-protection#423638373074747b02252f232b2e6c212d2f" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
-      tzur669@gmail.com
+      <span class="__cf_email__" data-cfemail="3a4e404f480c0c037a5d575b535614595557">[email&#160;protected]</span>
     </a>
     <div style="font-size:11px;color:var(--t3);margin-top:6px">לתמיכה, שאלות ומשוב</div>
   </div>
@@ -625,6 +626,13 @@ input[type=time].fi{text-align:center}
         <button class="btn btn-g btn-sm" onclick="addB()" style="padding:5px 10px;font-size:11px">+ הוסף</button>
       </div>
       <div id="dBonList"></div>
+    </div>
+    <div id="dExtraJobCont" style="margin-bottom:13px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span class="fl" style="margin:0">עבודה נוספת ביום זה</span>
+        <button class="btn btn-g btn-sm" onclick="addExtraJob()" style="padding:5px 10px;font-size:11px">+ הוסף עבודה</button>
+      </div>
+      <div id="dExtraJobList"></div>
     </div>
     <div class="fg"><label class="fl">הערה</label><input type="text" class="fi" id="dNote" placeholder="הערה אופציונלית..."></div>
     <div class="btn-row">
@@ -780,7 +788,7 @@ input[type=time].fi{text-align:center}
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ---- CONSTANTS ----
 const JC=['#1E3A8A','#2563EB','#10B981','#F59E0B','#EF4444','#8B5CF6'];
 const MN=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
@@ -822,6 +830,29 @@ function cp(h,r,b=[]){
   }
   const bon=(b||[]).reduce((a,x)=>a+(parseFloat(x.amount)||0),0);
   return{base,bonus:bon,total:base+bon,reg,ot1,ot2};
+}
+// חישוב עבודה נוספת — OT נפרד, ללא בונוסים
+function cpExtra(h,r){
+  const s=D.gs();
+  h=parseFloat(h)||0; r=parseFloat(r)||0;
+  let reg=h,ot1=0,ot2=0,base;
+  if(s.calcOvertime&&h>8){
+    reg=8; ot1=Math.min(h-8,2); ot2=Math.max(h-10,0);
+    base=(reg*r)+(ot1*r*1.25)+(ot2*r*1.5);
+  } else { base=h*r; }
+  return{base,reg,ot1,ot2};
+}
+// סה"כ יום — עבודה ראשית + כל עבודות נוספות
+function cpDay(dayData){
+  if(!dayData) return{total:0,base:0,bonus:0,hours:0,extraHours:0,allHours:0};
+  const main=cp(dayData.hours||0, dayData.rate||0, dayData.bonuses||[]);
+  let extraBase=0, extraHours=0;
+  (dayData.extraJobs||[]).forEach(ej=>{
+    const r=cpExtra(ej.hours||0, ej.rate||0);
+    extraBase+=r.base; extraHours+=ej.hours||0;
+  });
+  return{total:main.total+extraBase, base:main.base+extraBase, bonus:main.bonus,
+         hours:dayData.hours||0, extraHours, allHours:(dayData.hours||0)+extraHours, main};
 }
 
 // ---- DATES ----
@@ -888,7 +919,7 @@ function renderCal(){
     if(hasMe){const col=s.jobs?.[data[k]?.jobIdx||0]?.color||'#1E3A8A';bars.push(`<div class="cc-bar" style="background:${col}"></div>`);}
     if(hasPrt)bars.push(`<div class="cc-bar" style="background:${s.partnerColor}"></div>`);
     if(bars.length)html+=`<div class="cc-bars">${bars.join('')}</div>`;
-    else if(hasMe)html+=`<div class="cc-h">${data[k].hours}ש'</div>`;
+    else if(hasMe){const _eh=(data[k].extraJobs||[]).reduce((a,ej)=>a+(ej.hours||0),0);const _ah=((data[k].hours||0)+_eh);html+=`<div class="cc-h">${_ah%1===0?_ah:_ah.toFixed(1)}ש'</div>`;}
     c.innerHTML=html;grid.appendChild(c);
   }
   const mb=document.getElementById('missBanner');
@@ -912,7 +943,7 @@ function updHdrSub(){
   const now=new Date();
   const isCurrentMonth=mk===`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   let h=0,p=0;
-  Object.keys(data).forEach(k=>{if(k.startsWith(mk)){h+=data[k].hours||0;p+=cp(data[k].hours,data[k].rate,data[k].bonuses).total;}});
+  Object.keys(data).forEach(k=>{if(k.startsWith(mk)){const _pr=cpDay(data[k]);h+=_pr.allHours;p+=_pr.total;}});
   if(isCurrentMonth)(s.jobs||[]).forEach(j=>p+=parseFloat(j.fixed)||0);
   const label=isCurrentMonth?'החודש':`${MN[curDt.getMonth()]} ${curDt.getFullYear()}`;
   document.getElementById('hdrSub').textContent=`${label}: ${h.toFixed(1)} ש' | ₪${Math.round(p).toLocaleString('he-IL')}`;
@@ -921,7 +952,7 @@ function updHdrSub(){
 // ---- DAY MODAL ----
 function openDay(k){
   selDt=new Date(k);const data=D.g(),s=D.gs();
-  const d=data[k]||{hours:'',rate:s.jobs?.[0]?.rate||50,note:'',bonuses:[],jobIdx:0,startTime:'',endTime:''};
+  const d=data[k]||{hours:'',rate:s.jobs?.[0]?.rate||50,note:'',bonuses:[],jobIdx:0,startTime:'',endTime:'',extraJobs:[]};
   document.getElementById('mDayTtl').textContent=k;
   document.getElementById('mDaySub').textContent=HC.f(selDt);
   document.getElementById('mNavTtl').textContent=k;
@@ -935,17 +966,59 @@ function openDay(k){
   document.getElementById('dNote').value=d.note||'';
   document.getElementById('dBonList').innerHTML='';
   (d.bonuses||[]).forEach(b=>addB(b.desc,b.amount));
+  document.getElementById('dExtraJobList').innerHTML='';
+  (d.extraJobs||[]).forEach(ej=>addExtraJob(ej.jobIdx,ej.hours,ej.rate,ej.startTime,ej.endTime));
   openM('mDay');
 }
 function onJobCh(){const s=D.gs(),ji=parseInt(document.getElementById('dJob').value);const j=s.jobs?.[ji];if(j)document.getElementById('dR').value=j.rate||'';}
 function calcT(){const sv=document.getElementById('dS').value,ev=document.getElementById('dE').value;if(sv&&ev){const[sh,sm]=sv.split(':').map(Number),[eh,em]=ev.split(':').map(Number);let df=(eh+em/60)-(sh+sm/60);if(df<0)df+=24;document.getElementById('dH').value=df.toFixed(2);}}
 function copyYest(){const y=new Date(selDt);y.setDate(y.getDate()-1);const d=D.g()[fk(y)];if(d)document.getElementById('dH').value=d.hours;}
 function addB(desc='',amt=''){const list=document.getElementById('dBonList');const row=document.createElement('div');row.className='brow';row.innerHTML=`<input type="text" class="fi bdesc" placeholder="סיבה" value="${desc}"><input type="number" class="fi bamt" placeholder="₪" value="${amt}"><button class="bdel" onclick="this.parentElement.remove()">×</button>`;list.appendChild(row);}
+function addExtraJob(ji=0,h='',r='',st='',en=''){
+  const s=D.gs();const list=document.getElementById('dExtraJobList');
+  const row=document.createElement('div');
+  row.className='ej-row';
+  row.style.cssText='background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:10px;margin-bottom:8px;position:relative';
+  const jobOpts=(s.jobs||[]).map((j,i)=>`<option value="${i}"${i===ji?' selected':''}>${j.name}</option>`).join('');
+  row.innerHTML=`<button class="bdel" style="position:absolute;top:6px;left:6px;z-index:1" onclick="this.closest('.ej-row').remove()">×</button>
+    <div class="fg" style="margin-bottom:6px"><label class="fl">מקום עבודה נוסף</label>
+      <select class="fi ej-job" onchange="onExtraJobCh(this)">${jobOpts}</select></div>
+    <div class="t2row">
+      <div class="fg"><label class="fl">כניסה</label><input type="time" class="fi ej-start" value="${st||''}" onchange="calcExtraT(this)"></div>
+      <div class="fg"><label class="fl">יציאה</label><input type="time" class="fi ej-end" value="${en||''}" onchange="calcExtraT(this)"></div>
+    </div>
+    <div class="t2row">
+      <div class="fg"><label class="fl">שעות</label><input type="number" class="fi ej-hours" step="0.25" value="${h||''}" placeholder="0.00"></div>
+      <div class="fg"><label class="fl">תעריף ₪</label><input type="number" class="fi ej-rate" value="${r||''}" placeholder="₪"></div>
+    </div>`;
+  list.appendChild(row);
+}
+function onExtraJobCh(sel){
+  const s=D.gs(),ji=parseInt(sel.value)||0,j=s.jobs?.[ji];
+  if(!j)return;
+  const row=sel.closest('.ej-row');
+  const rateEl=row?.querySelector('.ej-rate');
+  if(rateEl&&!rateEl.value) rateEl.value=j.rate||'';
+}
+function calcExtraT(el){
+  const row=el.closest('.ej-row');if(!row)return;
+  const sv=row.querySelector('.ej-start').value,ev=row.querySelector('.ej-end').value;
+  if(sv&&ev){const[sh,sm]=sv.split(':').map(Number),[eh,em]=ev.split(':').map(Number);let df=(eh+em/60)-(sh+sm/60);if(df<0)df+=24;row.querySelector('.ej-hours').value=df.toFixed(2);}
+}
 function saveDay(){
   const data=D.g(),bons=[];
   document.querySelectorAll('#dBonList .brow').forEach(r=>{const desc=r.querySelector('.bdesc').value,amt=parseFloat(r.querySelector('.bamt').value);if(amt>0)bons.push({desc:desc||'תוספת',amount:amt});});
+  const extraJobs=[];
+  document.querySelectorAll('#dExtraJobList .ej-row').forEach(row=>{
+    const ji=parseInt(row.querySelector('.ej-job').value)||0;
+    const h=parseFloat(row.querySelector('.ej-hours').value)||0;
+    const r=parseFloat(row.querySelector('.ej-rate').value)||0;
+    const st=row.querySelector('.ej-start').value||'';
+    const en=row.querySelector('.ej-end').value||'';
+    if(h>0) extraJobs.push({jobIdx:ji,hours:h,rate:r,startTime:st,endTime:en});
+  });
   const k=fk(selDt);
-  data[k]={hours:parseFloat(document.getElementById('dH').value)||0,rate:parseFloat(document.getElementById('dR').value)||0,note:document.getElementById('dNote').value,bonuses:bons,jobIdx:parseInt(document.getElementById('dJob').value)||0,startTime:document.getElementById('dS').value,endTime:document.getElementById('dE').value};
+  data[k]={hours:parseFloat(document.getElementById('dH').value)||0,rate:parseFloat(document.getElementById('dR').value)||0,note:document.getElementById('dNote').value,bonuses:bons,jobIdx:parseInt(document.getElementById('dJob').value)||0,startTime:document.getElementById('dS').value,endTime:document.getElementById('dE').value,extraJobs};
   D.s(data);closeM('mDay');renderCal();updRep();saveDr();flash();vib();
 }
 function navDay(delta){const d=new Date(selDt);d.setDate(d.getDate()+delta);closeM('mDay');openDay(fk(d));}
@@ -974,23 +1047,38 @@ function execMulti(){
 
 // ---- REPORTS ----
 function selPer(btn){vib();document.querySelectorAll('.pill').forEach(b=>b.classList.remove('active'));btn.classList.add('active');per=btn.dataset.p;document.getElementById('custPRow').style.display=per==='custom'?'block':'none';if(per!=='custom')updRep();}
-function switchRTab(tab,btn){vib();document.querySelectorAll('.rtab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');rTab=tab;updRep();}
+function switchRTab(tab,btn){
+  vib();
+  document.querySelectorAll('.rtab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  rTab=tab;
+  const pillsEl=document.querySelector('.pills');
+  const custRow=document.getElementById('custPRow');
+  const noPills=['cmp','arc','year'];
+  if(pillsEl) pillsEl.style.display=noPills.includes(tab)?'none':'flex';
+  if(custRow&&noPills.includes(tab)) custRow.style.display='none';
+  updRep();
+}
 function updRep(){
   if(!document.getElementById('pg-rep').classList.contains('active'))return;
-  const dates=getPerDts(per);if(!dates.length)return;
   const cont=document.getElementById('repContent');
+  const noDateTabs=['cmp','arc','year'];
+  if(noDateTabs.includes(rTab)){
+    if(rTab==='cmp')renderCmp(cont);
+    else if(rTab==='arc')renderArc(cont);
+    else if(rTab==='year')renderYear(cont);
+    return;
+  }
+  const dates=getPerDts(per);if(!dates.length)return;
   if(rTab==='gen')renderGen(dates,cont);
   else if(rTab==='jobs')renderJobs(dates,cont);
-  else if(rTab==='cmp')renderCmp(cont);
-  else if(rTab==='arc')renderArc(cont);
-  else if(rTab==='year')renderYear(cont);
 }
 
 const cOpts=dk=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'transparent',borderColor:'transparent'},ticks:{color:dk?'#475569':'#94A3B8',font:{size:9,family:'Inter'},maxRotation:0}},y:{grid:{color:dk?'rgba(255,255,255,0.04)':'rgba(0,0,0,0.04)',lineWidth:0.5},border:{dash:[3,3],color:'transparent'},ticks:{color:dk?'#475569':'#94A3B8',font:{size:9,family:'Inter'}}}}});
 
 function renderGen(dates,cont){
   const data=D.g();let th=0,tp=0;const lb=[],hd=[],pd2=[];
-  dates.forEach(d=>{const k=fk(d);lb.push(`${d.getDate()}/${d.getMonth()+1}`);if(data[k]){const pr=cp(data[k].hours,data[k].rate,data[k].bonuses);th+=data[k].hours;tp+=pr.total;hd.push(data[k].hours);pd2.push(pr.total);}else{hd.push(0);pd2.push(0);}});
+  dates.forEach(d=>{const k=fk(d);lb.push(`${d.getDate()}/${d.getMonth()+1}`);if(data[k]){const pr=cpDay(data[k]);th+=pr.allHours;tp+=pr.total;hd.push(pr.allHours);pd2.push(pr.total);}else{hd.push(0);pd2.push(0);}});
   const aH=dates.length?th/dates.length:0,aP=dates.length?tp/dates.length:0;
   const dk=document.body.getAttribute('data-theme')==='dark';
   cont.innerHTML=`
@@ -1013,7 +1101,7 @@ function renderGen(dates,cont){
 function renderJobs(dates,cont){
   const data=D.g(),s=D.gs(),jobs=s.jobs||[];
   const st=jobs.map(()=>({h:0,p:0}));let total=0;
-  dates.forEach(d=>{const k=fk(d);if((data[k]?.hours||0)>0){const ji=data[k].jobIdx??0;if(st[ji]){const pr=cp(data[k].hours,data[k].rate,data[k].bonuses);st[ji].h+=data[k].hours;st[ji].p+=pr.total;total+=pr.total;}}});
+  dates.forEach(d=>{const k=fk(d);if((data[k]?.hours||0)>0){const ji=data[k].jobIdx??0;if(st[ji]){const pr=cpDay(data[k]);st[ji].h+=pr.allHours;st[ji].p+=pr.total;total+=pr.total;}(data[k].extraJobs||[]).forEach(ej=>{const eji=ej.jobIdx??0;if(st[eji]){const er=cpExtra(ej.hours||0,ej.rate||0);st[eji].h+=ej.hours||0;st[eji].p+=er.base;total+=er.base;}});}});
   jobs.forEach((j,i)=>{const f=parseFloat(j.fixed)||0;if(f>0){st[i].p+=f;total+=f;}});
   const maxI=st.reduce((mx,_,i)=>st[i].p>(st[mx]?.p||0)?i:mx,0);
   const dk=document.body.getAttribute('data-theme')==='dark';
@@ -1034,56 +1122,161 @@ function renderJobs(dates,cont){
   jCh=new Chart(document.getElementById('jCh'),{type:'bar',data:{labels:jobs.map(j=>j.name),datasets:[{data:st.map(x=>Math.round(x.p)),backgroundColor:jobs.map(j=>j.color),borderRadius:8,borderSkipped:false}]},options:cOpts(dk)});
 }
 
-function renderCmp(cont){
-  const data=D.g(),groups={};
-  Object.keys(data).forEach(k=>{const d=data[k],pr=cp(d.hours,d.rate,d.bonuses),mk=k.substring(0,7);groups[mk]=(groups[mk]||0)+pr.total;});
-  const sorted=Object.keys(groups).sort();
-  const lb=sorted.map(mk=>{const[y,m]=mk.split('-');return`${MN[parseInt(m)-1]} ${y.slice(2)}`;});
-  const vals=sorted.map(mk=>Math.round(groups[mk]));
+function renderCmp(cont,mode,p1,p2,p3){
+  // mode: 'months'|'weeks'|'custom'
+  // p1: selMonth(int), p2: selYear(str), p3: customMonths(JSON)
+  const data=D.g(),dk=document.body.getAttribute('data-theme')==='dark',now=new Date();
+  mode=mode||'months';
+  const selMonth=p1!=null?parseInt(p1):now.getMonth();
+  const selYear=p2||String(now.getFullYear());
+  let cmpM=[];try{cmpM=JSON.parse(p3||'[]');}catch(e){}
+  const allYears=[];for(let y=now.getFullYear();y>=2015;y--)allYears.push(String(y));
+  const monthOpts=MN.map((m,i)=>`<option value="${i}"${i===selMonth?' selected':''}>${m}</option>`).join('');
+  const yearOpts=allYears.map(y=>`<option value="${y}"${y===selYear?' selected':''}>${y}</option>`).join('');
+  const cmpMStr=JSON.stringify(cmpM);
+  const encCmpM=encodeURIComponent(cmpMStr);
+  const picker=`<div class="card" style="padding:12px 14px;margin-bottom:10px">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+      <button class="pill${mode==='months'?' active':''}" onclick="renderCmp(document.getElementById('repContent'),'months',${selMonth},'${selYear}','${cmpMStr}')">חודשים</button>
+      <button class="pill${mode==='weeks'?' active':''}" onclick="renderCmp(document.getElementById('repContent'),'weeks',${selMonth},'${selYear}','${cmpMStr}')">שבועות בחודש</button>
+      <button class="pill${mode==='custom'?' active':''}" onclick="renderCmp(document.getElementById('repContent'),'custom',${selMonth},'${selYear}','${cmpMStr}')">בחירה חופשית</button>
+    </div>
+    ${mode==='weeks'?`<div style="display:flex;gap:8px">
+      <select onchange="renderCmp(document.getElementById('repContent'),'weeks',this.value,'${selYear}','${cmpMStr}')" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--bd);background:var(--s);color:var(--t);font-size:13px">${monthOpts}</select>
+      <select onchange="renderCmp(document.getElementById('repContent'),'weeks',${selMonth},this.value,'${cmpMStr}')" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--bd);background:var(--s);color:var(--t);font-size:13px">${yearOpts}</select>
+    </div>`:''}
+    ${mode==='custom'?`<div><div style="font-size:11px;color:var(--t3);margin-bottom:6px">בחר חודשים:</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">${MN.map((m,i)=>{const sel=cmpM.includes(i);return`<button onclick="(function(){var cm=${cmpMStr};var ix=cm.indexOf(${i});if(ix>=0)cm.splice(ix,1);else cm.push(${i});renderCmp(document.getElementById('repContent'),'custom',${selMonth},'${selYear}',JSON.stringify(cm));})();return false" style="padding:4px 8px;border-radius:20px;border:1px solid var(--bd);background:${sel?'var(--b8)':'var(--s2)'};color:${sel?'#fff':'var(--t)'};font-size:11px;cursor:pointer">${m}</button>`;}).join('')}</div>
+      <select onchange="renderCmp(document.getElementById('repContent'),'custom',${selMonth},this.value,'${cmpMStr}')" style="width:100%;padding:7px;border-radius:8px;border:1px solid var(--bd);background:var(--s);color:var(--t);font-size:13px">${yearOpts}</select>
+    </div>`:''}
+  </div>`;
+  let lb=[],vals=[];
+  if(mode==='months'){
+    const groups={};
+    Object.keys(data).forEach(k=>{const day=data[k],pr=cpDay(day),mk=k.substring(0,7);groups[mk]=(groups[mk]||0)+pr.total;});
+    const sorted=Object.keys(groups).sort();
+    lb=sorted.map(mk=>{const[y,m]=mk.split('-');return`${MN[parseInt(m)-1]} ${y.slice(2)}`;});
+    vals=sorted.map(mk=>Math.round(groups[mk]));
+  } else if(mode==='weeks'){
+    const yr=parseInt(selYear),m=selMonth;
+    const days=new Date(yr,m+1,0).getDate();
+    const weeks=[{l:'שבוע 1',p:0},{l:'שבוע 2',p:0},{l:'שבוע 3',p:0},{l:'שבוע 4',p:0},{l:'שבוע 5',p:0}];
+    for(let day=1;day<=days;day++){
+      const k=`${yr}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      if(data[k]) weeks[Math.min(Math.floor((day-1)/7),4)].p+=cpDay(data[k]).total;
+    }
+    const actW=weeks.filter(w=>w.p>0);
+    lb=(actW.length?actW:weeks.slice(0,4)).map(w=>w.l);
+    vals=(actW.length?actW:weeks.slice(0,4)).map(w=>Math.round(w.p));
+  } else if(mode==='custom'){
+    if(!cmpM.length){cont.innerHTML=picker+`<div class="card"><div class="empty"><div class="empty-ttl">בחר חודשים להשוואה</div></div></div>`;return;}
+    const yr=parseInt(selYear);
+    [...cmpM].sort((a,b)=>a-b).forEach(m=>{
+      let tot=0;const days=new Date(yr,m+1,0).getDate();
+      for(let day=1;day<=days;day++){const k=`${yr}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;if(data[k])tot+=cpDay(data[k]).total;}
+      lb.push(`${MN[m]} ${selYear}`);vals.push(Math.round(tot));
+    });
+  }
   const maxV=Math.max(...vals,0),maxI=vals.indexOf(maxV);
-  const dk=document.body.getAttribute('data-theme')==='dark';
-  cont.innerHTML=`<div class="card"><div class="csummary"><span>הגבוה: <strong>${lb[maxI]||'-'} — ₪${maxV.toLocaleString('he-IL')}</strong></span></div><div class="cwrap"><canvas id="cmpCh"></canvas></div></div>`;
+  const titleTxt=mode==='weeks'?`שבועות — ${MN[selMonth]} ${selYear}`:mode==='custom'?`השוואה — ${selYear}`:'השוואת חודשים';
+  cont.innerHTML=picker+`<div class="card"><div class="csummary"><span>${titleTxt}</span><span style="color:var(--g)">גבוה: <strong>${lb[maxI]||'-'} — ₪${maxV.toLocaleString('he-IL')}</strong></span></div><div class="cwrap"><canvas id="cmpCh"></canvas></div></div>`;
   if(cmpCh)cmpCh.destroy();
   cmpCh=new Chart(document.getElementById('cmpCh'),{type:'bar',data:{labels:lb,datasets:[{data:vals,backgroundColor:vals.map((_,i)=>i===maxI?'#10B981':'#2563EB'),borderRadius:6,borderSkipped:false}]},options:cOpts(dk)});
 }
 
-function renderArc(cont){
-  const data=D.g(),s=D.gs(),months={};
-  Object.keys(data).forEach(k=>{const mk=k.substring(0,7),d=data[k],pr=cp(d.hours,d.rate,d.bonuses);if(!months[mk])months[mk]={h:0,p:0,days:0};months[mk].h+=d.hours;months[mk].p+=pr.total;months[mk].days++;});
+function renderArc(cont,selYear,selMonth){
+  const data=D.g(),s=D.gs(),now=new Date();
+  const allYears=[];
+  for(let y=now.getFullYear();y>=2015;y--)allYears.push(String(y));
+  const dataYears=new Set(Object.keys(data).map(k=>k.substring(0,4)));
+  // months map
+  const months={};
+  Object.keys(data).forEach(k=>{
+    const mk=k.substring(0,7),day=data[k],pr=cpDay(day);
+    if(!months[mk])months[mk]={h:0,p:0,days:0};
+    months[mk].h+=pr.allHours; months[mk].p+=pr.total; months[mk].days++;
+  });
   (s.jobs||[]).forEach(j=>{const f=parseFloat(j.fixed)||0;if(f>0)Object.keys(months).forEach(mk=>months[mk].p+=f);});
-  const sorted=Object.keys(months).sort().reverse();
-  if(!sorted.length){cont.innerHTML=`<div class="card"><div class="empty"><div class="empty-ico" style="font-size:0"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="empty-ttl">אין נתונים עדיין</div></div></div>`;return;}
-
+  // ברירת מחדל: השנה הנוכחית שיש בה נתונים
+  const availYears=allYears.filter(y=>dataYears.has(y));
+  const curY=selYear||(availYears[0]||String(now.getFullYear()));
+  const showAll=curY==='all';
+  const yearOpts=['<option value="all"'+(showAll?' selected':'')+'>הכל (כל השנים)</option>']
+    .concat(allYears.map(y=>`<option value="${y}"${y===curY?' selected':''}>${y}${dataYears.has(y)?' ✓':''}</option>`)).join('');
+  const yearPicker=`<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+    <label style="font-size:12px;font-weight:500;color:var(--t2);white-space:nowrap">שנה:</label>
+    <select onchange="renderArc(document.getElementById('repContent'),this.value,null)" style="flex:1;padding:7px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--s);color:var(--t);font-size:13px">${yearOpts}</select>
+  </div>`;
+  const sorted=Object.keys(months).sort().reverse().filter(mk=>showAll||mk.startsWith(curY));
+  if(!sorted.length){
+    cont.innerHTML=yearPicker+`<div class="card"><div class="empty"><div class="empty-ico" style="font-size:0"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="empty-ttl">אין נתונים עדיין</div></div></div>`;
+    return;
+  }
+  // אם נבחר חודש ספציפי → תצוגת שבועות
+  if(selMonth!=null){
+    const [yStr,mStr]=selMonth.split('-');
+    const yr=parseInt(yStr),m=parseInt(mStr)-1;
+    const days=new Date(yr,m+1,0).getDate();
+    const weeks=[{l:'שבוע 1',h:0,p:0},{l:'שבוע 2',h:0,p:0},{l:'שבוע 3',h:0,p:0},{l:'שבוע 4',h:0,p:0},{l:'שבוע 5',h:0,p:0}];
+    for(let day=1;day<=days;day++){
+      const k=`${yStr}-${mStr}-${String(day).padStart(2,'0')}`;
+      if(data[k]){const pr=cpDay(data[k]);const wi=Math.min(Math.floor((day-1)/7),4);weeks[wi].h+=pr.allHours;weeks[wi].p+=pr.total;}
+    }
+    const dk=document.body.getAttribute('data-theme')==='dark';
+    const mkTotal=months[selMonth]||{p:1};
+    const backBtn=`<div style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--b6);margin-bottom:12px" onclick="renderArc(document.getElementById('repContent'),'${curY}',null)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg> חזרה ל-${curY}</div>`;
+    let wHtml=`<div class="card" style="margin-bottom:12px"><div style="font-size:14px;font-weight:400;margin-bottom:12px">${MN[m]} ${yStr} — שבועות</div>`;
+    weeks.forEach((w,i)=>{
+      if(i>=4&&w.h===0)return;
+      const pct=mkTotal.p>0?Math.round(w.p/mkTotal.p*100):0;
+      wHtml+=`<div class="arc-row"><div style="flex:1"><div class="arc-m">${w.l}</div><div class="pbar-wrap" style="margin-top:4px;height:4px"><div class="pbar-fill" style="width:${pct}%;background:var(--b6)"></div></div></div><div class="arc-h">${w.h.toFixed(1)} ש'</div><div class="arc-p">₪${Math.round(w.p).toLocaleString('he-IL')}</div></div>`;
+    });
+    wHtml+=`</div><div class="card"><div class="cwrap" style="height:160px"><canvas id="arcWeekCh"></canvas></div></div>`;
+    cont.innerHTML=yearPicker+backBtn+wHtml;
+    const actW=weeks.filter((w,i)=>i<4||w.h>0);
+    if(window._arcWeekCh){try{window._arcWeekCh.destroy();}catch(e){}}
+    const cv=document.getElementById('arcWeekCh');
+    if(cv)window._arcWeekCh=new Chart(cv,{type:'bar',data:{labels:actW.map(w=>w.l),datasets:[{data:actW.map(w=>Math.round(w.p)),backgroundColor:'#2563EB',borderRadius:6,borderSkipped:false}]},options:{...cOpts(dk),plugins:{legend:{display:false}}}});
+    return;
+  }
+  // תצוגה ראשית: כרטיסי שנה (רק ב-showAll) + רשימת חודשים
   const years={};
   sorted.forEach(mk=>{const y=mk.substring(0,4);if(!years[y])years[y]={h:0,p:0,months:0,best:{p:0,mk:''}};years[y].h+=months[mk].h;years[y].p+=months[mk].p;years[y].months++;if(months[mk].p>years[y].best.p)years[y].best={p:months[mk].p,mk};});
-
-  let html='';
-
-  Object.keys(years).sort().reverse().forEach(y=>{
-    const yr=years[y];
-    const avgM=yr.months>0?Math.round(yr.p/yr.months):0;
-    const [bY,bM]=yr.best.mk.split('-');
-    html+=`<div class="card" style="margin-bottom:12px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-        <div style="font-size:16px;font-weight:300">${y}</div>
-        <div style="background:var(--b1);color:var(--b8);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:400">${yr.months} חודשים</div>
+  let html=yearPicker;
+  if(showAll){
+    Object.keys(years).sort().reverse().forEach(y=>{
+      const yr=years[y],avgM=yr.months>0?Math.round(yr.p/yr.months):0;
+      const [bY,bM]=(yr.best.mk||'-').split('-');
+      html+=`<div class="card" style="margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:16px;font-weight:300">${y}</div>
+          <div style="background:var(--b1);color:var(--b8);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:400">${yr.months} חודשים</div>
+        </div>
+        <div class="stats-row" style="margin-bottom:12px">
+          <div class="scard"><div class="slbl">סה"כ שעות</div><div class="sval b">${yr.h.toFixed(0)}</div></div>
+          <div class="scard"><div class="slbl">סה"כ הכנסה</div><div class="sval g">₪${Math.round(yr.p).toLocaleString('he-IL')}</div></div>
+        </div>
+        <div class="stats-row" style="margin-bottom:8px">
+          <div class="scard"><div class="slbl">ממוצע חודשי</div><div class="sval" style="color:var(--b6)">₪${avgM.toLocaleString('he-IL')}</div></div>
+          <div class="scard"><div class="slbl">🏆 חודש שיא</div><div class="sval" style="font-size:14px;color:var(--am)">${bM?MN[parseInt(bM)-1]:'—'}</div></div>
+        </div>
+      </div>`;
+    });
+  }
+  const maxP=Math.max(...sorted.map(mk=>months[mk].p),1);
+  html+=`<div class="card"><div style="font-size:13px;font-weight:400;color:var(--t2);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--bd)">ארכיון חודשי — לחץ לפירוט שבועי</div>`;
+  sorted.forEach(mk=>{
+    const[y,m]=mk.split('-');const pct=Math.round(months[mk].p/maxP*100);
+    html+=`<div class="arc-row" style="cursor:pointer" onclick="renderArc(document.getElementById('repContent'),'${curY}','${mk}')">
+      <div style="flex:1"><div class="arc-m" style="color:var(--b8)">${MN[parseInt(m)-1]} ${y} <span style="font-size:10px;color:var(--t3)">▸</span></div>
+        <div class="pbar-wrap" style="margin-top:4px;height:4px"><div class="pbar-fill" style="width:${pct}%;background:var(--b6)"></div></div>
       </div>
-      <div class="stats-row" style="margin-bottom:12px">
-        <div class="scard"><div class="slbl">סה"כ שעות</div><div class="sval b">${yr.h.toFixed(0)}</div></div>
-        <div class="scard"><div class="slbl">סה"כ הכנסה</div><div class="sval g">₪${Math.round(yr.p).toLocaleString('he-IL')}</div></div>
-      </div>
-      <div class="stats-row" style="margin-bottom:8px">
-        <div class="scard"><div class="slbl">ממוצע חודשי</div><div class="sval" style="color:var(--b6)">₪${avgM.toLocaleString('he-IL')}</div></div>
-        <div class="scard"><div class="slbl">🏆 חודש שיא</div><div class="sval" style="font-size:14px;color:var(--am)">${MN[parseInt(bM)-1]}</div></div>
-      </div>
+      <div class="arc-h">${months[mk].h.toFixed(1)} ש'</div>
+      <div class="arc-p">₪${Math.round(months[mk].p).toLocaleString('he-IL')}</div>
     </div>`;
   });
-
-  html+='<div class="card"><div style="font-size:13px;font-weight:400;color:var(--t2);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--bd)">ארכיון חודשי</div>';
-  sorted.forEach(mk=>{const[y,m]=mk.split('-');const maxP=Math.max(...Object.values(months).map(x=>x.p));const pct=maxP>0?Math.round(months[mk].p/maxP*100):0;
-    html+=`<div class="arc-row"><div style="flex:1"><div class="arc-m">${MN[parseInt(m)-1]} ${y}</div><div class="pbar-wrap" style="margin-top:4px;height:4px"><div class="pbar-fill" style="width:${pct}%;background:var(--b6)"></div></div></div><div class="arc-h">${months[mk].h.toFixed(1)} ש'</div><div class="arc-p">₪${Math.round(months[mk].p).toLocaleString('he-IL')}</div></div>`;
-  });
-  html+='</div>';
+  html+=`</div>`;
   cont.innerHTML=html;
 }
 
@@ -1108,9 +1301,9 @@ function renderYear(cont,selectedYear){
     if(!k.startsWith(curY))return;
     const d=data[k],mi=parseInt(k.split('-')[1])-1;
     if(mi<0||mi>11)return;
-    const pr=cp(d.hours,d.rate,d.bonuses);
-    months[mi].h+=d.hours;months[mi].p+=pr.total;months[mi].days++;
-    totalH+=d.hours;totalP+=pr.total;
+    const pr=cpDay(d);
+    months[mi].h+=pr.allHours;months[mi].p+=pr.total;months[mi].days++;
+    totalH+=pr.allHours;totalP+=pr.total;
   });
   months.forEach((m,i)=>{if(m.days>0&&m.p>bestP){bestP=m.p;bestM=i;}if(m.days>0&&m.p<worstP){worstP=m.p;worstM=i;}});
   const avgM=months.filter(m=>m.days>0).length;
@@ -1461,7 +1654,22 @@ function renderSettings(){
   document.getElementById('drOn').style.display=aToken?'block':'none';
   renderJobsCont();
 }
-function setSetting(k,v){const s=D.gs();s[k]=v;D.ss(s);if(k==='showMissing')renderCal();vib();}
+function setSetting(k,v){const s=D.gs();s[k]=v;D.ss(s);if(k==='showMissing')renderCal();if(k==='calcOvertime')_updXo2State();vib();}
+function _updXo2State(){
+  const s=D.gs();
+  const el=document.getElementById('xo2');
+  if(!el)return;
+  const wrap=el.closest('.pdfopt');
+  if(!wrap)return;
+  if(!s.calcOvertime){
+    if(el.classList.contains('on')){el.classList.remove('on');el.textContent='';}
+    wrap.style.opacity='0.4';
+    wrap.style.pointerEvents='none';
+  } else {
+    wrap.style.opacity='';
+    wrap.style.pointerEvents='';
+  }
+}
 function renderJobsCont(){
   const s=D.gs(),cont=document.getElementById('jobsCont');
   cont.innerHTML=(s.jobs||[]).map((j,i)=>`
@@ -1840,6 +2048,17 @@ async function manualSync(){
   }catch(e){showToast('שגיאה בסנכרון');}
 }
 function disconnDrive(){if(confirm('לנתק?')){aToken=null;localStorage.removeItem('syen');localStorage.removeItem('gtoken');renderSettings();setSyncDot(false);}}
+async function deleteDriveBackup(){
+  if(!aToken){showToast('יש לחבר Google Drive תחילה');return;}
+  if(!confirm('האם אתה בטוח שברצונך למחוק את הגיבוי מ-Google Drive? פעולה זו אינה הפיכה.')){return;}
+  try{
+    const q=encodeURIComponent("name='moneytime_solo.json' and trashed=false");
+    const list=await(await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=appDataFolder&fields=files(id)`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
+    if(!list.files?.length){showToast('לא נמצא גיבוי ב-Drive');return;}
+    await fetch(`https://www.googleapis.com/drive/v3/files/${list.files[0].id}`,{method:'DELETE',headers:{Authorization:`Bearer ${aToken}`}});
+    showToast('✅ הגיבוי נמחק מ-Drive');
+  }catch(e){showToast('שגיאה במחיקה');}
+}
 function setSyncDot(on){const d=document.getElementById('sdot');if(d)d.className='sdot'+(on?'':' off');}
 window.addEventListener('online',()=>{
   const s=D.gs();
@@ -2251,7 +2470,7 @@ function expXLSX(){
   }
   var opts={
     rate:   document.getElementById('xo1')?document.getElementById('xo1').classList.contains('on'):true,
-    ot:     document.getElementById('xo2')?document.getElementById('xo2').classList.contains('on'):true,
+    ot:     D.gs().calcOvertime&&(document.getElementById('xo2')?document.getElementById('xo2').classList.contains('on'):false),
     bonus:  document.getElementById('xo3')?document.getElementById('xo3').classList.contains('on'):true,
     note:   document.getElementById('xo4')?document.getElementById('xo4').classList.contains('on'):false,
     job:    document.getElementById('xo5')?document.getElementById('xo5').classList.contains('on'):false,
@@ -2263,29 +2482,35 @@ function expXLSX(){
 
 function _showTableReport(detailed,filterDates,xlsxOpts){
   var d=D.g(), s=D.gs(), jobs=s.jobs||[], pd=D.gp();
-  var dayNames=['\u05e8\u05d0\u05e9\u05d5\u05df','\u05e9\u05e0\u05d9','\u05e9\u05dc\u05d9\u05e9\u05d9','\u05e8\u05d1\u05d9\u05e2\u05d9','\u05d7\u05de\u05d9\u05e9\u05d9','\u05e9\u05d9\u05e9\u05d9','\u05e9\u05d1\u05ea'];
+  var HE=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
   var today=new Date().toLocaleDateString('he-IL');
   var totalH=0, totalP=0, totalBase=0, totalPartner=0;
   var rows='';
   var allKeys=Object.keys(d).sort();
   var activeSet=filterDates?new Set(filterDates.map(function(dt){return fk(dt);})):null;
-  // אפשרויות Excel — ברירת מחדל אם לא הועברו
-  var ox=xlsxOpts||{rate:true,ot:true,bonus:true,note:false,job:false,partner:false};
+  var ox=xlsxOpts||{rate:true,ot:false,bonus:true,note:false,job:false,partner:false};
+
+  // כמה עבודות נוספות מקסימום בטווח
+  var maxExtra=0;
+  allKeys.forEach(function(k){
+    if(activeSet&&!activeSet.has(k))return;
+    var r=d[k]; if(!(r.hours>0))return;
+    maxExtra=Math.max(maxExtra,(r.extraJobs||[]).length);
+  });
 
   allKeys.forEach(function(k){
     if(activeSet&&!activeSet.has(k))return;
     var r=d[k]; if(!(r.hours>0))return;
     var pr=cp(r.hours,r.rate,r.bonuses);
+    var dayTot=cpDay(r);
     var dt=new Date(k);
-    var jobName=((jobs[r.jobIdx||0])||{}).name||'\u05e8\u05d0\u05e9\u05d9';
-    var bon=(r.bonuses||[]).reduce(function(s,b){return s+(parseFloat(b.amount)||0);},0);
-    totalH+=r.hours; totalBase+=pr.base; totalP+=pr.total;
+    var jobName=((jobs[r.jobIdx||0])||{}).name||'ראשי';
+    var bon=(r.bonuses||[]).reduce(function(s2,b){return s2+(parseFloat(b.amount)||0);},0);
+    totalH+=dayTot.allHours; totalBase+=dayTot.base; totalP+=dayTot.total;
     rows+='<tr>';
-    // תאריך — מודגש בשישי/שבת
-    var dayIdx=dt.getDay();
     rows+='<td>'+(detailed?'<strong>':'')+k+(detailed?'</strong>':'')+'</td>';
-    rows+='<td style="color:var(--t2)">'+dayNames[dayIdx]+'</td>';
-    // שעות — מודגש
+    rows+='<td style="color:#64748B">'+HE[dt.getDay()]+'</td>';
+    // שעות עבודה א
     rows+='<td style="font-weight:600;color:#1E3A8A">'+r.hours+'</td>';
     if(detailed&&ox.rate) rows+='<td style="color:#475569">'+r.rate+'</td>';
     if(detailed&&ox.ot){
@@ -2293,10 +2518,22 @@ function _showTableReport(detailed,filterDates,xlsxOpts){
       rows+='<td style="color:#F59E0B;font-weight:500">'+(pr.ot1||0).toFixed(1)+'</td>';
       rows+='<td style="color:#EF4444;font-weight:500">'+(pr.ot2||0).toFixed(1)+'</td>';
     }
-    // רווח עבודה / בונוס / סה"כ
+    // עמודות עבודות נוספות
+    var extras=r.extraJobs||[];
+    for(var ei=0;ei<maxExtra;ei++){
+      if(extras[ei]){
+        var ej=extras[ei];
+        var ejr=cpExtra(ej.hours||0,ej.rate||0);
+        rows+='<td style="color:#0EA5E9;font-weight:500">'+ej.hours+'</td>';
+        rows+='<td style="color:#0EA5E9">\u20aa'+Math.round(ejr.base).toLocaleString('he-IL')+'</td>';
+      } else {
+        rows+='<td style="color:#CBD5E1">-</td><td style="color:#CBD5E1">-</td>';
+      }
+    }
+    // עבודה א סכום / בונוס / סה"כ
     rows+='<td style="font-weight:600;color:#1E3A8A;font-size:13px">\u20aa'+Math.round(pr.base).toLocaleString('he-IL')+'</td>';
     rows+='<td style="color:#D97706;font-weight:500">'+(bon>0?'\u20aa'+bon.toFixed(0):'-')+'</td>';
-    rows+='<td style="font-weight:700;color:#166534;font-size:13px">\u20aa'+Math.round(pr.total).toLocaleString('he-IL')+'</td>';
+    rows+='<td style="font-weight:700;color:#166534;font-size:13px">\u20aa'+Math.round(dayTot.total).toLocaleString('he-IL')+'</td>';
     if(detailed&&ox.note) rows+='<td style="color:#64748B">'+(r.note||'')+'</td>';
     if(detailed&&ox.job)  rows+='<td style="color:#475569">'+jobName+'</td>';
     if(detailed&&ox.partner){
@@ -2307,10 +2544,16 @@ function _showTableReport(detailed,filterDates,xlsxOpts){
     rows+='</tr>';
   });
 
-  var headerCols='<th>\u05ea\u05d0\u05e8\u05d9\u05da</th><th>\u05d9\u05d5\u05dd</th><th>\u05e9\u05e2\u05d5\u05ea</th>';
+  // אותיות לעמודות: א ב ג ד
+  var HEL=['\u05d0','\u05d1','\u05d2','\u05d3','\u05d4'];
+  var headerCols='<th>\u05ea\u05d0\u05e8\u05d9\u05da</th><th>\u05d9\u05d5\u05dd</th><th>\u05e9\u05e2\u05d5\u05ea \u05e2\u05d1 \u05d0</th>';
   if(detailed&&ox.rate)  headerCols+='<th>\u05ea\u05e2\u05e8\u05d9\u05e3</th>';
   if(detailed&&ox.ot)    headerCols+='<th>\u05e8\u05d2\u05d9\u05dc\u05d5\u05ea</th><th>125%</th><th>150%</th>';
-  headerCols+='<th>\u05e2\u05d1\u05d5\u05d3\u05d4 \u20aa</th>';
+  for(var ei2=0;ei2<maxExtra;ei2++){
+    var lbl=HEL[ei2+1]||String(ei2+2);
+    headerCols+='<th>\u05e9\u05e2\u05d5\u05ea \u05e2\u05d1 '+lbl+'</th><th>\u05e1\u05db\u05d5\u05dd '+lbl+' \u20aa</th>';
+  }
+  headerCols+='<th>\u05e2\u05d1 \u05d0 \u20aa</th>';
   headerCols+='<th>\u05d1\u05d5\u05e0\u05d5\u05e1 \u20aa</th>';
   headerCols+='<th>\u05e1\u05d4"\u05db \u20aa</th>';
   if(detailed&&ox.note)   headerCols+='<th>\u05d4\u05e2\u05e8\u05d4</th>';
@@ -2319,11 +2562,12 @@ function _showTableReport(detailed,filterDates,xlsxOpts){
 
   var title=detailed?'\u05d3\u05d5\u05d7 \u05de\u05e4\u05d5\u05e8\u05d8 Excel':'\u05d3\u05d5\u05d7 CSV';
 
-  // CSV לשיתוף
-  var hdr=['\u05ea\u05d0\u05e8\u05d9\u05da','\u05d9\u05d5\u05dd','\u05e9\u05e2\u05d5\u05ea'];
+  // CSV
+  var hdr=['\u05ea\u05d0\u05e8\u05d9\u05da','\u05d9\u05d5\u05dd','\u05e9\u05e2\u05d5\u05ea \u05e2\u05d1 \u05d0'];
   if(detailed&&ox.rate)   hdr.push('\u05ea\u05e2\u05e8\u05d9\u05e3');
   if(detailed&&ox.ot)     hdr=hdr.concat(['\u05e8\u05d2\u05d9\u05dc\u05d5\u05ea','125%','150%']);
-  hdr.push('\u05e2\u05d1\u05d5\u05d3\u05d4 \u20aa');
+  for(var ei3=0;ei3<maxExtra;ei3++){var lbl2=HEL[ei3+1]||String(ei3+2);hdr.push('\u05e9\u05e2\u05d5\u05ea \u05e2\u05d1 '+lbl2);hdr.push('\u05e1\u05db\u05d5\u05dd '+lbl2+' \u20aa');}
+  hdr.push('\u05e2\u05d1 \u05d0 \u20aa');
   hdr.push('\u05d1\u05d5\u05e0\u05d5\u05e1 \u20aa');
   hdr.push('\u05e1\u05d4"\u05db \u20aa');
   if(detailed&&ox.note)   hdr.push('\u05d4\u05e2\u05e8\u05d4');
@@ -2334,22 +2578,28 @@ function _showTableReport(detailed,filterDates,xlsxOpts){
     if(activeSet&&!activeSet.has(k))return;
     var r=d[k]; if(!(r.hours>0))return;
     var pr=cp(r.hours,r.rate,r.bonuses);
+    var dayTot=cpDay(r);
     var dt=new Date(k);
     var jobName=((jobs[r.jobIdx||0])||{}).name||'\u05e8\u05d0\u05e9\u05d9';
-    var bon=(r.bonuses||[]).reduce(function(s,b){return s+(parseFloat(b.amount)||0);},0);
-    var cols=[k,dayNames[dt.getDay()],r.hours];
+    var bon=(r.bonuses||[]).reduce(function(s2,b){return s2+(parseFloat(b.amount)||0);},0);
+    var cols=[k,HE[dt.getDay()],r.hours];
     if(detailed&&ox.rate)   cols.push(r.rate);
     if(detailed&&ox.ot)     cols=cols.concat([(pr.reg||r.hours).toFixed(1),(pr.ot1||0).toFixed(1),(pr.ot2||0).toFixed(1)]);
+    var extras2=r.extraJobs||[];
+    for(var ei4=0;ei4<maxExtra;ei4++){
+      if(extras2[ei4]){var ej2=extras2[ei4];var ejr2=cpExtra(ej2.hours||0,ej2.rate||0);cols.push(ej2.hours);cols.push(Math.round(ejr2.base));}
+      else{cols.push('');cols.push('');}
+    }
     cols.push(Math.round(pr.base));
     cols.push(bon.toFixed(0));
-    cols.push(Math.round(pr.total));
+    cols.push(Math.round(dayTot.total));
     if(detailed&&ox.note)   cols.push(r.note||'');
     if(detailed&&ox.job)    cols.push(jobName);
     if(detailed&&ox.partner){var pp=pd[k];cols.push(pp&&pp.hours>0?Math.round(cp(pp.hours,pp.rate||50,pp.bonuses).total):'');}
-    csvLines.push(cols.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(','));
+    csvLines.push(cols.map(function(cv){return'"'+String(cv).replace(/"/g,'""')+'"';}).join(','));
   });
   csvLines.push('');
-  csvLines.push('"\u05e1\u05d4"\u05db","","'+totalH.toFixed(1)+'","\u20aa'+Math.round(totalP).toLocaleString('he-IL')+'"'+(detailed&&ox.partner?',"","\u05d1\u05d9\u05d7\u05d3: \u20aa'+Math.round(totalP+totalPartner).toLocaleString('he-IL')+'"':''));
+  csvLines.push('"\u05e1\u05d4"\u05db","","'+totalH.toFixed(1)+'","\u20aa'+Math.round(totalP).toLocaleString('he-IL')+'"'+(detailed&&ox.partner?',\u05d1\u05d9\u05d7\u05d3: \u20aa'+Math.round(totalP+totalPartner).toLocaleString('he-IL'):''));
   var csvText='\uFEFF'+csvLines.join('\r\n');
 
   var htmlContent='<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="UTF-8">'
@@ -2374,58 +2624,33 @@ function _showTableReport(detailed,filterDates,xlsxOpts){
 
   var existing=document.getElementById('reportOverlay');
   if(existing)existing.remove();
-
   var overlay=document.createElement('div');
   overlay.id='reportOverlay';
   overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:#fff;display:flex;flex-direction:column;overflow:hidden';
-
   var topbar=document.createElement('div');
   topbar.style.cssText='background:#166534;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;gap:8px';
-
   var titleEl=document.createElement('span');
   titleEl.style.cssText='font-size:14px;font-weight:400;flex:1';
   titleEl.textContent=title;
-
   var btnShare=document.createElement('button');
   btnShare.style.cssText='background:rgba(255,255,255,.22);border:none;color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap';
-  btnShare.textContent='📤 שתף';
-
+  btnShare.textContent='\ud83d\udce4 \u05e9\u05ea\u05e3';
   var btnClose=document.createElement('button');
   btnClose.style.cssText='background:rgba(239,68,68,.8);border:none;color:#fff;padding:9px 14px;border-radius:8px;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap';
-  btnClose.textContent='✕ סגור';
-
-  topbar.appendChild(titleEl);
-  topbar.appendChild(btnShare);
-  topbar.appendChild(btnClose);
-
+  btnClose.textContent='\u2715 \u05e1\u05d2\u05d5\u05e8';
+  topbar.appendChild(titleEl);topbar.appendChild(btnShare);topbar.appendChild(btnClose);
   var frame=document.createElement('iframe');
   frame.style.cssText='flex:1;border:none;width:100%;background:#fff';
-
-  overlay.appendChild(topbar);
-  overlay.appendChild(frame);
+  overlay.appendChild(topbar);overlay.appendChild(frame);
   document.body.appendChild(overlay);
   _saveToReportHistory(htmlContent, detailed?'xlsx':'table');
-
-  btnClose.addEventListener('click',function(){
-    var el=document.getElementById('reportOverlay');
-    if(el)el.remove();
-  });
-
-  // כפתור שיתוף — תמיד שיתוף, אף פעם לא הורדה
+  btnClose.addEventListener('click',function(){var el=document.getElementById('reportOverlay');if(el)el.remove();});
   btnShare.addEventListener('click',function(){
-    var ext = detailed ? 'csv' : 'csv';
     var fileName=(detailed?'hours_detailed':'hours')+'_'+new Date().toISOString().slice(0,10)+'.csv';
     var blob=new Blob([csvText],{type:'text/csv;charset=utf-8'});
     _shareFile(blob, fileName);
   });
-
-  try{
-    frame.contentDocument.open();
-    frame.contentDocument.write(htmlContent);
-    frame.contentDocument.close();
-  }catch(e){
-    frame.srcdoc=htmlContent;
-  }
+  try{frame.contentDocument.open();frame.contentDocument.write(htmlContent);frame.contentDocument.close();}catch(e){frame.srcdoc=htmlContent;}
 }
 
 // ---- RESTORE ----
@@ -2626,7 +2851,7 @@ async function restoreFromDrive(){
 function execDel(){if(!confirm('האם אתה בטוח?'))return;const r=document.getElementById('delR').value;if(r==='all'){D.s({});location.reload();return;}let data=D.g();getDts(r,'delS','delE').forEach(d=>delete data[fk(d)]);D.s(data);closeM('mDel');renderCal();updRep();saveDr();vib();}
 
 // ---- MODALS ----
-function openM(id){document.getElementById(id).classList.add('active');}
+function openM(id){document.getElementById(id).classList.add('active');if(id==='mXLSX')setTimeout(_updXo2State,30);}
 function closeM(id){document.getElementById(id).classList.remove('active');}
 document.querySelectorAll('.modal').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)closeM(m.id);});});
 
