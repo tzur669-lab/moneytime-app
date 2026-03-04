@@ -4,13 +4,11 @@
   "webDir": "www",
   "bundledWebRuntime": false,
   "android": {
-    "allowMixedContent": true,
     "captureInput": true,
     "webContentsDebuggingEnabled": false
   },
   "server": {
-    "androidScheme": "https",
-    "cleartext": true
+    "androidScheme": "https"
   },
   "plugins": {
     "SplashScreen": {
