@@ -84,7 +84,8 @@ async function syncPairToFirebase(){
     workData:D.g(),
     myName:s.myName,
     myColor:s.myColor,
-    timestamp:Date.now()
+    timestamp:Date.now(),
+    pairInfo:{myCode:s.myCode,pairCode:s.pairCode,partnerCode:s.partnerCode,myName:s.myName,myColor:s.myColor}
   };
   await fbWrite(`pairs/${s.pairCode}/${s.myCode}`,payload);
 }
@@ -109,6 +110,32 @@ async function loadPartnerFromFirebase(){
 function calcPairCode(a,b){
   const arr=[a.toUpperCase(),b.toUpperCase()].sort();
   return arr[0]+'_'+arr[1];
+}
+
+// שחזור חיבור זוג ממכשיר חדש — מחפש ב-Firebase לפי myCode
+async function restorePairFromCloud(){
+  try{
+    const s=D.gs();
+    if(!s.myCode||s.pairCode)return false; // כבר מחובר או אין קוד
+    // חפש בכל הזוגות אם myCode שלי מופיע
+    const allPairs=await fbRead('pairs');
+    if(!allPairs)return false;
+    for(const pairCode of Object.keys(allPairs)){
+      const pair=allPairs[pairCode];
+      if(pair[s.myCode]&&pair[s.myCode].pairInfo){
+        const info=pair[s.myCode].pairInfo;
+        s.pairCode=info.pairCode;
+        s.partnerCode=info.partnerCode;
+        if(info.myName&&s.myName==='אני')s.myName=info.myName;
+        if(info.myColor)s.myColor=info.myColor;
+        D.ss(s);
+        await loadPartnerFromFirebase();
+        console.log('pair restored from cloud');
+        return true;
+      }
+    }
+  }catch(e){console.warn('restorePairFromCloud:',e);}
+  return false;
 }
 </script>
 <!-- Google auth handled via custom OAuth redirect — works in APK WebView -->
@@ -521,9 +548,9 @@ input[type=time].fi{text-align:center}
 
   <div class="set-sec-ttl">יצירת קשר</div>
   <div class="card" style="padding:14px;text-align:center">
-    <a href="/cdn-cgi/l/email-protection#30444a454206060970575d51595c1e535f5d" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
+    <a href="mailto:tzur669@gmail.com" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
-      <span class="__cf_email__" data-cfemail="64101e111652525d240309050d084a070b09">[email&#160;protected]</span>
+      tzur669@gmail.com
     </a>
     <div style="font-size:11px;color:var(--t3);margin-top:6px">לתמיכה, שאלות ומשוב</div>
   </div>
@@ -724,7 +751,7 @@ input[type=time].fi{text-align:center}
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 // ---- CONSTANTS ----
 const JC=['#1E3A8A','#2563EB','#10B981','#F59E0B','#EF4444','#8B5CF6'];
 const MN=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
@@ -1316,7 +1343,7 @@ function connPair(){
   const myCode=s.myCode;
   s.pairCode=calcPairCode(myCode,pc);
   s.partnerCode=pc;
-  s.myUID=myCode;
+  if(!s.myUID){s.myUID=s.myCode;} // שמור myUID רק אם עוד לא קיים
   var nmEl=document.getElementById('myNmN');
   var pnEl=document.getElementById('pNmN');
   if(nmEl&&nmEl.value.trim())s.myName=nmEl.value.trim();
@@ -1328,6 +1355,9 @@ function connPair(){
     return loadPartnerFromFirebase();
   }).then(function(got){
     showToast(got?'חובר! נטענו נתוני פרטנר':'חובר! ממתין לפרטנר...');
+    // שמור חיבור זוג לפי Google ID כדי לשחזר במכשירים אחרים
+    var gid=D.gs().googleId;
+    if(gid)_savePairByGoogleId(gid);
     _navToCouple();
     renderCouple();
   }).catch(function(){
@@ -1447,14 +1477,23 @@ function handleClock(){
 function checkPairLink(){
   try{
     const params=new URLSearchParams(window.location.search);
-    const partnerCode=params.get('pair');
-    if(!partnerCode)return;
+    let partnerCode=params.get('pair');
+    if(!partnerCode)partnerCode=sessionStorage.getItem('pendingPair');
+    if(!partnerCode){
+      // אין קישור זוג — נסה לשחזר חיבור קיים מה-cloud
+      const s=D.gs();
+      if(s.myCode&&!s.pairCode){
+        restorePairFromCloud().then(function(restored){
+          if(restored){renderCouple();renderSettings();showToast('חיבור זוג שוחזר ✅');}
+        });
+      }
+      return;
+    }
     history.replaceState(null,'',location.pathname);
+    sessionStorage.removeItem('pendingPair');
     const s=D.gs();
     const pc=partnerCode.toUpperCase();
-    sessionStorage.setItem('pendingPair',pc);
     if(s.pairCode&&s.partnerCode===pc){
-      sessionStorage.removeItem('pendingPair');
       setTimeout(function(){_navToCouple();renderCouple();},300);
       return;
     }
@@ -1542,16 +1581,62 @@ function _onTokenReceived(token){
   }, 300);
 }
 
+// שמירת חיבור זוג ב-Firebase לפי Google ID
+function _savePairByGoogleId(googleId){
+  try{
+    const s=D.gs();
+    if(!s.pairCode||!s.myCode||!googleId)return;
+    var safe=googleId.replace(/[.#$\[\]]/g,'_');
+    fetch(FB_URL+'/userPairs/'+safe+'.json',{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        myCode:s.myCode,
+        pairCode:s.pairCode,
+        partnerCode:s.partnerCode,
+        myName:s.myName,
+        myColor:s.myColor,
+        ts:Date.now()
+      })
+    }).catch(function(){});
+  }catch(e){}
+}
+
+// שחזור חיבור זוג לפי Google ID — ממכשיר חדש
+async function _restorePairByGoogleId(googleId){
+  try{
+    if(!googleId)return;
+    var safe=googleId.replace(/[.#$\[\]]/g,'_');
+    const r=await fetch(FB_URL+'/userPairs/'+safe+'.json');
+    if(!r.ok)return;
+    const info=await r.json();
+    if(!info||!info.pairCode||!info.myCode)return;
+    // שחזר הגדרות זוג
+    const s=D.gs();
+    s.myCode=info.myCode;
+    s.pairCode=info.pairCode;
+    s.partnerCode=info.partnerCode;
+    if(info.myName&&(s.myName==='אני'||!s.myName))s.myName=info.myName;
+    if(info.myColor)s.myColor=info.myColor;
+    D.ss(s);
+    // טען נתוני פרטנר
+    await loadPartnerFromFirebase();
+    renderCouple();
+    renderSettings();
+    showToast('✅ חיבור זוג שוחזר אוטומטית!');
+  }catch(e){console.warn('_restorePairByGoogleId:',e);}
+}
+
 function _countUniqueUser(){
   try{
     var s=D.gs();
-    var uid=s.myUID||s.myCode||null;
-    if(!uid)return;
-    var safe=uid.replace(/[.#$\[\]]/g,'_');
+    var gid=s.googleId||null;
+    if(!gid)return; // רק אחרי חיבור Google
+    var safe=gid.replace(/[.#$\[\]]/g,'_');
     fetch(FB_URL+'/ucount/'+safe+'.json',{
       method:'PUT',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({uid:uid})
+      body:JSON.stringify({gid:gid})
     }).catch(function(){});
   }catch(e){}
 }
@@ -1582,7 +1667,26 @@ function showToast(msg){
   document.body.appendChild(t);
   setTimeout(()=>t.remove(),3000);
 }
-async function fetchEmail(){try{const r=await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:`Bearer ${aToken}`}});const i=await r.json();if(i.email)document.getElementById('drEmail').textContent=`מחובר: ${i.email}`;}catch(e){}}
+async function fetchEmail(){
+  try{
+    const r=await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:`Bearer ${aToken}`}});
+    const i=await r.json();
+    if(i.email)document.getElementById('drEmail').textContent=`מחובר: ${i.email}`;
+    if(i.sub){
+      // שמור Google ID קבוע
+      const s=D.gs();
+      s.googleId=i.sub;
+      D.ss(s);
+      // נסה לשחזר חיבור זוג ממכשיר אחר
+      if(!s.pairCode){
+        _restorePairByGoogleId(i.sub);
+      } else {
+        // עדכן את ה-Firebase עם ה-Google ID כדי שמכשירים אחרים יוכלו לשחזר
+        _savePairByGoogleId(i.sub);
+      }
+    }
+  }catch(e){}
+}
 
 // ---- DRIVE HELPERS ----
 async function driveUpsert(fileName, body, isShared){
@@ -2485,7 +2589,15 @@ if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.ser
 document.addEventListener('DOMContentLoaded',()=>{
   const s=D.gs();
   if(s.theme==='dark')toggleTheme(true);
-  if(!s.myUID){s.myUID=Math.random().toString(36).substring(2,10);D.ss(s);}
+  if(!s.myUID){
+    s.myUID=Math.random().toString(36).substring(2,10);
+    // צבע ברירת מחדל — בחר אקראי שאינו כחול (שמור לפרטנר)
+    var defColors=['#10B981','#F59E0B','#8B5CF6','#EF4444','#0EA5E9','#EC4899'];
+    if(s.myColor==='#1E3A8A'||!s.myColor){
+      s.myColor=defColors[Math.floor(Math.random()*defColors.length)];
+    }
+    D.ss(s);
+  }
   const savedColor=D.gs().colorTheme||'blue';
   applyColorTheme(savedColor);
   initClock();renderCal();setSyncDot(false);initGD();renderSettings();checkPairLink();
