@@ -80,8 +80,8 @@ async function fbRead(path){
 async function syncPairToFirebase(){
   const s=D.gs();
   if(!s.pairCode||!s.myCode)return;
-  // השתמש ב-googleId אם קיים, אחרת myCode
-  const myKey=(s.googleId||s.myCode).replace(/[.#$\[\]]/g,'_');
+  // המפתח ב-Firebase הוא תמיד myCode — קבוע ועקבי
+  const myKey=s.myCode.replace(/[.#$\[\]]/g,'_');
   const payload={
     workData:D.g(),
     myName:s.myName,
@@ -97,20 +97,9 @@ async function syncPairToFirebase(){
 async function loadPartnerFromFirebase(){
   const s=D.gs();
   if(!s.pairCode||!s.partnerCode)return false;
-  // קרא את כל הרשומות תחת pairCode ומצא את הפרטנר לפי myCode שלו
-  const allEntries=await fbRead(`pairs/${s.pairCode}`);
-  if(!allEntries)return false;
-  // חפש לפי myCode או googleId (קבוע בין מכשירים)
-  let data=null;
-  for(const key of Object.keys(allEntries)){
-    const entry=allEntries[key];
-    if(!entry)continue;
-    const entryGid=entry.googleId?entry.googleId.replace(/[.#$\[\]]/g,'_'):null;
-    if(entry.myCode===s.partnerCode||entryGid===s.partnerCode){
-      data=entry;
-      break;
-    }
-  }
+  // המפתח תמיד = myCode של הפרטנר
+  const partnerKey=s.partnerCode.replace(/[.#$\[\]]/g,'_');
+  const data=await fbRead(`pairs/${s.pairCode}/${partnerKey}`);
   if(data&&data.workData){
     D.sp(data.workData);
     if(data.myName){
@@ -134,12 +123,9 @@ async function checkPartnerConnected(){
   try{
     const s=D.gs();
     if(!s.pairCode||!s.partnerCode)return false;
-    const allEntries=await fbRead(`pairs/${s.pairCode}`);
-    if(!allEntries)return false;
-    for(const key of Object.keys(allEntries)){
-      if(allEntries[key]&&allEntries[key].myCode===s.partnerCode)return true;
-    }
-    return false;
+    const partnerKey=s.partnerCode.replace(/[.#$\[\]]/g,'_');
+    const data=await fbRead(`pairs/${s.pairCode}/${partnerKey}`);
+    return !!(data&&data.myCode);
   }catch(e){return false;}
 }
 
@@ -574,6 +560,40 @@ input[type=time].fi{text-align:center}
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
       צפה בדוחות שמורים
     </button>
+  </div>
+
+  <div class="set-sec-ttl">פרטיות ואבטחה</div>
+  <div class="card" style="padding:14px">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-size:18px;flex-shrink:0">🔒</span>
+        <div>
+          <div style="font-size:13px;font-weight:500;color:var(--t)">הנתונים שלך מאובטחים</div>
+          <div style="font-size:12px;color:var(--t2);margin-top:3px">שעות העבודה נשמרות רק אצלך במכשיר ובגוגל דרייב האישי שלך — לאף אחד אחר אין גישה</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-size:18px;flex-shrink:0">👤</span>
+        <div>
+          <div style="font-size:13px;font-weight:500;color:var(--t)">ללא מידע אישי</div>
+          <div style="font-size:12px;color:var(--t2);margin-top:3px">האפליקציה לא שומרת שם, מייל, מספר טלפון או כל פרט מזהה — רק נתוני שעות עבודה</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-size:18px;flex-shrink:0">🤝</span>
+        <div>
+          <div style="font-size:13px;font-weight:500;color:var(--t)">סנכרון זוג מוגן</div>
+          <div style="font-size:12px;color:var(--t2);margin-top:3px">בחיבור זוג עוברים רק נתוני שעות — ללא מייל, ללא שם מלא, רק מה שאתה בוחר לשתף</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <span style="font-size:18px;flex-shrink:0">📵</span>
+        <div>
+          <div style="font-size:13px;font-weight:500;color:var(--t)">ללא פרסומות</div>
+          <div style="font-size:12px;color:var(--t2);margin-top:3px">האפליקציה לא מכילה פרסומות ולא מוכרת מידע לצד שלישי</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="set-sec-ttl">יצירת קשר</div>
@@ -1399,10 +1419,11 @@ function connPair(){
   const s=D.gs();
   if(!s.myCode){s.myCode=genCode();}
   const myCode=s.myCode;
-  const myEffectiveCode=s.googleId?s.googleId.replace(/[.#$\[\]]/g,'_'):myCode;
-  s.pairCode=calcPairCode(myEffectiveCode,pc);
+  // pairCode תמיד מחושב לפי myCode בלבד — לא googleId
+  // כך זה עקבי בכל מכשיר ובכל דפדפן
+  s.pairCode=calcPairCode(myCode,pc);
   s.partnerCode=pc;
-  if(!s.myUID){s.myUID=myEffectiveCode;}
+  if(!s.myUID){s.myUID=myCode;}
   var nmEl=document.getElementById('myNmN');
   var pnEl=document.getElementById('pNmN');
   if(nmEl&&nmEl.value.trim())s.myName=nmEl.value.trim();
