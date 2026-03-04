@@ -34,7 +34,6 @@ jobs:
           cp sw.js www/sw.js || true
           cp manifest.json www/manifest.json || true
           cp callback.html www/callback.html || true
-          ls -la www/
 
       - name: Add Android platform
         run: |
@@ -44,15 +43,8 @@ jobs:
       - name: Patch AndroidManifest
         run: |
           MANIFEST="android/app/src/main/AndroidManifest.xml"
-
-          # הכל HTTPS — אין צורך ב-cleartext
           sed -i 's/android:usesCleartextTraffic="true"/android:usesCleartextTraffic="false"/' $MANIFEST || true
-
-          # deep link בלבד — ללא WRITE_EXTERNAL_STORAGE
           sed -i 's|</activity>|<intent-filter><action android:name="android.intent.action.VIEW"/><category android:name="android.intent.category.DEFAULT"/><category android:name="android.intent.category.BROWSABLE"/><data android:scheme="com.tzur669.moneytime" android:host="oauth"/></intent-filter></activity>|' $MANIFEST || true
-
-          echo "=== AndroidManifest ==="
-          cat $MANIFEST
 
       - name: Patch Android resources
         run: |
@@ -66,34 +58,74 @@ jobs:
           </resources>
           EOF
 
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > keystore.jks
+          echo "storeFile=$(pwd)/keystore.jks" > keystore.properties
+          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> keystore.properties
+          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> keystore.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> keystore.properties
+
+      - name: Inject signing config into build.gradle
+        run: |
+          GRADLE="android/app/build.gradle"
+
+          # הוסף קריאת keystore.properties בראש הקובץ
+          sed -i '1s|^|def keystoreProps = new Properties()\nkeystoreProps.load(new FileInputStream(rootProject.file("../keystore.properties")))\n\n|' $GRADLE
+
+          # החלף את buildTypes { release { ... } } עם signing מלא
+          python3 - << 'PYEOF'
+          import re
+
+          with open("android/app/build.gradle", "r") as f:
+              content = f.read()
+
+          signing_config = """
+              signingConfigs {
+                  release {
+                      storeFile file(keystoreProps['storeFile'])
+                      storePassword keystoreProps['storePassword']
+                      keyAlias keystoreProps['keyAlias']
+                      keyPassword keystoreProps['keyPassword']
+                  }
+              }
+          """
+
+          # הוסף signingConfigs לפני buildTypes
+          if 'signingConfigs' not in content:
+              content = content.replace('    buildTypes {', signing_config + '\n    buildTypes {')
+
+          # הוסף signingConfig ל-release
+          content = re.sub(
+              r'(release\s*\{)',
+              r'\1\n            signingConfig signingConfigs.release\n            minifyEnabled false\n            shrinkResources false',
+              content,
+              count=1
+          )
+
+          with open("android/app/build.gradle", "w") as f:
+              f.write(content)
+
+          print("build.gradle patched successfully")
+          PYEOF
+
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
-      - name: Build Release APK
+      - name: Build Signed Release APK
         run: |
           cd android
           ./gradlew assembleRelease --no-daemon
         env:
           GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
 
-      - name: Sign APK
+      - name: Locate and copy APK
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > keystore.jks
-
-          $JAVA_HOME/bin/jarsigner \
-            -verbose \
-            -sigalg SHA256withRSA \
-            -digestalg SHA-256 \
-            -keystore keystore.jks \
-            -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
-            -keypass "${{ secrets.KEY_PASSWORD }}" \
-            android/app/build/outputs/apk/release/app-release-unsigned.apk \
-            "${{ secrets.KEY_ALIAS }}"
-
-          $ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | tail -1)/zipalign \
-            -v 4 \
-            android/app/build/outputs/apk/release/app-release-unsigned.apk \
-            moneytime-pro.apk
+          echo "=== APK files found ==="
+          find android -name "*.apk" -type f
+          # release חתום ישירות מ-Gradle
+          cp android/app/build/outputs/apk/release/app-release.apk moneytime-pro.apk
+          ls -lh moneytime-pro.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
