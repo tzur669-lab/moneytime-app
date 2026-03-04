@@ -87,6 +87,7 @@ async function syncPairToFirebase(){
     myName:s.myName,
     myColor:s.myColor,
     myCode:s.myCode,
+    googleId:s.googleId||null,
     partnerCode:s.partnerCode,
     timestamp:Date.now()
   };
@@ -99,11 +100,13 @@ async function loadPartnerFromFirebase(){
   // קרא את כל הרשומות תחת pairCode ומצא את הפרטנר לפי myCode שלו
   const allEntries=await fbRead(`pairs/${s.pairCode}`);
   if(!allEntries)return false;
-  // חפש רשומה שה-myCode שלה = partnerCode שלי
+  // חפש לפי myCode או googleId (קבוע בין מכשירים)
   let data=null;
   for(const key of Object.keys(allEntries)){
     const entry=allEntries[key];
-    if(entry&&entry.myCode===s.partnerCode){
+    if(!entry)continue;
+    const entryGid=entry.googleId?entry.googleId.replace(/[.#$\[\]]/g,'_'):null;
+    if(entry.myCode===s.partnerCode||entryGid===s.partnerCode){
       data=entry;
       break;
     }
@@ -575,9 +578,9 @@ input[type=time].fi{text-align:center}
 
   <div class="set-sec-ttl">יצירת קשר</div>
   <div class="card" style="padding:14px;text-align:center">
-    <a href="mailto:tzur669@gmail.com" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
+    <a href="/cdn-cgi/l/email-protection#295d535c5b1f1f10694e44484045074a4644" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
-      tzur669@gmail.com
+      <span class="__cf_email__" data-cfemail="fd8987888fcbcbc4bd9a909c9491d39e9290">[email&#160;protected]</span>
     </a>
     <div style="font-size:11px;color:var(--t3);margin-top:6px">לתמיכה, שאלות ומשוב</div>
   </div>
@@ -778,7 +781,7 @@ input[type=time].fi{text-align:center}
   </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ---- CONSTANTS ----
 const JC=['#1E3A8A','#2563EB','#10B981','#F59E0B','#EF4444','#8B5CF6'];
 const MN=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
@@ -1346,13 +1349,14 @@ function openPair(){
   const s=D.gs(),cont=document.getElementById('pairCont');
   if(!s.myCode){const ss=D.gs();ss.myCode=genCode();D.ss(ss);}
   const myCode=D.gs().myCode;
+  const myEffCode=s.googleId?s.googleId.replace(/[.#$\[\]]/g,'_'):myCode;
 
   if(s.pairCode){
     cont.innerHTML=`
-    <div class="pair-box"><div class="pair-lbl">הקוד שלי (קבוע)</div><div class="pair-val">${myCode}</div>
+    <div class="pair-box"><div class="pair-lbl">הקוד שלי (קבוע)</div><div class="pair-val">${myEffCode}</div>
     <div class="pair-acts">
-      <button class="pair-btn" onclick="navigator.clipboard?.writeText('${myCode}').then(()=>showToast('הועתק!'))"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> העתק</button>
-      <button class="pair-btn" onclick="navigator.share&&navigator.share({text:'קוד זוג: ${myCode}'})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> שתף</button>
+      <button class="pair-btn" onclick="navigator.clipboard?.writeText('${myEffCode}').then(()=>showToast('הועתק!'))"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> העתק</button>
+      <button class="pair-btn" onclick="navigator.share&&navigator.share({text:'קוד זוג: ${myEffCode}'})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> שתף</button>
     </div></div>
     <div id="qrB" style="display:flex;justify-content:center;padding:10px 0"></div>
     <div class="fg"><label class="fl">השם שלי</label><input type="text" class="fi" id="myNm" value="${s.myName}"></div>
@@ -1363,14 +1367,14 @@ function openPair(){
     <button class="btn btn-d" onclick="unpair()" style="margin-top:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> נתק מהזוג</button>`;
     setTimeout(()=>{try{new QRCode(document.getElementById('qrB'),{text:myCode,width:130,height:130,colorDark:'#1E3A8A',colorLight:'#fff'});}catch(e){}},100);
   } else {
-    const pairLink='https://tzur669-lab.github.io/moneytime-app/?pair='+myCode;
+    const pairLink='https://tzur669-lab.github.io/moneytime-app/?pair='+myEffCode;
     cont.innerHTML=`
     <p style="font-size:13px;color:var(--t2);margin-bottom:14px;line-height:1.6">שלח לפרטנר את <strong>הקישור</strong> — הוא יחבר אתכם אוטומטית. או שלח את <strong>הקוד</strong> שלך והפרטנר יזין אותו ידנית.</p>
     <div class="pair-box">
       <div class="pair-lbl">הקוד שלי (קבוע)</div>
-      <div class="pair-val" style="font-size:26px;letter-spacing:6px">${myCode}</div>
+      <div class="pair-val" style="font-size:26px;letter-spacing:6px">${myEffCode}</div>
       <div class="pair-acts">
-        <button class="pair-btn" onclick="navigator.clipboard?.writeText('${myCode}').then(()=>showToast('הועתק!'))"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> קוד</button>
+        <button class="pair-btn" onclick="navigator.clipboard?.writeText('${myEffCode}').then(()=>showToast('הועתק!'))"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> קוד</button>
         <button class="pair-btn" onclick="navigator.clipboard?.writeText('${pairLink}').then(()=>showToast('קישור הועתק!'))"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> קישור</button>
         <button class="pair-btn" onclick="navigator.share&&navigator.share({title:'הצטרף לזוג שלי',text:'לחץ כדי להתחבר אליי:',url:'${pairLink}'})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> שתף</button>
       </div>
@@ -1393,9 +1397,10 @@ function connPair(){
   const s=D.gs();
   if(!s.myCode){s.myCode=genCode();}
   const myCode=s.myCode;
-  s.pairCode=calcPairCode(myCode,pc);
+  const myEffectiveCode=s.googleId?s.googleId.replace(/[.#$\[\]]/g,'_'):myCode;
+  s.pairCode=calcPairCode(myEffectiveCode,pc);
   s.partnerCode=pc;
-  if(!s.myUID){s.myUID=s.myCode;} // שמור myUID רק אם עוד לא קיים
+  if(!s.myUID){s.myUID=myEffectiveCode;}
   var nmEl=document.getElementById('myNmN');
   var pnEl=document.getElementById('pNmN');
   if(nmEl&&nmEl.value.trim())s.myName=nmEl.value.trim();
@@ -1668,6 +1673,7 @@ async function _restorePairByGoogleId(googleId){
     s.myCode=info.myCode;
     s.pairCode=info.pairCode;
     s.partnerCode=info.partnerCode;
+    if(s.googleId)s.myUID=s.googleId.replace(/[.#$\[\]]/g,'_');
     if(info.myName&&(s.myName==='אני'||!s.myName))s.myName=info.myName;
     if(info.myColor)s.myColor=info.myColor;
     D.ss(s);
@@ -2643,7 +2649,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(s.theme==='dark')toggleTheme(true);
   if(!s.myUID){
     s.myUID=Math.random().toString(36).substring(2,10);
-    // צבע ברירת מחדל — בחר אקראי שאינו כחול (שמור לפרטנר)
     var defColors=['#10B981','#F59E0B','#8B5CF6','#EF4444','#0EA5E9','#EC4899'];
     if(s.myColor==='#1E3A8A'||!s.myColor){
       s.myColor=defColors[Math.floor(Math.random()*defColors.length)];
