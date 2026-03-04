@@ -521,9 +521,9 @@ input[type=time].fi{text-align:center}
 
   <div class="set-sec-ttl">יצירת קשר</div>
   <div class="card" style="padding:14px;text-align:center">
-    <a href="mailto:tzur669@gmail.com" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
+    <a href="/cdn-cgi/l/email-protection#30444a454206060970575d51595c1e535f5d" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
-      tzur669@gmail.com
+      <span class="__cf_email__" data-cfemail="64101e111652525d240309050d084a070b09">[email&#160;protected]</span>
     </a>
     <div style="font-size:11px;color:var(--t3);margin-top:6px">לתמיכה, שאלות ומשוב</div>
   </div>
@@ -675,6 +675,15 @@ input[type=time].fi{text-align:center}
       <div style="flex:1"><label class="fl">מ</label><input type="date" class="fi" id="xlsxS"></div>
       <div style="flex:1"><label class="fl">עד</label><input type="date" class="fi" id="xlsxE"></div>
     </div></div>
+    <div class="card" style="padding:14px;margin-bottom:12px">
+      <div class="fl" style="margin-bottom:8px">מה לכלול?</div>
+      <div class="pdfopt" onclick="txlsx('xo1')"><div class="pdfchk on" id="xo1">✓</div><span class="pdfopt-lbl">תעריף שעתי</span></div>
+      <div class="pdfopt" onclick="txlsx('xo2')"><div class="pdfchk on" id="xo2">✓</div><span class="pdfopt-lbl">שעות נוספות (125% / 150%)</span></div>
+      <div class="pdfopt" onclick="txlsx('xo3')"><div class="pdfchk on" id="xo3">✓</div><span class="pdfopt-lbl">בונוסים ותוספות</span></div>
+      <div class="pdfopt" onclick="txlsx('xo4')"><div class="pdfchk" id="xo4"></div><span class="pdfopt-lbl">הערות</span></div>
+      <div class="pdfopt" onclick="txlsx('xo5')"><div class="pdfchk" id="xo5"></div><span class="pdfopt-lbl">עמודת עבודה</span></div>
+      <div class="pdfopt" onclick="txlsx('xo6')"><div class="pdfchk" id="xo6"></div><span class="pdfopt-lbl">נתוני פרטנר (אם מחובר)</span></div>
+    </div>
     <button class="btn btn-g" onclick="expXLSX()">צור Excel</button>
     <div style="height:8px"></div>
   </div>
@@ -715,7 +724,7 @@ input[type=time].fi{text-align:center}
   </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ---- CONSTANTS ----
 const JC=['#1E3A8A','#2563EB','#10B981','#F59E0B','#EF4444','#8B5CF6'];
 const MN=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
@@ -1679,6 +1688,7 @@ window.addEventListener('pagehide',()=>{if(aToken)saveDr();});
 
 // ---- PDF ----
 function tpdf(id){const el=document.getElementById(id);el.classList.toggle('on');el.textContent=el.classList.contains('on')?'✓':'';}
+function txlsx(id){const el=document.getElementById(id);el.classList.toggle('on');el.textContent=el.classList.contains('on')?'✓':'';}
 function genPDF(){
   if(!window.jspdf && !window.jsPDF){
     var sc=document.createElement('script');
@@ -2075,18 +2085,28 @@ function expXLSX(){
     dates=getDts(per,'xlsxS','xlsxE');
     if(!dates.length){showToast('בחר טווח תאריכים תקין');return;}
   }
+  var opts={
+    rate:   document.getElementById('xo1')?document.getElementById('xo1').classList.contains('on'):true,
+    ot:     document.getElementById('xo2')?document.getElementById('xo2').classList.contains('on'):true,
+    bonus:  document.getElementById('xo3')?document.getElementById('xo3').classList.contains('on'):true,
+    note:   document.getElementById('xo4')?document.getElementById('xo4').classList.contains('on'):false,
+    job:    document.getElementById('xo5')?document.getElementById('xo5').classList.contains('on'):false,
+    partner:document.getElementById('xo6')?document.getElementById('xo6').classList.contains('on'):false
+  };
   closeM('mXLSX');
-  _showTableReport(true,dates);
+  _showTableReport(true,dates,opts);
 }
 
-function _showTableReport(detailed,filterDates){
-  var d=D.g(), s=D.gs(), jobs=s.jobs||[];
+function _showTableReport(detailed,filterDates,xlsxOpts){
+  var d=D.g(), s=D.gs(), jobs=s.jobs||[], pd=D.gp();
   var dayNames=['\u05e8\u05d0\u05e9\u05d5\u05df','\u05e9\u05e0\u05d9','\u05e9\u05dc\u05d9\u05e9\u05d9','\u05e8\u05d1\u05d9\u05e2\u05d9','\u05d7\u05de\u05d9\u05e9\u05d9','\u05e9\u05d9\u05e9\u05d9','\u05e9\u05d1\u05ea'];
   var today=new Date().toLocaleDateString('he-IL');
-  var totalH=0, totalP=0;
+  var totalH=0, totalP=0, totalPartner=0;
   var rows='';
   var allKeys=Object.keys(d).sort();
   var activeSet=filterDates?new Set(filterDates.map(function(dt){return fk(dt);})):null;
+  // אפשרויות Excel — ברירת מחדל אם לא הועברו
+  var ox=xlsxOpts||{rate:true,ot:true,bonus:true,note:false,job:false,partner:false};
 
   allKeys.forEach(function(k){
     if(activeSet&&!activeSet.has(k))return;
@@ -2097,30 +2117,55 @@ function _showTableReport(detailed,filterDates){
     var bon=(r.bonuses||[]).reduce(function(s,b){return s+(parseFloat(b.amount)||0);},0);
     totalH+=r.hours; totalP+=pr.total;
     rows+='<tr>';
-    rows+='<td>'+k+'</td>';
-    rows+='<td>'+dayNames[dt.getDay()]+'</td>';
-    rows+='<td>'+r.hours+'</td>';
-    if(detailed){
-      rows+='<td>'+r.rate+'</td>';
-      rows+='<td>'+(pr.reg||r.hours).toFixed(1)+'</td>';
-      rows+='<td>'+(pr.ot1||0).toFixed(1)+'</td>';
-      rows+='<td>'+(pr.ot2||0).toFixed(1)+'</td>';
+    // תאריך — מודגש בשישי/שבת
+    var dayIdx=dt.getDay();
+    rows+='<td>'+(detailed?'<strong>':'')+k+(detailed?'</strong>':'')+'</td>';
+    rows+='<td style="color:var(--t2)">'+dayNames[dayIdx]+'</td>';
+    // שעות — מודגש
+    rows+='<td style="font-weight:600;color:#1E3A8A">'+r.hours+'</td>';
+    if(detailed&&ox.rate) rows+='<td style="color:#475569">'+r.rate+'</td>';
+    if(detailed&&ox.ot){
+      rows+='<td style="color:#475569">'+(pr.reg||r.hours).toFixed(1)+'</td>';
+      rows+='<td style="color:#F59E0B;font-weight:500">'+(pr.ot1||0).toFixed(1)+'</td>';
+      rows+='<td style="color:#EF4444;font-weight:500">'+(pr.ot2||0).toFixed(1)+'</td>';
     }
-    rows+='<td><strong>\u20aa'+Math.round(pr.total).toLocaleString('he-IL')+'</strong></td>';
-    if(bon>0)rows+='<td>\u20aa'+bon.toFixed(0)+'</td>'; else rows+='<td>-</td>';
-    rows+='<td>'+(r.note||'')+'</td>';
-    rows+='<td>'+jobName+'</td>';
+    // סה"כ — מודגש בירוק
+    rows+='<td style="font-weight:700;color:#166534;font-size:13px">\u20aa'+Math.round(pr.total).toLocaleString('he-IL')+'</td>';
+    if(detailed&&ox.bonus){
+      if(bon>0) rows+='<td style="color:#D97706;font-weight:500">\u20aa'+bon.toFixed(0)+'</td>';
+      else rows+='<td style="color:#94A3B8">-</td>';
+    }
+    if(detailed&&ox.note) rows+='<td style="color:#64748B">'+(r.note||'')+'</td>';
+    if(detailed&&ox.job)  rows+='<td style="color:#475569">'+jobName+'</td>';
+    if(detailed&&ox.partner){
+      var pp=pd[k];
+      if(pp&&pp.hours>0){var ppr=cp(pp.hours,pp.rate||50,pp.bonuses);totalPartner+=ppr.total;rows+='<td style="color:#0EA5E9;font-weight:500">\u20aa'+Math.round(ppr.total).toLocaleString('he-IL')+'</td>';}
+      else rows+='<td style="color:#94A3B8">-</td>';
+    }
     rows+='</tr>';
   });
 
   var headerCols='<th>\u05ea\u05d0\u05e8\u05d9\u05da</th><th>\u05d9\u05d5\u05dd</th><th>\u05e9\u05e2\u05d5\u05ea</th>';
-  if(detailed)headerCols+='<th>\u05ea\u05e2\u05e8\u05d9\u05e3</th><th>\u05e8\u05d2\u05d9\u05dc\u05d5\u05ea</th><th>125%</th><th>150%</th>';
-  headerCols+='<th>\u05e1\u05d4"\u05db \u20aa</th><th>\u05d1\u05d5\u05e0\u05d5\u05e1</th><th>\u05d4\u05e2\u05e8\u05d4</th><th>\u05e2\u05d1\u05d5\u05d3\u05d4</th>';
+  if(detailed&&ox.rate)  headerCols+='<th>\u05ea\u05e2\u05e8\u05d9\u05e3</th>';
+  if(detailed&&ox.ot)    headerCols+='<th>\u05e8\u05d2\u05d9\u05dc\u05d5\u05ea</th><th>125%</th><th>150%</th>';
+  headerCols+='<th>\u05e1\u05d4"\u05db \u20aa</th>';
+  if(detailed&&ox.bonus)  headerCols+='<th>\u05d1\u05d5\u05e0\u05d5\u05e1</th>';
+  if(detailed&&ox.note)   headerCols+='<th>\u05d4\u05e2\u05e8\u05d4</th>';
+  if(detailed&&ox.job)    headerCols+='<th>\u05e2\u05d1\u05d5\u05d3\u05d4</th>';
+  if(detailed&&ox.partner)headerCols+='<th>\u05e4\u05e8\u05d8\u05e0\u05e8 \u20aa</th>';
 
   var title=detailed?'\u05d3\u05d5\u05d7 \u05de\u05e4\u05d5\u05e8\u05d8 Excel':'\u05d3\u05d5\u05d7 CSV';
 
   // CSV לשיתוף
-  var csvLines=['\u05ea\u05d0\u05e8\u05d9\u05da,\u05d9\u05d5\u05dd,\u05e9\u05e2\u05d5\u05ea,'+(detailed?'\u05ea\u05e2\u05e8\u05d9\u05e3,\u05e8\u05d2\u05d9\u05dc\u05d5\u05ea,125%,150%,':'')+'\u05e1\u05d4"\u05db,\u05d1\u05d5\u05e0\u05d5\u05e1,\u05d4\u05e2\u05e8\u05d4,\u05e2\u05d1\u05d5\u05d3\u05d4'];
+  var hdr=['\u05ea\u05d0\u05e8\u05d9\u05da','\u05d9\u05d5\u05dd','\u05e9\u05e2\u05d5\u05ea'];
+  if(detailed&&ox.rate)   hdr.push('\u05ea\u05e2\u05e8\u05d9\u05e3');
+  if(detailed&&ox.ot)     hdr=hdr.concat(['\u05e8\u05d2\u05d9\u05dc\u05d5\u05ea','125%','150%']);
+  hdr.push('\u05e1\u05d4"\u05db');
+  if(detailed&&ox.bonus)  hdr.push('\u05d1\u05d5\u05e0\u05d5\u05e1');
+  if(detailed&&ox.note)   hdr.push('\u05d4\u05e2\u05e8\u05d4');
+  if(detailed&&ox.job)    hdr.push('\u05e2\u05d1\u05d5\u05d3\u05d4');
+  if(detailed&&ox.partner)hdr.push('\u05e4\u05e8\u05d8\u05e0\u05e8');
+  var csvLines=[hdr.join(',')];
   allKeys.forEach(function(k){
     if(activeSet&&!activeSet.has(k))return;
     var r=d[k]; if(!(r.hours>0))return;
@@ -2129,12 +2174,17 @@ function _showTableReport(detailed,filterDates){
     var jobName=((jobs[r.jobIdx||0])||{}).name||'\u05e8\u05d0\u05e9\u05d9';
     var bon=(r.bonuses||[]).reduce(function(s,b){return s+(parseFloat(b.amount)||0);},0);
     var cols=[k,dayNames[dt.getDay()],r.hours];
-    if(detailed)cols=cols.concat([r.rate,(pr.reg||r.hours).toFixed(1),(pr.ot1||0).toFixed(1),(pr.ot2||0).toFixed(1)]);
-    cols=cols.concat([Math.round(pr.total),bon.toFixed(0),r.note||'',jobName]);
+    if(detailed&&ox.rate)   cols.push(r.rate);
+    if(detailed&&ox.ot)     cols=cols.concat([(pr.reg||r.hours).toFixed(1),(pr.ot1||0).toFixed(1),(pr.ot2||0).toFixed(1)]);
+    cols.push(Math.round(pr.total));
+    if(detailed&&ox.bonus)  cols.push(bon.toFixed(0));
+    if(detailed&&ox.note)   cols.push(r.note||'');
+    if(detailed&&ox.job)    cols.push(jobName);
+    if(detailed&&ox.partner){var pp=pd[k];cols.push(pp&&pp.hours>0?Math.round(cp(pp.hours,pp.rate||50,pp.bonuses).total):'');}
     csvLines.push(cols.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(','));
   });
   csvLines.push('');
-  csvLines.push('"\u05e1\u05d4"\u05db","","'+totalH.toFixed(1)+'","","","","","\u20aa'+Math.round(totalP).toLocaleString('he-IL')+'","","",""');
+  csvLines.push('"\u05e1\u05d4"\u05db","","'+totalH.toFixed(1)+'","\u20aa'+Math.round(totalP).toLocaleString('he-IL')+'"'+(detailed&&ox.partner?',"","\u05d1\u05d9\u05d7\u05d3: \u20aa'+Math.round(totalP+totalPartner).toLocaleString('he-IL')+'"':''));
   var csvText='\uFEFF'+csvLines.join('\r\n');
 
   var htmlContent='<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="UTF-8">'
@@ -2144,14 +2194,18 @@ function _showTableReport(detailed,filterDates){
     +'*{margin:0;padding:0;box-sizing:border-box}'
     +'body{font-family:Arial,sans-serif;font-size:13px;color:#0F172A;direction:rtl;padding:12px;overflow-x:auto}'
     +'table{width:100%;border-collapse:collapse;min-width:460px;margin-bottom:16px}'
-    +'th{background:#DBEAFE;color:#1E3A8A;padding:9px 8px;text-align:right;white-space:nowrap;font-size:12px;border-bottom:2px solid #BFDBFE}'
-    +'td{padding:8px;border-bottom:1px solid #E2E8F0;white-space:nowrap;font-size:12px}'
+    +'th{background:#1E3A8A;color:#fff;padding:10px 8px;text-align:right;white-space:nowrap;font-size:12px;font-weight:600;border-bottom:3px solid #1D4ED8}'
+    +'td{padding:9px 8px;border-bottom:1px solid #E2E8F0;white-space:nowrap;font-size:12px;vertical-align:middle}'
     +'tr:nth-child(even) td{background:#F8FAFF}'
-    +'.summary{background:#1E3A8A;color:#fff;padding:12px 16px;text-align:center;font-weight:bold;font-size:14px;border-radius:10px}'
+    +'tr:hover td{background:#EFF6FF}'
+    +'.summary{background:linear-gradient(135deg,#1E3A8A,#2563EB);color:#fff;padding:14px 20px;text-align:center;font-weight:700;font-size:15px;border-radius:10px;margin-top:4px}'
+    +'.summary span{opacity:.8;font-weight:400;font-size:12px;display:block;margin-top:4px}'
     +'</style></head><body>'
     +'<table><thead><tr>'+headerCols+'</tr></thead><tbody>'+rows+'</tbody></table>'
-    +'<div class="summary">\u05e1\u05d4"\u05db: '+totalH.toFixed(1)+' \u05e9\u05e2\u05d5\u05ea | \u20aa'+Math.round(totalP).toLocaleString('he-IL')+'</div>'
-    +'<p style="text-align:center;font-size:10px;color:#94A3B8;padding:8px">tzur669@gmail.com</p></body></html>';
+    +'<div class="summary">\u05e1\u05d4"\u05db: '+totalH.toFixed(1)+' \u05e9\u05e2\u05d5\u05ea | \u20aa'+Math.round(totalP).toLocaleString('he-IL')
+    +(detailed&&ox.partner&&totalPartner>0?' | \u05d1\u05d9\u05d7\u05d3: \u20aa'+Math.round(totalP+totalPartner).toLocaleString('he-IL'):'')
+    +'<span>'+today+'</span></div>'
+    +'</body></html>';
 
   var existing=document.getElementById('reportOverlay');
   if(existing)existing.remove();
