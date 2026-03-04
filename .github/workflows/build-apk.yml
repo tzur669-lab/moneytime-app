@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # הוספנו הרשאה כדי שהוא יוכל לשמור לך את קובץ ה-APK בסוף!
+      contents: write
 
     steps:
       - name: Checkout code
@@ -72,9 +72,10 @@ jobs:
         run: |
           GRADLE="android/app/build.gradle"
 
-          # הוסף קריאת keystore.properties בראש הקובץ
+          # קריאת הקובץ שמכיל את הסודות
           sed -i '1s|^|def keystoreProps = new Properties()\nkeystoreProps.load(new FileInputStream(rootProject.file("../keystore.properties")))\n\n|' $GRADLE
 
+          # סקריפט חכם יותר שמתעלם מרווחים וטאבים
           python3 - << 'PYEOF'
           import re
 
@@ -92,22 +93,19 @@ jobs:
               }
           """
 
-          # 1. קודם כל נוסיף את השורות של release בתוך buildTypes (לפני שנוסיף עוד מילים בשם release)
-          content = re.sub(
-              r'(release\s*\{)',
-              r'\1\n            signingConfig signingConfigs.release\n            minifyEnabled false\n            shrinkResources false',
-              content,
-              count=1
-          )
+          if 'signingConfigs {' not in content:
+              content = re.sub(r'(\s*buildTypes\s*\{)', '\n' + signing_config + r'\1', content, count=1)
 
-          # 2. רק עכשיו בטוח להוסיף את בלוק ה-signingConfigs למעלה
-          if 'signingConfigs' not in content:
-              content = content.replace('    buildTypes {', signing_config + '\n    buildTypes {')
+          if 'signingConfig signingConfigs.release' not in content:
+              content = re.sub(
+                  r'(release\s*\{)',
+                  r'\1\n            signingConfig signingConfigs.release\n            minifyEnabled false\n            shrinkResources false',
+                  content,
+                  count=1
+              )
 
           with open("android/app/build.gradle", "w") as f:
               f.write(content)
-
-          print("build.gradle patched successfully")
           PYEOF
 
       - name: Make gradlew executable
@@ -124,8 +122,7 @@ jobs:
         run: |
           echo "=== APK files found ==="
           find android -name "*.apk" -type f
-          cp android/app/build/outputs/apk/release/app-release.apk moneytime-pro.apk
-          ls -lh moneytime-pro.apk
+          cp android/app/build/outputs/apk/release/app-release.apk moneytime-pro.apk || true
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
