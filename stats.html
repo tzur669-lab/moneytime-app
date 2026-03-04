@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>סטטיסטיקות — מעקב שעות</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0F172A; color: #F1F5F9; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .card { background: #1E293B; border-radius: 20px; padding: 40px; max-width: 420px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,.4); border: 1px solid #334155; text-align: center; }
+  .logo { font-size: 40px; margin-bottom: 16px; }
+  h1 { font-size: 18px; font-weight: 500; color: #94A3B8; margin-bottom: 32px; letter-spacing: .5px; }
+  .stat { background: #0F172A; border-radius: 14px; padding: 28px 20px; margin-bottom: 16px; border: 1px solid #1E3A8A; }
+  .stat-num { font-size: 64px; font-weight: 200; color: #60A5FA; line-height: 1; margin-bottom: 8px; }
+  .stat-lbl { font-size: 14px; color: #64748B; font-weight: 400; }
+  .updated { font-size: 11px; color: #475569; margin-top: 24px; }
+  .btn { background: #1D4ED8; border: none; color: #fff; padding: 12px 28px; border-radius: 10px; font-size: 13px; cursor: pointer; margin-top: 20px; font-family: inherit; transition: background .2s; }
+  .btn:hover { background: #2563EB; }
+  .loading { color: #475569; font-size: 32px; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">⏱</div>
+  <h1>מעקב שעות Pro — סטטיסטיקות</h1>
+  <div class="stat">
+    <div class="stat-num" id="count"><span class="loading">...</span></div>
+    <div class="stat-lbl">משתמשים שחיברו Google Drive</div>
+  </div>
+  <div class="updated" id="updated"></div>
+  <br>
+  <button class="btn" onclick="load()">🔄 רענן</button>
+</div>
+
+<script>
+const FB = 'https://moneytime-app-f5a15-default-rtdb.firebaseio.com/ucount.json?shallow=true';
+
+async function load() {
+  document.getElementById('count').innerHTML = '<span class="loading">...</span>';
+  try {
+    const r = await fetch(FB);
+    if (!r.ok) throw new Error('שגיאה ' + r.status);
+    const data = await r.json();
+    const count = data ? Object.keys(data).length : 0;
+    document.getElementById('count').textContent = count;
+    const now = new Date().toLocaleString('he-IL');
+    document.getElementById('updated').textContent = 'עודכן: ' + now;
+  } catch(e) {
+    document.getElementById('count').textContent = '—';
+    document.getElementById('updated').textContent = 'שגיאה: ' + e.message;
+  }
+}
+
+load();
+</script>
+</body>
+</html>
