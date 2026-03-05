@@ -511,6 +511,13 @@ input[type=time].fi{text-align:center}
   <div class="set-sec-ttl" style="margin-top:4px">מקומות עבודה</div>
   <div id="jobsCont"></div>
   <button class="btn btn-g btn-sm" onclick="addJob()" id="addJobBtn" style="margin-bottom:16px">+ הוסף מקום עבודה</button>
+  
+  <div class="set-sec-ttl">בונוסים קבועים</div>
+  <div class="card" id="fixedBonusesCont">
+    <!-- יתמלא ב-JavaScript -->
+  </div>
+  <button class="btn btn-g btn-sm" onclick="addFixedBonus()" style="margin-bottom:16px">➕ הוסף בונוס קבוע</button>
+  
   <div class="set-sec-ttl">הגדרות חישוב</div>
   <div class="card">
     <div class="trow"><div><div class="trow-lbl">שעות נוספות</div><div class="trow-sub">מעל 8 ש' = 125%, מעל 10 = 150%</div></div><label class="toggle"><input type="checkbox" id="togOT" onchange="setSetting('calcOvertime',this.checked)"><span class="tsl"></span></label></div>
@@ -632,7 +639,10 @@ input[type=time].fi{text-align:center}
     <div id="dBonCont" style="margin-bottom:13px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <span class="fl" style="margin:0">תוספות ובונוסים</span>
-        <button class="btn btn-g btn-sm" onclick="addB()" style="padding:5px 10px;font-size:11px">+ הוסף</button>
+        <div>
+          <button class="btn btn-g btn-sm" onclick="addB()" style="padding:5px 10px;font-size:11px">➕ הוסף בונוס</button>
+          <button class="btn btn-g btn-sm" onclick="addFixedBonusToDay()" style="padding:5px 10px;font-size:11px;margin-right:4px">📋 בונוס קבוע</button>
+        </div>
       </div>
       <div id="dBonList"></div>
     </div>
@@ -641,6 +651,20 @@ input[type=time].fi{text-align:center}
       <button class="btn btn-p" onclick="saveDay()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg> שמור</button>
       <button class="btn btn-o" onclick="closeM('mDay')">ביטול</button>
     </div>
+    <div style="height:8px"></div>
+  </div>
+</div>
+
+<!-- MODAL: SELECT FIXED BONUS -->
+<div class="modal" id="mSelectFixedBonus">
+  <div class="msh">
+    <div class="mhdl"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="mttl">📋 בחר בונוס קבוע</div>
+      <button class="mclose" onclick="closeM('mSelectFixedBonus')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div id="fixedBonusesList" style="margin:16px 0; max-height:300px; overflow-y:auto"></div>
+    <button class="btn btn-o" onclick="closeM('mSelectFixedBonus')">ביטול</button>
     <div style="height:8px"></div>
   </div>
 </div>
@@ -790,6 +814,9 @@ input[type=time].fi{text-align:center}
   </div>
 </div>
 
+<!-- מנגנון עדכונים אוטומטי -->
+<script src="update-checker.js"></script>
+
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ---- CONSTANTS ----
 const JC=['#1E3A8A','#2563EB','#10B981','#F59E0B','#EF4444','#8B5CF6'];
@@ -801,7 +828,7 @@ let hCh,pCh,cmpCh,cplCh,jCh;
 let aToken=null, tClient=null, dProm=null, tInt=null;
 
 // ---- STORAGE ----
-const DEF_S={jobs:[{name:'עבודה ראשית',color:'#1E3A8A',rate:50,fixed:0}],calcOvertime:false,showMissing:true,myName:'אני',myColor:'#1E3A8A',partnerName:'פרטנר',partnerColor:'#10B981',pairCode:null,partnerCode:null,myUID:null,theme:'light'};
+const DEF_S={jobs:[{name:'עבודה ראשית',color:'#1E3A8A',rate:50,fixed:0}],fixedBonuses:[],calcOvertime:false,showMissing:true,myName:'אני',myColor:'#1E3A8A',partnerName:'פרטנר',partnerColor:'#10B981',pairCode:null,partnerCode:null,myUID:null,theme:'light'};
 const D={
   g:()=>{try{return JSON.parse(localStorage.getItem('wd')||'{}');}catch{return {};}},
   s:d=>{localStorage.setItem('wd',JSON.stringify(d));localStorage.setItem('wdts',Date.now());},
@@ -891,7 +918,7 @@ function swPage(p,btn){
   btn.classList.add('active');
   if(p==='rep')updRep();
   if(p==='couple')renderCouple();
-  if(p==='set')renderSettings();
+  if(p==='set'){renderSettings();renderFixedBonuses();}
 }
 
 // ---- CALENDAR ----
@@ -1008,6 +1035,38 @@ function calcExtraT(el){
   const sv=row.querySelector('.ej-start').value,ev=row.querySelector('.ej-end').value;
   if(sv&&ev){const[sh,sm]=sv.split(':').map(Number),[eh,em]=ev.split(':').map(Number);let df=(eh+em/60)-(sh+sm/60);if(df<0)df+=24;row.querySelector('.ej-hours').value=df.toFixed(2);}
 }
+function addFixedBonusToDay(){
+  const s=D.gs();
+  if(!s.fixedBonuses||s.fixedBonuses.length===0){
+    showToast('אין בונוסים קבועים. הוסף בהגדרות');
+    return;
+  }
+  const listDiv=document.getElementById('fixedBonusesList');
+  let html='';
+  s.fixedBonuses.forEach((bonus, index)=>{
+    html+=`
+      <div class="jcard" style="cursor:pointer;margin-bottom:8px;padding:12px" onclick="selectFixedBonus(${index})">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:20px">💰</span>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:500">${bonus.desc}</div>
+            <div style="font-size:16px;color:var(--g);font-weight:600">₪${bonus.amount}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  listDiv.innerHTML=html;
+  openM('mSelectFixedBonus');
+}
+function selectFixedBonus(index){
+  const s=D.gs();
+  const bonus=s.fixedBonuses[index];
+  if(!bonus) return;
+  addB(bonus.desc, bonus.amount);
+  closeM('mSelectFixedBonus');
+  showToast(`➕ נוסף: ${bonus.desc}`);
+}
 function saveDay(){
   const data=D.g(),bons=[];
   document.querySelectorAll('#dBonList .brow').forEach(r=>{const desc=r.querySelector('.bdesc').value,amt=parseFloat(r.querySelector('.bamt').value);if(amt>0)bons.push({desc:desc||'תוספת',amount:amt});});
@@ -1025,6 +1084,64 @@ function saveDay(){
   D.s(data);closeM('mDay');renderCal();updRep();saveDr();flash();vib();
 }
 function navDay(delta){const d=new Date(selDt);d.setDate(d.getDate()+delta);closeM('mDay');openDay(fk(d));}
+
+// ---- FIXED BONUSES ----
+function renderFixedBonuses(){
+  const s = D.gs();
+  if (!s.fixedBonuses) s.fixedBonuses = [];
+  
+  const cont = document.getElementById('fixedBonusesCont');
+  if (!cont) return;
+  
+  if (s.fixedBonuses.length === 0) {
+    cont.innerHTML = '<div style="padding:16px;text-align:center;color:var(--t3);font-size:12px">אין בונוסים קבועים. לחץ על "➕ הוסף בונוס קבוע"</div>';
+    return;
+  }
+  
+  let html = '';
+  s.fixedBonuses.forEach((bonus, index) => {
+    html += `
+      <div class="jcard" style="margin-bottom:8px;padding:12px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="font-size:16px">💰</span>
+          <input type="text" class="fi" value="${bonus.desc}" placeholder="תיאור" style="flex:2" onchange="updateFixedBonus(${index}, 'desc', this.value)">
+          <input type="number" class="fi" value="${bonus.amount}" placeholder="סכום" style="flex:1" onchange="updateFixedBonus(${index}, 'amount', this.value)">
+          <button class="bdel" onclick="deleteFixedBonus(${index})" style="font-size:20px">×</button>
+        </div>
+      </div>
+    `;
+  });
+  cont.innerHTML = html;
+}
+
+function addFixedBonus(){
+  const s = D.gs();
+  if (!s.fixedBonuses) s.fixedBonuses = [];
+  s.fixedBonuses.push({desc: 'בונוס חדש', amount: 100});
+  D.ss(s);
+  renderFixedBonuses();
+  showToast('➕ בונוס קבוע נוסף');
+}
+
+function updateFixedBonus(index, field, value){
+  const s = D.gs();
+  if (!s.fixedBonuses || !s.fixedBonuses[index]) return;
+  if (field === 'amount') {
+    s.fixedBonuses[index][field] = parseFloat(value) || 0;
+  } else {
+    s.fixedBonuses[index][field] = value;
+  }
+  D.ss(s);
+}
+
+function deleteFixedBonus(index){
+  const s = D.gs();
+  if (!s.fixedBonuses) return;
+  s.fixedBonuses.splice(index, 1);
+  D.ss(s);
+  renderFixedBonuses();
+  showToast('🗑️ בונוס נמחק');
+}
 
 // ---- MULTI MODAL ----
 function openMulti(type){
@@ -2057,6 +2174,9 @@ async function loadDr(){
               // עדכן jobs קיימים — שמור צבע מקומי אם לא שונה
               cur.jobs=data.settings.jobs.map((rj,i)=>Object.assign({},cur.jobs?.[i]||{},rj));
             }
+            if(data.settings.fixedBonuses){
+              cur.fixedBonuses=data.settings.fixedBonuses;
+            }
             if(data.settings.calcOvertime!==undefined) cur.calcOvertime=data.settings.calcOvertime;
             if(data.settings.showMissing!==undefined) cur.showMissing=data.settings.showMissing;
             D.ss(cur);
@@ -2927,7 +3047,5 @@ document.addEventListener('DOMContentLoaded',()=>{
   initClock();renderCal();setSyncDot(false);initGD();renderSettings();checkPairLink();
 });
 </script>
-  <!-- מנגנון עדכונים אוטומטי -->
-<script src="update-checker.js"></script>
 </body>
 </html>
