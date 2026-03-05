@@ -1,7 +1,7 @@
 (function() {
   'use strict';
   
-  const CURRENT_VERSION = "2.2.0";
+  const CURRENT_VERSION = "2.1.0";
   const VERSION_URL = "https://tzur669-lab.github.io/moneytime-app/version.json";
   const CHECK_INTERVAL = 1000 * 60 * 60 * 6;
   const BANNER_DISMISS_KEY = 'update_banner_dismissed';
