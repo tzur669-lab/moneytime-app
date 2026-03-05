@@ -14,31 +14,46 @@ p{font-size:16px;opacity:.8}
 <div class="spinner"></div>
 <p>מחבר את חשבון Google...</p>
 <script>
+var FB = 'https://moneytime-app-f5a15-default-rtdb.firebaseio.com';
 var hash = window.location.hash || window.location.search;
 var params = new URLSearchParams(hash.replace(/^[#?]/,''));
 var token = params.get('access_token');
+var state = params.get('state') || 'anon';
 
 if(token){
   document.querySelector('p').textContent = 'מחובר! חוזר לאפליקציה...';
 
-  // שמור ב-localStorage כ-fallback
+  // 1. שמור ב-localStorage (לדפדפן רגיל)
   try{
     localStorage.setItem('gtoken', token);
     localStorage.setItem('syen', '1');
     localStorage.setItem('oauth_done', Date.now().toString());
   }catch(e){}
 
-  // deep link — בלי encodeURIComponent כדי שהטוקן יעבור כמו שהוא
-  var deepLink = 'com.tzur669.moneytime://oauth#access_token=' + token;
+  // 2. שמור ב-Firebase (ל-APK שלא יכול לקרוא localStorage של GitHub Pages)
+  var safeState = state.replace(/[.#$\[\]/]/g,'_');
+  fetch(FB + '/oauthTokens/' + safeState + '.json', {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({token: token, ts: Date.now()})
+  }).catch(function(){});
 
+  // 3. deep link ל-APK
+  var deepLink = 'com.tzur669.moneytime://oauth#access_token=' + token + '&state=' + state;
   setTimeout(function(){
-    window.location.href = deepLink;
-  }, 200);
+    try{ window.location.href = deepLink; }catch(e){}
+  }, 100);
 
-  // fallback — אם deep link לא עובד
+  // 4. postMessage לחלון האב
+  try{
+    if(window.opener) window.opener.postMessage({type:'oauth_token', token:token}, '*');
+    if(window.parent && window.parent !== window) window.parent.postMessage({type:'oauth_token', token:token}, '*');
+  }catch(e){}
+
+  // 5. fallback — חזור לדף הראשי
   setTimeout(function(){
     window.location.href = 'index.html';
-  }, 2000);
+  }, 1500);
 
 } else {
   document.querySelector('p').textContent = 'שגיאה בהתחברות. חוזר...';
