@@ -632,9 +632,9 @@ input[type=time].fi{text-align:center}
 
   <div class="set-sec-ttl">יצירת קשר</div>
   <div class="card" style="padding:14px;text-align:center">
-    <a href="mailto:tzur669@gmail.com" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
+    <a href="/cdn-cgi/l/email-protection#66121c131450505f26010b070f0a4805090b" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
-      tzur669@gmail.com
+      <span class="__cf_email__" data-cfemail="41353b343377777801262c20282d6f222e2c">[email&#160;protected]</span>
     </a>
     <div style="font-size:11px;color:var(--t3);margin-top:6px">לתמיכה, שאלות ומשוב</div>
   </div>
@@ -843,7 +843,7 @@ input[type=time].fi{text-align:center}
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ---- CONSTANTS ----
 const JC=['#1E3A8A','#2563EB','#10B981','#F59E0B','#EF4444','#8B5CF6'];
 const MN=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
@@ -1824,7 +1824,9 @@ function renderFbonChips(){
 const APP_VERSION='2.1.0';
 const LIVE_URL='https://tzur669-lab.github.io/moneytime-app/';
 const VER_FB_URL='https://moneytime-app-f5a15-default-rtdb.firebaseio.com/appVersion.json';
+const GITHUB_APK_BASE='https://github.com/tzur669-lab/moneytime-app/releases/download';
 let _updShown=false;
+let _updApkUrl='';
 
 async function checkAppUpdate(){
   if(_updShown)return;
@@ -1837,13 +1839,19 @@ async function checkAppUpdate(){
     const data=await r.json();
     if(!data||!data.version)return;
     if(_verIsNewer(data.version,APP_VERSION)){
-      _showUpdBanner(data.version,data.notes||'');
+      // בנה URL של ה-APK מ-GitHub Releases לפי ה-build number
+      const buildNum=data.build||'';
+      _updApkUrl = buildNum
+        ? GITHUB_APK_BASE+'/v'+buildNum+'/moneytime-pro.apk'
+        : '';
+      _showUpdBanner(data.version, data.notes||'');
     }
   }catch(e){
     // אין אינטרנט — ננסה שוב כשיהיה
     setTimeout(checkAppUpdate,60000);
   }
 }
+
 function _verIsNewer(remote,local){
   const r=String(remote).split('.').map(Number);
   const l=String(local).split('.').map(Number);
@@ -1853,11 +1861,13 @@ function _verIsNewer(remote,local){
   }
   return false;
 }
+
 function _showUpdBanner(ver,notes){
   if(_updShown)return;
   _updShown=true;
   const old=document.getElementById('updBanner');
   if(old)old.remove();
+  const isApk=!!window.Capacitor;
   const el=document.createElement('div');
   el.id='updBanner';
   el.className='upd-banner';
@@ -1867,38 +1877,157 @@ function _showUpdBanner(ver,notes){
       <div class="upd-ttl">גרסה ${ver} זמינה!</div>
       <div class="upd-sub">${notes||'עדכון חדש עם שיפורים'}</div>
     </div>
-    <button class="upd-btn" onclick="_doUpdate(this)">עדכן</button>
+    ${isApk
+      ? `<button class="upd-btn" onclick="_askApkUpdate(this)">עדכן</button>`
+      : `<button class="upd-btn" onclick="_doWebUpdate(this)">עדכן</button>`
+    }
     <button class="upd-x" onclick="document.getElementById('updBanner')?.remove();_updShown=false">×</button>`;
   document.body.appendChild(el);
 }
-function _doUpdate(btn){
-  if(btn){btn.textContent='⏳...';btn.disabled=true;}
-  // שמור את כל הנתונים לפני המעבר
-  const wd=localStorage.getItem('wd')||'{}';
-  const settings=localStorage.getItem('settings')||'{}';
-  const pd=localStorage.getItem('pd')||'{}';
-  const gtoken=localStorage.getItem('gtoken')||'';
-  const syen=localStorage.getItem('syen')||'';
-  // בנה URL עם פרמטר שיאמר לדף החי לשחזר נתונים
-  const params=encodeURIComponent(JSON.stringify({wd,settings,pd,gtoken,syen}));
-  // ב-Capacitor APK — פתח את האתר החי
-  if(window.CapBrowser){
-    window.CapBrowser.open({url:LIVE_URL}).catch(()=>{
-      window.location.href=LIVE_URL;
-    });
-  } else {
-    // בדפדפן רגיל — נקה cache ורענן
-    if('serviceWorker' in navigator){
-      navigator.serviceWorker.getRegistrations().then(regs=>{
-        Promise.all(regs.map(r=>r.unregister())).then(()=>{
-          caches.keys().then(keys=>{
-            Promise.all(keys.map(k=>caches.delete(k))).then(()=>location.reload(true));
-          });
-        });
-      }).catch(()=>location.reload(true));
-    } else {
-      location.reload(true);
+
+// --- עדכון ב-APK: שאל את המשתמש, הורד והתקן ---
+function _askApkUpdate(btn){
+  if(btn){btn.disabled=true;}
+  // הצג דיאלוג אישור
+  const dlg=document.createElement('div');
+  dlg.id='updDlg';
+  dlg.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
+  dlg.innerHTML=`
+    <div style="background:#1E293B;border-radius:18px;padding:28px 24px;max-width:320px;width:100%;border:1px solid #334155;text-align:center">
+      <div style="font-size:36px;margin-bottom:12px">🔄</div>
+      <div style="font-size:16px;font-weight:600;color:#F1F5F9;margin-bottom:8px">עדכון זמין</div>
+      <div style="font-size:13px;color:#94A3B8;margin-bottom:24px">האם לעדכן את האפליקציה עכשיו?<br>הנתונים שלך יישמרו.</div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button onclick="_cancelApkUpdate()" style="background:#334155;border:none;color:#94A3B8;padding:12px 24px;border-radius:10px;font-size:14px;cursor:pointer;font-family:inherit">לא עכשיו</button>
+        <button id="updYesBtn" onclick="_doApkUpdate()" style="background:#2563EB;border:none;color:#fff;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit">עדכן ✓</button>
+      </div>
+      <div id="updProgress" style="display:none;margin-top:20px">
+        <div style="font-size:12px;color:#94A3B8;margin-bottom:8px" id="updProgressTxt">מוריד...</div>
+        <div style="background:#0F172A;border-radius:6px;height:6px;overflow:hidden">
+          <div id="updProgressBar" style="background:#2563EB;height:100%;width:0%;transition:width .3s;border-radius:6px"></div>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(dlg);
+}
+
+function _cancelApkUpdate(){
+  const dlg=document.getElementById('updDlg');
+  if(dlg)dlg.remove();
+  // אפשר לבטל את ה-disabled של הכפתור
+  const btn=document.querySelector('#updBanner .upd-btn');
+  if(btn){btn.disabled=false;}
+}
+
+async function _doApkUpdate(){
+  const yesBtn=document.getElementById('updYesBtn');
+  const noBtn=yesBtn?.previousElementSibling;
+  if(yesBtn){yesBtn.textContent='מוריד...';yesBtn.disabled=true;}
+  if(noBtn){noBtn.disabled=true;}
+  const prog=document.getElementById('updProgress');
+  const progBar=document.getElementById('updProgressBar');
+  const progTxt=document.getElementById('updProgressTxt');
+  if(prog)prog.style.display='block';
+
+  // אם אין APK URL — פתח ב-browser כ-fallback
+  if(!_updApkUrl){
+    if(window.CapBrowser){
+      window.CapBrowser.open({url:'https://github.com/tzur669-lab/moneytime-app/releases/latest'}).catch(()=>{});
     }
+    document.getElementById('updDlg')?.remove();
+    return;
+  }
+
+  try{
+    // הורד APK עם fetch + progress
+    const response=await fetch(_updApkUrl);
+    if(!response.ok) throw new Error('שגיאת הורדה '+response.status);
+    const contentLength=response.headers.get('content-length');
+    const total=contentLength?parseInt(contentLength):0;
+    const reader=response.body.getReader();
+    const chunks=[];
+    let received=0;
+    while(true){
+      const {done,value}=await reader.read();
+      if(done)break;
+      chunks.push(value);
+      received+=value.length;
+      if(total&&progBar){
+        const pct=Math.round((received/total)*100);
+        progBar.style.width=pct+'%';
+        if(progTxt)progTxt.textContent='מוריד... '+pct+'%';
+      }
+    }
+    if(progBar)progBar.style.width='100%';
+    if(progTxt)progTxt.textContent='כמעט מוכן...';
+
+    // המר ל-base64
+    const blob=new Blob(chunks,{type:'application/vnd.android.package-archive'});
+    const base64=await _blobToBase64(blob);
+
+    // שמור ל-Filesystem של Capacitor
+    if(window.CapFS){
+      const fileName='moneytime-update.apk';
+      await window.CapFS.writeFile({
+        path:fileName,
+        data:base64,
+        directory:'CACHE',
+        recursive:true
+      });
+      // קבל URI מלא
+      const uriResult=await window.CapFS.getUri({
+        path:fileName,
+        directory:'CACHE'
+      });
+      const fileUri=uriResult.uri;
+
+      // פתח את ה-APK דרך Android Intent
+      if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
+        document.getElementById('updDlg')?.remove();
+        document.getElementById('updBanner')?.remove();
+        // פתח דיאלוג Android להתקנה
+        window.location.href='intent:'+fileUri+'#Intent;scheme=file;type=application/vnd.android.package-archive;end';
+      } else {
+        // fallback — פתח ב-browser
+        window.CapBrowser&&window.CapBrowser.open({url:_updApkUrl});
+        document.getElementById('updDlg')?.remove();
+      }
+    } else {
+      // אין CapFS — פתח ב-browser ישירות
+      window.CapBrowser&&window.CapBrowser.open({url:_updApkUrl});
+      document.getElementById('updDlg')?.remove();
+    }
+  }catch(err){
+    if(progTxt)progTxt.textContent='שגיאה בהורדה. פותח בדפדפן...';
+    setTimeout(()=>{
+      window.CapBrowser&&window.CapBrowser.open({url:_updApkUrl||'https://github.com/tzur669-lab/moneytime-app/releases/latest'}).catch(()=>{});
+      document.getElementById('updDlg')?.remove();
+    },1500);
+  }
+}
+
+function _blobToBase64(blob){
+  return new Promise((res,rej)=>{
+    const reader=new FileReader();
+    reader.onloadend=()=>res(reader.result.split(',')[1]);
+    reader.onerror=rej;
+    reader.readAsDataURL(blob);
+  });
+}
+
+// --- עדכון בדפדפן רגיל: נקה cache ורענן ---
+function _doWebUpdate(btn){
+  if(btn){btn.textContent='⏳...';btn.disabled=true;}
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.getRegistrations().then(regs=>{
+      Promise.all(regs.map(r=>r.unregister())).then(()=>{
+        caches.keys().then(keys=>{
+          Promise.all(keys.map(k=>caches.delete(k))).then(()=>location.reload(true));
+        });
+      });
+    }).catch(()=>location.reload(true));
+  } else {
+    location.reload(true);
   }
 }
 
