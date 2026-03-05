@@ -50,40 +50,40 @@ jobs:
       - name: Patch AndroidManifest
         run: |
           python3 << 'PYEOF'
-import re
+          import re
 
-path = "android/app/src/main/AndroidManifest.xml"
-with open(path, "r") as f:
-    content = f.read()
+          path = "android/app/src/main/AndroidManifest.xml"
+          with open(path, "r") as f:
+              content = f.read()
 
-# 1. כבה cleartext
-content = content.replace('android:usesCleartextTraffic="true"', 'android:usesCleartextTraffic="false"')
+          # 1. כבה cleartext
+          content = content.replace('android:usesCleartextTraffic="true"', 'android:usesCleartextTraffic="false"')
 
-# 2. deep link — הוסף לפני </activity> הראשון בלבד
-deep_link = '<intent-filter><action android:name="android.intent.action.VIEW"/><category android:name="android.intent.category.DEFAULT"/><category android:name="android.intent.category.BROWSABLE"/><data android:scheme="com.tzur669.moneytime" android:host="oauth"/></intent-filter>'
-if 'android.intent.action.VIEW' not in content:
-    idx = content.find('</activity>')
-    if idx != -1:
-        content = content[:idx] + deep_link + content[idx:]
+          # 2. deep link — הוסף לפני </activity> הראשון בלבד
+          deep_link = '<intent-filter><action android:name="android.intent.action.VIEW"/><category android:name="android.intent.category.DEFAULT"/><category android:name="android.intent.category.BROWSABLE"/><data android:scheme="com.tzur669.moneytime" android:host="oauth"/></intent-filter>'
+          if 'android.intent.action.VIEW' not in content:
+              idx = content.find('</activity>')
+              if idx != -1:
+                  content = content[:idx] + deep_link + content[idx:]
 
-# 3. הרשאות — הוסף לפני <application אם לא קיים
-if 'REQUEST_INSTALL_PACKAGES' not in content:
-    content = content.replace(
-        '<application',
-        '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>\n    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>\n    <application',
-        1
-    )
+          # 3. הרשאות — הוסף לפני <application אם לא קיים
+          if 'REQUEST_INSTALL_PACKAGES' not in content:
+              content = content.replace(
+                  '<application',
+                  '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>\n    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>\n    <application',
+                  1
+              )
 
-# 4. FileProvider — הוסף לפני </application> אם לא קיים
-if 'FileProvider' not in content:
-    provider = '<provider android:name="androidx.core.content.FileProvider" android:authorities="com.tzur669.moneytime.fileprovider" android:exported="false" android:grantUriPermissions="true"><meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths"/></provider>'
-    content = content.replace('</application>', provider + '\n</application>', 1)
+          # 4. FileProvider — הוסף לפני </application> אם לא קיים
+          if 'FileProvider' not in content:
+              provider = '<provider android:name="androidx.core.content.FileProvider" android:authorities="com.tzur669.moneytime.fileprovider" android:exported="false" android:grantUriPermissions="true"><meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths"/></provider>'
+              content = content.replace('</application>', provider + '\n</application>', 1)
 
-with open(path, "w") as f:
-    f.write(content)
+          with open(path, "w") as f:
+              f.write(content)
 
-print("AndroidManifest patched OK")
-PYEOF
+          print("AndroidManifest patched OK")
+          PYEOF
 
       - name: Create FileProvider paths xml
         run: |
@@ -108,37 +108,37 @@ PYEOF
           GRADLE="android/app/build.gradle"
           sed -i '1s|^|def keystoreProps = new Properties()\nkeystoreProps.load(new FileInputStream(rootProject.file("../keystore.properties")))\n\n|' $GRADLE
           python3 << 'PYEOF'
-import re
+          import re
 
-with open("android/app/build.gradle", "r") as f:
-    content = f.read()
+          with open("android/app/build.gradle", "r") as f:
+              content = f.read()
 
-signing_block = """
-    signingConfigs {
-        release {
-            storeFile file(keystoreProps['storeFile'])
-            storePassword keystoreProps['storePassword']
-            keyAlias keystoreProps['keyAlias']
-            keyPassword keystoreProps['keyPassword']
-        }
-    }
-"""
+          signing_block = """
+              signingConfigs {
+                  release {
+                      storeFile file(keystoreProps['storeFile'])
+                      storePassword keystoreProps['storePassword']
+                      keyAlias keystoreProps['keyAlias']
+                      keyPassword keystoreProps['keyPassword']
+                  }
+              }
+          """
 
-if 'signingConfigs {' not in content:
-    content = re.sub(r'(\s*buildTypes\s*\{)', signing_block + r'\1', content, count=1)
+          if 'signingConfigs {' not in content:
+              content = re.sub(r'(\s*buildTypes\s*\{)', signing_block + r'\1', content, count=1)
 
-if 'signingConfig signingConfigs.release' not in content:
-    content = re.sub(
-        r'(buildTypes\s*\{[^}]*?release\s*\{)',
-        r'\1\n            signingConfig signingConfigs.release\n            minifyEnabled false\n            shrinkResources false',
-        content, count=1, flags=re.DOTALL
-    )
+          if 'signingConfig signingConfigs.release' not in content:
+              content = re.sub(
+                  r'(buildTypes\s*\{[^}]*?release\s*\{)',
+                  r'\1\n            signingConfig signingConfigs.release\n            minifyEnabled false\n            shrinkResources false',
+                  content, count=1, flags=re.DOTALL
+              )
 
-with open("android/app/build.gradle", "w") as f:
-    f.write(content)
+          with open("android/app/build.gradle", "w") as f:
+              f.write(content)
 
-print("build.gradle patched OK")
-PYEOF
+          print("build.gradle patched OK")
+          PYEOF
 
       - name: Make gradlew executable
         run: chmod +x android/gradlew
