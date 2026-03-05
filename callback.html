@@ -28,18 +28,17 @@ if(token){
     localStorage.setItem('oauth_done', Date.now().toString());
   }catch(e){}
 
-  // פנה ל-deep link — אנדרואיד יפתח את האפליקציה
-  // ה-App plugin יאזין ל-appUrlOpen עם ה-token
-  var deepLink = 'com.tzur669.moneytime://oauth#access_token=' + encodeURIComponent(token);
+  // deep link — בלי encodeURIComponent כדי שהטוקן יעבור כמו שהוא
+  var deepLink = 'com.tzur669.moneytime://oauth#access_token=' + token;
 
   setTimeout(function(){
     window.location.href = deepLink;
-  }, 300);
+  }, 200);
 
-  // fallback — אם deep link לא עובד, redirect לדף הראשי
+  // fallback — אם deep link לא עובד
   setTimeout(function(){
     window.location.href = 'index.html';
-  }, 2500);
+  }, 2000);
 
 } else {
   document.querySelector('p').textContent = 'שגיאה בהתחברות. חוזר...';
