@@ -184,6 +184,16 @@ async function restorePairFromCloud(){
 .upd-btn{background:var(--b6);border:none;color:#fff;padding:8px 14px;border-radius:9px;font-family:'Inter',sans-serif;font-size:11px;font-weight:400;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .2s}
 .upd-btn:active{transform:scale(.95)}
 .upd-x{background:none;border:none;color:#475569;font-size:20px;cursor:pointer;padding:0;line-height:1;flex-shrink:0}
+/* ---- UPDATE BANNER ---- */
+.upd-banner{position:fixed;top:calc(var(--hh) + 8px);left:12px;right:12px;background:linear-gradient(135deg,#0F172A,#1E3A5F);border:1px solid rgba(96,165,250,.45);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.5);animation:slideDownBnr .4s cubic-bezier(.34,1.56,.64,1)}
+@keyframes slideDownBnr{from{transform:translateY(-120%);opacity:0}to{transform:translateY(0);opacity:1}}
+.upd-ico{font-size:22px;flex-shrink:0}
+.upd-txt{flex:1;min-width:0}
+.upd-ttl{font-size:13px;font-weight:500;color:#F1F5F9;margin-bottom:1px}
+.upd-sub{font-size:10px;color:#94A3B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upd-btn{background:#2563EB;border:none;color:#fff;padding:8px 14px;border-radius:9px;font-family:'Inter',sans-serif;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.upd-btn:disabled{opacity:.6}
+.upd-x{background:none;border:none;color:#64748B;font-size:20px;cursor:pointer;padding:0 0 0 4px;line-height:1;flex-shrink:0}
 /* ---- FIXED BONUSES ---- */
 .fbon-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--bd)}
 .fbon-row:last-child{border-bottom:none}
@@ -609,9 +619,9 @@ input[type=time].fi{text-align:center}
 
   <div class="set-sec-ttl">יצירת קשר</div>
   <div class="card" style="padding:14px;text-align:center">
-    <a href="/cdn-cgi/l/email-protection#a8dcd2ddda9e9e91e8cfc5c9c1c486cbc7c5" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
+    <a href="mailto:tzur669@gmail.com" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
-      <span class="__cf_email__" data-cfemail="05717f707733333c456268646c692b666a68">[email&#160;protected]</span>
+      tzur669@gmail.com
     </a>
     <div style="font-size:11px;color:var(--t3);margin-top:6px">לתמיכה, שאלות ומשוב</div>
   </div>
@@ -1799,52 +1809,83 @@ function renderFbonChips(){
 
 // ---- AUTO UPDATE ----
 const APP_VERSION='2.1.0';
+const LIVE_URL='https://tzur669-lab.github.io/moneytime-app/';
 const VER_FB_URL='https://moneytime-app-f5a15-default-rtdb.firebaseio.com/appVersion.json';
 let _updShown=false;
 
 async function checkAppUpdate(){
   if(_updShown)return;
   try{
-    const r=await fetch(VER_FB_URL+'?nocache='+Date.now());
+    const r=await fetch(VER_FB_URL+'?nocache='+Date.now(),{
+      method:'GET',
+      cache:'no-store'
+    });
     if(!r.ok)return;
     const data=await r.json();
     if(!data||!data.version)return;
     if(_verIsNewer(data.version,APP_VERSION)){
       _showUpdBanner(data.version,data.notes||'');
     }
-  }catch(e){}
+  }catch(e){
+    // אין אינטרנט — ננסה שוב כשיהיה
+    setTimeout(checkAppUpdate,60000);
+  }
 }
 function _verIsNewer(remote,local){
-  const r=remote.split('.').map(Number),l=local.split('.').map(Number);
-  for(let i=0;i<3;i++){if((r[i]||0)>(l[i]||0))return true;if((r[i]||0)<(l[i]||0))return false;}
+  const r=String(remote).split('.').map(Number);
+  const l=String(local).split('.').map(Number);
+  for(let i=0;i<3;i++){
+    if((r[i]||0)>(l[i]||0))return true;
+    if((r[i]||0)<(l[i]||0))return false;
+  }
   return false;
 }
 function _showUpdBanner(ver,notes){
   if(_updShown)return;
   _updShown=true;
+  const old=document.getElementById('updBanner');
+  if(old)old.remove();
   const el=document.createElement('div');
-  el.id='updBanner';el.className='upd-banner';
-  el.innerHTML=`<div class="upd-ico">🔄</div>
+  el.id='updBanner';
+  el.className='upd-banner';
+  el.innerHTML=`
+    <div class="upd-ico">🔄</div>
     <div class="upd-txt">
       <div class="upd-ttl">גרסה ${ver} זמינה!</div>
       <div class="upd-sub">${notes||'עדכון חדש עם שיפורים'}</div>
     </div>
     <button class="upd-btn" onclick="_doUpdate(this)">עדכן</button>
-    <button class="upd-x" onclick="document.getElementById('updBanner')?.remove()">×</button>`;
+    <button class="upd-x" onclick="document.getElementById('updBanner')?.remove();_updShown=false">×</button>`;
   document.body.appendChild(el);
 }
 function _doUpdate(btn){
   if(btn){btn.textContent='⏳...';btn.disabled=true;}
-  if('serviceWorker' in navigator){
-    navigator.serviceWorker.getRegistrations().then(regs=>{
-      Promise.all(regs.map(r=>r.unregister())).then(()=>{
-        caches.keys().then(keys=>{
-          Promise.all(keys.map(k=>caches.delete(k))).then(()=>location.reload(true));
-        });
-      });
-    }).catch(()=>location.reload(true));
+  // שמור את כל הנתונים לפני המעבר
+  const wd=localStorage.getItem('wd')||'{}';
+  const settings=localStorage.getItem('settings')||'{}';
+  const pd=localStorage.getItem('pd')||'{}';
+  const gtoken=localStorage.getItem('gtoken')||'';
+  const syen=localStorage.getItem('syen')||'';
+  // בנה URL עם פרמטר שיאמר לדף החי לשחזר נתונים
+  const params=encodeURIComponent(JSON.stringify({wd,settings,pd,gtoken,syen}));
+  // ב-Capacitor APK — פתח את האתר החי
+  if(window.CapBrowser){
+    window.CapBrowser.open({url:LIVE_URL}).catch(()=>{
+      window.location.href=LIVE_URL;
+    });
   } else {
-    location.reload(true);
+    // בדפדפן רגיל — נקה cache ורענן
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.getRegistrations().then(regs=>{
+        Promise.all(regs.map(r=>r.unregister())).then(()=>{
+          caches.keys().then(keys=>{
+            Promise.all(keys.map(k=>caches.delete(k))).then(()=>location.reload(true));
+          });
+        });
+      }).catch(()=>location.reload(true));
+    } else {
+      location.reload(true);
+    }
   }
 }
 
@@ -3049,7 +3090,9 @@ document.addEventListener('DOMContentLoaded',()=>{
   const savedColor=D.gs().colorTheme||'blue';
   applyColorTheme(savedColor);
   initClock();renderCal();setSyncDot(false);initGD();renderSettings();checkPairLink();
+  // בדיקת עדכון
   setTimeout(checkAppUpdate,3000);
+  document.addEventListener('resume',()=>setTimeout(checkAppUpdate,1500));
 });
 </script>
 </body>
