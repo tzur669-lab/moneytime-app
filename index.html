@@ -1979,7 +1979,15 @@ function initGD(){
           localStorage.removeItem('gtoken');localStorage.removeItem('syen');
           aToken=null;setSyncDot(false);renderSettings();
         } else {
-          fetchEmail().then(()=>{renderSettings();setSyncDot(true);loadDr();});
+          fetchEmail().then(()=>{
+            renderSettings();
+            setSyncDot(true);
+            loadDr();
+            _countUniqueUser();
+            // סנכרן זוג מחדש ל-Firebase בכל פתיחה
+            const _s=D.gs();
+            if(_s.pairCode&&_s.myCode) syncPairToFirebase().catch(()=>{});
+          });
         }
       }).catch(()=>{fetchEmail().then(()=>{renderSettings();setSyncDot(true);});});
   }
@@ -2197,6 +2205,7 @@ async function saveDr(){
       await syncPairToFirebase();
     }
     if(aToken){
+      // שמור הכל — כולל הגדרות זוג, בונוסים, תעריפים, ערכת צבע
       await driveUpsert('moneytime_solo.json', JSON.stringify({workData:D.g(),settings:s,timestamp:Date.now()}), false);
     }
     setSyncDot(true);
@@ -2219,23 +2228,48 @@ async function loadDr(){
       if(data){
         const cTs=data.timestamp||0, lTs=parseInt(localStorage.getItem('wdts'))||0;
         if(cTs>lTs||lTs===0){
-          if(data.workData)D.s(data.workData);
-          // שחזר הגדרות עבודה מהגיבוי (שם עבודה, שכר קבוע, תעריף)
+          if(data.workData) D.s(data.workData);
           if(data.settings){
             const cur=D.gs();
+            // תעריפים ומקומות עבודה
             if(data.settings.jobs&&data.settings.jobs.length>0){
-              // עדכן jobs קיימים — שמור צבע מקומי אם לא שונה
               cur.jobs=data.settings.jobs.map((rj,i)=>Object.assign({},cur.jobs?.[i]||{},rj));
             }
+            // הגדרות חישוב
             if(data.settings.calcOvertime!==undefined) cur.calcOvertime=data.settings.calcOvertime;
             if(data.settings.showMissing!==undefined) cur.showMissing=data.settings.showMissing;
+            // ערכת צבע
+            if(data.settings.colorTheme) cur.colorTheme=data.settings.colorTheme;
+            // שם וצבע אישי
+            if(data.settings.myName&&data.settings.myName!=='אני') cur.myName=data.settings.myName;
+            if(data.settings.myColor) cur.myColor=data.settings.myColor;
+            // בונוסים קבועים
+            if(data.settings.fixedBonuses&&data.settings.fixedBonuses.length>0) cur.fixedBonuses=data.settings.fixedBonuses;
+            // חיבור זוגי — שחזר רק אם אין חיבור קיים
+            if(!cur.pairCode&&data.settings.pairCode){
+              cur.pairCode=data.settings.pairCode;
+              cur.partnerCode=data.settings.partnerCode;
+              cur.myCode=data.settings.myCode||cur.myCode;
+            }
+            // שם ופרטנר
+            if(data.settings.partnerName&&data.settings.partnerName!=='פרטנר') cur.partnerName=data.settings.partnerName;
+            if(data.settings.partnerColor) cur.partnerColor=data.settings.partnerColor;
             D.ss(cur);
+            // אם שוחזר חיבור זוגי — סנכרן מחדש
+            if(cur.pairCode&&cur.myCode){
+              syncPairToFirebase().catch(()=>{});
+              loadPartnerFromFirebase().catch(()=>{});
+            }
+            // החל ערכת צבע
+            if(data.settings.colorTheme) applyColorTheme(data.settings.colorTheme);
           }
-        } else await driveUpsert('moneytime_solo.json', JSON.stringify({workData:D.g(),settings:s,timestamp:Date.now()}), false);
+        } else {
+          await driveUpsert('moneytime_solo.json', JSON.stringify({workData:D.g(),settings:D.gs(),timestamp:Date.now()}), false);
+        }
       }
     }
   }catch(e){}
-  renderCal();updRep();
+  renderCal();updRep();renderSettings();
 }
 
 async function manualSync(){
