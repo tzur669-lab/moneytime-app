@@ -3,6 +3,16 @@ name: Build Android APK
 on:
   push:
     branches: [ main, master ]
+    tags-ignore:
+      - '**'
+    paths:
+      - 'index.html'
+      - 'sw.js'
+      - 'manifest.json'
+      - 'callback.html'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - '.github/workflows/build-apk.yml'
   workflow_dispatch:
 
 jobs:
@@ -39,7 +49,10 @@ jobs:
 
       - name: Add Android platform
         run: |
-          npx cap add android
+          # מוסיף android רק אם לא קיים כבר
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
           npx cap sync android
 
       - name: Patch AndroidManifest
@@ -87,10 +100,8 @@ jobs:
         run: |
           GRADLE="android/app/build.gradle"
 
-          # קריאת הקובץ שמכיל את הסודות
           sed -i '1s|^|def keystoreProps = new Properties()\nkeystoreProps.load(new FileInputStream(rootProject.file("../keystore.properties")))\n\n|' $GRADLE
 
-          # סקריפט חכם יותר שמתעלם מרווחים וטאבים
           python3 - << 'PYEOF'
           import re
 
@@ -108,12 +119,9 @@ jobs:
               }
           """
 
-          # הוסף signingConfigs לפני buildTypes (רק אם לא קיים)
           if 'signingConfigs {' not in content:
               content = re.sub(r'(\s*buildTypes\s*\{)', '\n' + signing_config + r'\1', content, count=1)
 
-          # הוסף signingConfig רק בתוך buildTypes > release (לא בתוך signingConfigs > release)
-          # הפתרון: מחפש buildTypes { ... release { ומוסיף שם
           if 'signingConfig signingConfigs.release' not in content:
               content = re.sub(
                   r'(buildTypes\s*\{[^}]*?release\s*\{)',
