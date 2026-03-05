@@ -1,7 +1,7 @@
 {
   "name": "מעקב שעות Pro",
   "short_name": "שעות",
-  "description": "מעקב שעות עבודה חכם - גרסה 2.1.0",
+  "description": "מעקב שעות עבודה חכם",
   "start_url": "./",
   "display": "standalone",
   "orientation": "portrait",
@@ -22,7 +22,5 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ],
-  "version": "2.1.0",
-  "version_code": 45
+  ]
 }
