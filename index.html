@@ -2010,12 +2010,32 @@ function startGoogleAuth(){
         _appUrlHandler.remove();
         try{ window.CapBrowser && window.CapBrowser.close(); }catch(e){}
         var url2 = data.url || '';
+        // נסה לחלץ טוקן מה-hash או מה-query
+        var token = null;
         var hashIdx = url2.indexOf('#');
+        var queryIdx = url2.indexOf('?');
         if(hashIdx !== -1){
-          var params = new URLSearchParams(url2.substring(hashIdx+1));
-          var token = params.get('access_token');
-          if(token){ _onTokenReceived(token); return; }
+          try{
+            var hp = new URLSearchParams(url2.substring(hashIdx+1));
+            token = hp.get('access_token');
+            if(token) token = decodeURIComponent(token);
+          }catch(e){}
         }
+        if(!token && queryIdx !== -1){
+          try{
+            var qp = new URLSearchParams(url2.substring(queryIdx+1));
+            token = qp.get('access_token');
+            if(token) token = decodeURIComponent(token);
+          }catch(e){}
+        }
+        // fallback — חפש ישירות בstring
+        if(!token && url2.includes('access_token=')){
+          try{
+            var match = url2.match(/access_token=([^&\s]+)/);
+            if(match) token = decodeURIComponent(match[1]);
+          }catch(e){}
+        }
+        if(token){ _onTokenReceived(token); return; }
         handleOAuthReturn();
       });
     }
@@ -2024,7 +2044,8 @@ function startGoogleAuth(){
     window.CapBrowser.open({url: url, presentationStyle: 'fullscreen'});
     window.CapBrowser.addListener('browserFinished', function(){
       if(_appUrlHandler){ try{_appUrlHandler.remove();}catch(e){} }
-      handleOAuthReturn();
+      // המתן קצת לפני handleOAuthReturn — הטוקן אולי עדיין בדרך
+      setTimeout(handleOAuthReturn, 500);
     });
 
   } else {
