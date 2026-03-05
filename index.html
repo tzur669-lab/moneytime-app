@@ -174,6 +174,27 @@ async function restorePairFromCloud(){
 [data-color=orange]{--b8:#C2410C;--b7:#EA580C;--b6:#F97316;--b5:#FB923C;--b4:#FDBA74;--b1:#FED7AA;--b0:#FFF7ED;--bg:#FFF7ED;}
 [data-color=pink]{--b8:#9F1239;--b7:#BE123C;--b6:#E11D48;--b5:#F43F5E;--b4:#FB7185;--b1:#FFE4E6;--b0:#FFF1F2;--bg:#FFF1F2;}
 [data-color=teal]{--b8:#134E4A;--b7:#0F766E;--b6:#0D9488;--b5:#14B8A6;--b4:#2DD4BF;--b1:#CCFBF1;--b0:#F0FDFA;--bg:#F0FDFA;}
+/* ---- UPDATE BANNER ---- */
+.upd-banner{position:fixed;bottom:calc(var(--nh) + 10px);left:12px;right:12px;background:linear-gradient(135deg,#0F172A,#1E3A5F);border:1px solid rgba(96,165,250,.4);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;z-index:150;box-shadow:0 8px 32px rgba(0,0,0,.45);animation:slideUpBnr .4s cubic-bezier(.34,1.56,.64,1)}
+@keyframes slideUpBnr{from{transform:translateY(130%);opacity:0}to{transform:translateY(0);opacity:1}}
+.upd-ico{font-size:22px;flex-shrink:0}
+.upd-txt{flex:1}
+.upd-ttl{font-size:13px;font-weight:500;color:#F1F5F9;margin-bottom:1px}
+.upd-sub{font-size:10px;color:#94A3B8}
+.upd-btn{background:var(--b6);border:none;color:#fff;padding:8px 14px;border-radius:9px;font-family:'Inter',sans-serif;font-size:11px;font-weight:400;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .2s}
+.upd-btn:active{transform:scale(.95)}
+.upd-x{background:none;border:none;color:#475569;font-size:20px;cursor:pointer;padding:0;line-height:1;flex-shrink:0}
+/* ---- FIXED BONUSES ---- */
+.fbon-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--bd)}
+.fbon-row:last-child{border-bottom:none}
+.fbon-name{flex:1;font-size:13px;font-weight:400;background:transparent;border:none;color:var(--t);font-family:'Inter',sans-serif;padding:4px 0;border-bottom:1px solid transparent}
+.fbon-name:focus{outline:none;border-bottom-color:var(--b6)}
+.fbon-amt{width:88px;padding:6px 8px;border-radius:7px;border:1px solid var(--bd);background:var(--s2);color:var(--t);font-family:'Inter',sans-serif;font-size:13px;text-align:center}
+.fbon-amt:focus{outline:none;border-color:var(--b6)}
+.fbon-del{background:none;border:none;color:var(--t3);font-size:18px;cursor:pointer;padding:0;line-height:1;flex-shrink:0}
+.fbon-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.fbon-chip{padding:5px 11px;border-radius:20px;border:1px solid var(--bd);background:var(--s2);color:var(--t2);font-family:'Inter',sans-serif;font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.fbon-chip:active{transform:scale(.95);background:var(--b0);border-color:var(--b6)}
 .theme-picker{display:flex;gap:10px;flex-wrap:wrap;padding:8px 0}
 .tpick{width:42px;height:42px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .2s;position:relative;flex-shrink:0}
 .tpick.sel{border-color:var(--t);transform:scale(1.1);box-shadow:0 0 0 3px var(--s),0 0 0 5px var(--b6)}
@@ -511,13 +532,14 @@ input[type=time].fi{text-align:center}
   <div class="set-sec-ttl" style="margin-top:4px">מקומות עבודה</div>
   <div id="jobsCont"></div>
   <button class="btn btn-g btn-sm" onclick="addJob()" id="addJobBtn" style="margin-bottom:16px">+ הוסף מקום עבודה</button>
-  
+
   <div class="set-sec-ttl">בונוסים קבועים</div>
-  <div class="card" id="fixedBonusesCont">
-    <!-- יתמלא ב-JavaScript -->
+  <div class="card" style="padding:14px;margin-bottom:4px">
+    <div style="font-size:11px;color:var(--t3);margin-bottom:10px;line-height:1.6">הגדר בונוסים חוזרים — ניתן לבחור מהם ישירות בעת רישום יום</div>
+    <div id="fbonCont"></div>
+    <button class="btn btn-g btn-sm" onclick="addFixedBonus()" style="margin-top:10px;width:100%">+ הוסף בונוס קבוע</button>
   </div>
-  <button class="btn btn-g btn-sm" onclick="addFixedBonus()" style="margin-bottom:16px">➕ הוסף בונוס קבוע</button>
-  
+
   <div class="set-sec-ttl">הגדרות חישוב</div>
   <div class="card">
     <div class="trow"><div><div class="trow-lbl">שעות נוספות</div><div class="trow-sub">מעל 8 ש' = 125%, מעל 10 = 150%</div></div><label class="toggle"><input type="checkbox" id="togOT" onchange="setSetting('calcOvertime',this.checked)"><span class="tsl"></span></label></div>
@@ -587,9 +609,9 @@ input[type=time].fi{text-align:center}
 
   <div class="set-sec-ttl">יצירת קשר</div>
   <div class="card" style="padding:14px;text-align:center">
-    <a href="mailto:tzur669@gmail.com" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
+    <a href="/cdn-cgi/l/email-protection#92e6e8e7e0a4a4abd2f5fff3fbfebcf1fdff" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
-      tzur669@gmail.com
+      <span class="__cf_email__" data-cfemail="a7d3ddd2d591919ee7c0cac6cecb89c4c8ca">[email&#160;protected]</span>
     </a>
     <div style="font-size:11px;color:var(--t3);margin-top:6px">לתמיכה, שאלות ומשוב</div>
   </div>
@@ -637,13 +659,11 @@ input[type=time].fi{text-align:center}
       <div id="dExtraJobList"></div>
     </div>
     <div id="dBonCont" style="margin-bottom:13px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <span class="fl" style="margin:0">תוספות ובונוסים</span>
-        <div>
-          <button class="btn btn-g btn-sm" onclick="addB()" style="padding:5px 10px;font-size:11px">➕ הוסף בונוס</button>
-          <button class="btn btn-g btn-sm" onclick="addFixedBonusToDay()" style="padding:5px 10px;font-size:11px;margin-right:4px">📋 בונוס קבוע</button>
-        </div>
+        <button class="btn btn-g btn-sm" onclick="addB()" style="padding:5px 10px;font-size:11px">+ בונוס</button>
       </div>
+      <div id="dFbonChips" class="fbon-chips"></div>
       <div id="dBonList"></div>
     </div>
     <div class="fg"><label class="fl">הערה</label><input type="text" class="fi" id="dNote" placeholder="הערה אופציונלית..."></div>
@@ -651,20 +671,6 @@ input[type=time].fi{text-align:center}
       <button class="btn btn-p" onclick="saveDay()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg> שמור</button>
       <button class="btn btn-o" onclick="closeM('mDay')">ביטול</button>
     </div>
-    <div style="height:8px"></div>
-  </div>
-</div>
-
-<!-- MODAL: SELECT FIXED BONUS -->
-<div class="modal" id="mSelectFixedBonus">
-  <div class="msh">
-    <div class="mhdl"></div>
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <div class="mttl">📋 בחר בונוס קבוע</div>
-      <button class="mclose" onclick="closeM('mSelectFixedBonus')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-    </div>
-    <div id="fixedBonusesList" style="margin:16px 0; max-height:300px; overflow-y:auto"></div>
-    <button class="btn btn-o" onclick="closeM('mSelectFixedBonus')">ביטול</button>
     <div style="height:8px"></div>
   </div>
 </div>
@@ -814,10 +820,7 @@ input[type=time].fi{text-align:center}
   </div>
 </div>
 
-<!-- מנגנון עדכונים אוטומטי -->
-<script src="update-checker.js"></script>
-
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ---- CONSTANTS ----
 const JC=['#1E3A8A','#2563EB','#10B981','#F59E0B','#EF4444','#8B5CF6'];
 const MN=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
@@ -828,7 +831,7 @@ let hCh,pCh,cmpCh,cplCh,jCh;
 let aToken=null, tClient=null, dProm=null, tInt=null;
 
 // ---- STORAGE ----
-const DEF_S={jobs:[{name:'עבודה ראשית',color:'#1E3A8A',rate:50,fixed:0}],fixedBonuses:[],calcOvertime:false,showMissing:true,myName:'אני',myColor:'#1E3A8A',partnerName:'פרטנר',partnerColor:'#10B981',pairCode:null,partnerCode:null,myUID:null,theme:'light'};
+const DEF_S={jobs:[{name:'עבודה ראשית',color:'#1E3A8A',rate:50,fixed:0}],calcOvertime:false,showMissing:true,myName:'אני',myColor:'#1E3A8A',partnerName:'פרטנר',partnerColor:'#10B981',pairCode:null,partnerCode:null,myUID:null,theme:'light',fixedBonuses:[]};
 const D={
   g:()=>{try{return JSON.parse(localStorage.getItem('wd')||'{}');}catch{return {};}},
   s:d=>{localStorage.setItem('wd',JSON.stringify(d));localStorage.setItem('wdts',Date.now());},
@@ -918,7 +921,7 @@ function swPage(p,btn){
   btn.classList.add('active');
   if(p==='rep')updRep();
   if(p==='couple')renderCouple();
-  if(p==='set'){renderSettings();renderFixedBonuses();}
+  if(p==='set')renderSettings();
 }
 
 // ---- CALENDAR ----
@@ -996,6 +999,7 @@ function openDay(k){
   document.getElementById('dNote').value=d.note||'';
   document.getElementById('dBonList').innerHTML='';
   (d.bonuses||[]).forEach(b=>addB(b.desc,b.amount));
+  renderFbonChips();
   document.getElementById('dExtraJobList').innerHTML='';
   (d.extraJobs||[]).forEach(ej=>addExtraJob(ej.jobIdx,ej.hours,ej.rate,ej.startTime,ej.endTime));
   openM('mDay');
@@ -1035,38 +1039,6 @@ function calcExtraT(el){
   const sv=row.querySelector('.ej-start').value,ev=row.querySelector('.ej-end').value;
   if(sv&&ev){const[sh,sm]=sv.split(':').map(Number),[eh,em]=ev.split(':').map(Number);let df=(eh+em/60)-(sh+sm/60);if(df<0)df+=24;row.querySelector('.ej-hours').value=df.toFixed(2);}
 }
-function addFixedBonusToDay(){
-  const s=D.gs();
-  if(!s.fixedBonuses||s.fixedBonuses.length===0){
-    showToast('אין בונוסים קבועים. הוסף בהגדרות');
-    return;
-  }
-  const listDiv=document.getElementById('fixedBonusesList');
-  let html='';
-  s.fixedBonuses.forEach((bonus, index)=>{
-    html+=`
-      <div class="jcard" style="cursor:pointer;margin-bottom:8px;padding:12px" onclick="selectFixedBonus(${index})">
-        <div style="display:flex;align-items:center;gap:12px">
-          <span style="font-size:20px">💰</span>
-          <div style="flex:1">
-            <div style="font-size:14px;font-weight:500">${bonus.desc}</div>
-            <div style="font-size:16px;color:var(--g);font-weight:600">₪${bonus.amount}</div>
-          </div>
-        </div>
-      </div>
-    `;
-  });
-  listDiv.innerHTML=html;
-  openM('mSelectFixedBonus');
-}
-function selectFixedBonus(index){
-  const s=D.gs();
-  const bonus=s.fixedBonuses[index];
-  if(!bonus) return;
-  addB(bonus.desc, bonus.amount);
-  closeM('mSelectFixedBonus');
-  showToast(`➕ נוסף: ${bonus.desc}`);
-}
 function saveDay(){
   const data=D.g(),bons=[];
   document.querySelectorAll('#dBonList .brow').forEach(r=>{const desc=r.querySelector('.bdesc').value,amt=parseFloat(r.querySelector('.bamt').value);if(amt>0)bons.push({desc:desc||'תוספת',amount:amt});});
@@ -1084,64 +1056,6 @@ function saveDay(){
   D.s(data);closeM('mDay');renderCal();updRep();saveDr();flash();vib();
 }
 function navDay(delta){const d=new Date(selDt);d.setDate(d.getDate()+delta);closeM('mDay');openDay(fk(d));}
-
-// ---- FIXED BONUSES ----
-function renderFixedBonuses(){
-  const s = D.gs();
-  if (!s.fixedBonuses) s.fixedBonuses = [];
-  
-  const cont = document.getElementById('fixedBonusesCont');
-  if (!cont) return;
-  
-  if (s.fixedBonuses.length === 0) {
-    cont.innerHTML = '<div style="padding:16px;text-align:center;color:var(--t3);font-size:12px">אין בונוסים קבועים. לחץ על "➕ הוסף בונוס קבוע"</div>';
-    return;
-  }
-  
-  let html = '';
-  s.fixedBonuses.forEach((bonus, index) => {
-    html += `
-      <div class="jcard" style="margin-bottom:8px;padding:12px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-          <span style="font-size:16px">💰</span>
-          <input type="text" class="fi" value="${bonus.desc}" placeholder="תיאור" style="flex:2" onchange="updateFixedBonus(${index}, 'desc', this.value)">
-          <input type="number" class="fi" value="${bonus.amount}" placeholder="סכום" style="flex:1" onchange="updateFixedBonus(${index}, 'amount', this.value)">
-          <button class="bdel" onclick="deleteFixedBonus(${index})" style="font-size:20px">×</button>
-        </div>
-      </div>
-    `;
-  });
-  cont.innerHTML = html;
-}
-
-function addFixedBonus(){
-  const s = D.gs();
-  if (!s.fixedBonuses) s.fixedBonuses = [];
-  s.fixedBonuses.push({desc: 'בונוס חדש', amount: 100});
-  D.ss(s);
-  renderFixedBonuses();
-  showToast('➕ בונוס קבוע נוסף');
-}
-
-function updateFixedBonus(index, field, value){
-  const s = D.gs();
-  if (!s.fixedBonuses || !s.fixedBonuses[index]) return;
-  if (field === 'amount') {
-    s.fixedBonuses[index][field] = parseFloat(value) || 0;
-  } else {
-    s.fixedBonuses[index][field] = value;
-  }
-  D.ss(s);
-}
-
-function deleteFixedBonus(index){
-  const s = D.gs();
-  if (!s.fixedBonuses) return;
-  s.fixedBonuses.splice(index, 1);
-  D.ss(s);
-  renderFixedBonuses();
-  showToast('🗑️ בונוס נמחק');
-}
 
 // ---- MULTI MODAL ----
 function openMulti(type){
@@ -1793,6 +1707,7 @@ function renderSettings(){
   document.getElementById('drOff').style.display=aToken?'none':'block';
   document.getElementById('drOn').style.display=aToken?'block':'none';
   renderJobsCont();
+  renderFixedBonuses();
 }
 function setSetting(k,v){const s=D.gs();s[k]=v;D.ss(s);if(k==='showMissing')renderCal();if(k==='calcOvertime')_updXo2State();vib();}
 function _updXo2State(){
@@ -1838,6 +1753,98 @@ function updJC(i,col,el){
     const card=el.closest('.jcard');
     if(card){const badge=card.querySelector('.jcbadge');if(badge)badge.style.background=col;}
     if(card)card.style.borderRightColor=col;
+  }
+}
+
+// ---- FIXED BONUSES ----
+function renderFixedBonuses(){
+  const s=D.gs(),cont=document.getElementById('fbonCont');
+  if(!cont)return;
+  const fbs=s.fixedBonuses||[];
+  if(!fbs.length){
+    cont.innerHTML='<div style="font-size:12px;color:var(--t3);text-align:center;padding:8px 0">אין בונוסים קבועים עדיין</div>';
+    return;
+  }
+  cont.innerHTML=fbs.map((fb,i)=>`
+    <div class="fbon-row">
+      <input class="fbon-name" value="${(fb.name||'').replace(/"/g,'&quot;')}" placeholder="שם הבונוס" onchange="updFixedBonus(${i},'name',this.value)">
+      <input type="number" class="fbon-amt" value="${fb.amount||''}" placeholder="₪" onchange="updFixedBonus(${i},'amount',this.value)">
+      <button class="fbon-del" onclick="delFixedBonus(${i})">×</button>
+    </div>`).join('');
+}
+function addFixedBonus(){
+  const s=D.gs();
+  if(!s.fixedBonuses)s.fixedBonuses=[];
+  s.fixedBonuses.push({name:'',amount:0});
+  D.ss(s);renderFixedBonuses();vib();
+}
+function updFixedBonus(i,f,v){
+  const s=D.gs();
+  if(!s.fixedBonuses||!s.fixedBonuses[i])return;
+  s.fixedBonuses[i][f]=f==='name'?v:(parseFloat(v)||0);
+  D.ss(s);
+}
+function delFixedBonus(i){
+  const s=D.gs();
+  if(!s.fixedBonuses)return;
+  s.fixedBonuses.splice(i,1);D.ss(s);renderFixedBonuses();vib();
+}
+function renderFbonChips(){
+  const s=D.gs(),cont=document.getElementById('dFbonChips');
+  if(!cont)return;
+  const fbs=(s.fixedBonuses||[]).filter(fb=>fb.name&&fb.amount>0);
+  if(!fbs.length){cont.innerHTML='';return;}
+  cont.innerHTML=fbs.map(fb=>`<button class="fbon-chip" onclick="addB('${fb.name.replace(/'/g,'\\\'')}',${fb.amount})">+ ${fb.name} ₪${fb.amount}</button>`).join('');
+}
+
+// ---- AUTO UPDATE ----
+const APP_VERSION='2.1.0';
+const VER_FB_URL='https://moneytime-app-f5a15-default-rtdb.firebaseio.com/appVersion.json';
+let _updShown=false;
+
+async function checkAppUpdate(){
+  if(_updShown)return;
+  try{
+    const r=await fetch(VER_FB_URL+'?nocache='+Date.now());
+    if(!r.ok)return;
+    const data=await r.json();
+    if(!data||!data.version)return;
+    if(_verIsNewer(data.version,APP_VERSION)){
+      _showUpdBanner(data.version,data.notes||'');
+    }
+  }catch(e){}
+}
+function _verIsNewer(remote,local){
+  const r=remote.split('.').map(Number),l=local.split('.').map(Number);
+  for(let i=0;i<3;i++){if((r[i]||0)>(l[i]||0))return true;if((r[i]||0)<(l[i]||0))return false;}
+  return false;
+}
+function _showUpdBanner(ver,notes){
+  if(_updShown)return;
+  _updShown=true;
+  const el=document.createElement('div');
+  el.id='updBanner';el.className='upd-banner';
+  el.innerHTML=`<div class="upd-ico">🔄</div>
+    <div class="upd-txt">
+      <div class="upd-ttl">גרסה ${ver} זמינה!</div>
+      <div class="upd-sub">${notes||'עדכון חדש עם שיפורים'}</div>
+    </div>
+    <button class="upd-btn" onclick="_doUpdate(this)">עדכן</button>
+    <button class="upd-x" onclick="document.getElementById('updBanner')?.remove()">×</button>`;
+  document.body.appendChild(el);
+}
+function _doUpdate(btn){
+  if(btn){btn.textContent='⏳...';btn.disabled=true;}
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.getRegistrations().then(regs=>{
+      Promise.all(regs.map(r=>r.unregister())).then(()=>{
+        caches.keys().then(keys=>{
+          Promise.all(keys.map(k=>caches.delete(k))).then(()=>location.reload(true));
+        });
+      });
+    }).catch(()=>location.reload(true));
+  } else {
+    location.reload(true);
   }
 }
 
@@ -2173,9 +2180,6 @@ async function loadDr(){
             if(data.settings.jobs&&data.settings.jobs.length>0){
               // עדכן jobs קיימים — שמור צבע מקומי אם לא שונה
               cur.jobs=data.settings.jobs.map((rj,i)=>Object.assign({},cur.jobs?.[i]||{},rj));
-            }
-            if(data.settings.fixedBonuses){
-              cur.fixedBonuses=data.settings.fixedBonuses;
             }
             if(data.settings.calcOvertime!==undefined) cur.calcOvertime=data.settings.calcOvertime;
             if(data.settings.showMissing!==undefined) cur.showMissing=data.settings.showMissing;
@@ -3045,6 +3049,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   const savedColor=D.gs().colorTheme||'blue';
   applyColorTheme(savedColor);
   initClock();renderCal();setSyncDot(false);initGD();renderSettings();checkPairLink();
+  setTimeout(checkAppUpdate,3000);
 });
 </script>
 </body>
