@@ -36,8 +36,6 @@ jobs:
           cp sw.js www/sw.js || true
           cp manifest.json www/manifest.json || true
           cp callback.html www/callback.html || true
-          cp version.json www/version.json || true
-          cp update-checker.js www/update-checker.js || true
 
       - name: Add Android platform
         run: |
@@ -99,7 +97,8 @@ jobs:
           if 'signingConfigs {' not in content:
               content = re.sub(r'(\s*buildTypes\s*\{)', '\n' + signing_config + r'\1', content, count=1)
 
-          # הוסף signingConfig רק בתוך buildTypes > release
+          # הוסף signingConfig רק בתוך buildTypes > release (לא בתוך signingConfigs > release)
+          # הפתרון: מחפש buildTypes { ... release { ומוסיף שם
           if 'signingConfig signingConfigs.release' not in content:
               content = re.sub(
                   r'(buildTypes\s*\{[^}]*?release\s*\{)',
@@ -146,12 +145,17 @@ jobs:
             1. הורד moneytime-pro.apk
             2. שלח לפלאפון והתקן
             3. אשר "מקורות לא ידועים"
-            
-            ## גרסה חדשה
-            • עדכון אוטומטי - האפליקציה תעדכן את עצמה מעתה
-            • תיקוני באגים ושיפורי ביצועים
           files: moneytime-pro.apk
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push version to Firebase (triggers in-app update banner)
+        run: |
+          APP_VER=$(grep -oP "APP_VERSION='\K[0-9]+\.[0-9]+\.[0-9]+" www/index.html || echo "2.1.0")
+          NOTES="עדכון v${APP_VER} — build ${{ github.run_number }}"
+          curl -s -X PUT \
+            "https://moneytime-app-f5a15-default-rtdb.firebaseio.com/appVersion.json" \
+            -H "Content-Type: application/json" \
+            -d "{\"version\":\"${APP_VER}\",\"build\":${{ github.run_number }},\"notes\":\"${NOTES}\",\"ts\":$(date +%s000)}" || true
