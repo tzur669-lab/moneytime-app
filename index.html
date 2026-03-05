@@ -80,7 +80,6 @@ async function fbRead(path){
 async function syncPairToFirebase(){
   const s=D.gs();
   if(!s.pairCode||!s.myCode)return;
-  // המפתח ב-Firebase הוא תמיד myCode — קבוע ועקבי
   const myKey=s.myCode.replace(/[.#$\[\]]/g,'_');
   const payload={
     workData:D.g(),
@@ -89,7 +88,15 @@ async function syncPairToFirebase(){
     myCode:s.myCode,
     googleId:s.googleId||null,
     partnerCode:s.partnerCode,
-    timestamp:Date.now()
+    timestamp:Date.now(),
+    // pairInfo — לשחזור חיבור מאחר
+    pairInfo:{
+      pairCode:s.pairCode,
+      partnerCode:s.partnerCode,
+      myCode:s.myCode,
+      myName:s.myName,
+      myColor:s.myColor
+    }
   };
   await fbWrite(`pairs/${s.pairCode}/${myKey}`,payload);
 }
@@ -97,7 +104,6 @@ async function syncPairToFirebase(){
 async function loadPartnerFromFirebase(){
   const s=D.gs();
   if(!s.pairCode||!s.partnerCode)return false;
-  // המפתח תמיד = myCode של הפרטנר
   const partnerKey=s.partnerCode.replace(/[.#$\[\]]/g,'_');
   const data=await fbRead(`pairs/${s.pairCode}/${partnerKey}`);
   if(data&&data.workData){
@@ -110,15 +116,13 @@ async function loadPartnerFromFirebase(){
     }
     return true;
   }
-  return false; // פרטנר עוד לא סנכרן
+  return false;
 }
 function calcPairCode(a,b){
   const arr=[a.toUpperCase(),b.toUpperCase()].sort();
   return arr[0]+'_'+arr[1];
 }
 
-// שחזור חיבור זוג ממכשיר חדש — מחפש ב-Firebase לפי myCode
-// בדיקה אם פרטנר כבר חיבר מהצד שלו
 async function checkPartnerConnected(){
   try{
     const s=D.gs();
@@ -132,21 +136,22 @@ async function checkPartnerConnected(){
 async function restorePairFromCloud(){
   try{
     const s=D.gs();
-    if(!s.myCode||s.pairCode)return false; // כבר מחובר או אין קוד
-    // חפש בכל הזוגות אם myCode שלי מופיע
+    if(!s.myCode||s.pairCode)return false;
     const allPairs=await fbRead('pairs');
     if(!allPairs)return false;
+    const myKeySafe=s.myCode.replace(/[.#$\[\]]/g,'_');
     for(const pairCode of Object.keys(allPairs)){
       const pair=allPairs[pairCode];
-      if(pair[s.myCode]&&pair[s.myCode].pairInfo){
-        const info=pair[s.myCode].pairInfo;
+      // מחפש לפי המפתח הבטוח (עם _ במקום תווים מיוחדים)
+      const myEntry=pair[myKeySafe]||pair[s.myCode];
+      if(myEntry&&myEntry.pairInfo){
+        const info=myEntry.pairInfo;
         s.pairCode=info.pairCode;
         s.partnerCode=info.partnerCode;
-        if(info.myName&&s.myName==='אני')s.myName=info.myName;
+        if(info.myName&&(s.myName==='אני'||!s.myName))s.myName=info.myName;
         if(info.myColor)s.myColor=info.myColor;
         D.ss(s);
         await loadPartnerFromFirebase();
-        console.log('pair restored from cloud');
         return true;
       }
     }
