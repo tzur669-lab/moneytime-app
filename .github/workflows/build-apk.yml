@@ -36,6 +36,8 @@ jobs:
           cp sw.js www/sw.js || true
           cp manifest.json www/manifest.json || true
           cp callback.html www/callback.html || true
+          cp version.json www/version.json || true
+          cp update-checker.js www/update-checker.js || true
 
       - name: Add Android platform
         run: |
@@ -97,8 +99,7 @@ jobs:
           if 'signingConfigs {' not in content:
               content = re.sub(r'(\s*buildTypes\s*\{)', '\n' + signing_config + r'\1', content, count=1)
 
-          # הוסף signingConfig רק בתוך buildTypes > release (לא בתוך signingConfigs > release)
-          # הפתרון: מחפש buildTypes { ... release { ומוסיף שם
+          # הוסף signingConfig רק בתוך buildTypes > release
           if 'signingConfig signingConfigs.release' not in content:
               content = re.sub(
                   r'(buildTypes\s*\{[^}]*?release\s*\{)',
@@ -145,6 +146,10 @@ jobs:
             1. הורד moneytime-pro.apk
             2. שלח לפלאפון והתקן
             3. אשר "מקורות לא ידועים"
+            
+            ## גרסה חדשה
+            • עדכון אוטומטי - האפליקציה תעדכן את עצמה מעתה
+            • תיקוני באגים ושיפורי ביצועים
           files: moneytime-pro.apk
           draft: false
           prerelease: false
