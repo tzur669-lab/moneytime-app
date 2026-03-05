@@ -3,16 +3,6 @@ name: Build Android APK
 on:
   push:
     branches: [ main, master ]
-    tags-ignore:
-      - '**'
-    paths:
-      - 'index.html'
-      - 'sw.js'
-      - 'manifest.json'
-      - 'callback.html'
-      - 'capacitor.config.json'
-      - 'package.json'
-      - '.github/workflows/build-apk.yml'
   workflow_dispatch:
 
 jobs:
@@ -20,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
+    # מונע לולאה אינסופית — לא רץ אם ה-commit נעשה ע"י GitHub Actions
+    if: github.actor != 'github-actions[bot]'
 
     steps:
       - name: Checkout code
@@ -49,7 +42,6 @@ jobs:
 
       - name: Add Android platform
         run: |
-          # מוסיף android רק אם לא קיים כבר
           if [ ! -d "android" ]; then
             npx cap add android
           fi
@@ -57,36 +49,51 @@ jobs:
 
       - name: Patch AndroidManifest
         run: |
-          MANIFEST="android/app/src/main/AndroidManifest.xml"
-          sed -i 's/android:usesCleartextTraffic="true"/android:usesCleartextTraffic="false"/' $MANIFEST || true
-          sed -i 's|</activity>|<intent-filter><action android:name="android.intent.action.VIEW"/><category android:name="android.intent.category.DEFAULT"/><category android:name="android.intent.category.BROWSABLE"/><data android:scheme="com.tzur669.moneytime" android:host="oauth"/></intent-filter></activity>|' $MANIFEST || true
-          # הרשאות לעדכון APK בתוך האפליקציה
-          sed -i 's|<uses-permission android:name="android.permission.INTERNET"/>|<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>\n    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>|' $MANIFEST || true
-          # FileProvider לשיתוף קובץ APK עם Android installer
-          sed -i 's|</application>|    <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.fileprovider" android:exported="false" android:grantUriPermissions="true"><meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths"/></provider>\n    </application>|' $MANIFEST || true
+          python3 << 'PYEOF'
+import re
+
+path = "android/app/src/main/AndroidManifest.xml"
+with open(path, "r") as f:
+    content = f.read()
+
+# 1. כבה cleartext
+content = content.replace('android:usesCleartextTraffic="true"', 'android:usesCleartextTraffic="false"')
+
+# 2. deep link — הוסף לפני </activity> הראשון בלבד
+deep_link = '<intent-filter><action android:name="android.intent.action.VIEW"/><category android:name="android.intent.category.DEFAULT"/><category android:name="android.intent.category.BROWSABLE"/><data android:scheme="com.tzur669.moneytime" android:host="oauth"/></intent-filter>'
+if 'android.intent.action.VIEW' not in content:
+    idx = content.find('</activity>')
+    if idx != -1:
+        content = content[:idx] + deep_link + content[idx:]
+
+# 3. הרשאות — הוסף לפני <application אם לא קיים
+if 'REQUEST_INSTALL_PACKAGES' not in content:
+    content = content.replace(
+        '<application',
+        '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>\n    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>\n    <application',
+        1
+    )
+
+# 4. FileProvider — הוסף לפני </application> אם לא קיים
+if 'FileProvider' not in content:
+    provider = '<provider android:name="androidx.core.content.FileProvider" android:authorities="com.tzur669.moneytime.fileprovider" android:exported="false" android:grantUriPermissions="true"><meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths"/></provider>'
+    content = content.replace('</application>', provider + '\n</application>', 1)
+
+with open(path, "w") as f:
+    f.write(content)
+
+print("AndroidManifest patched OK")
+PYEOF
 
       - name: Create FileProvider paths xml
         run: |
           mkdir -p android/app/src/main/res/xml
-          cat > android/app/src/main/res/xml/file_paths.xml << 'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-          <paths>
-            <cache-path name="apk_cache" path="." />
-            <external-cache-path name="apk_external_cache" path="." />
-          </paths>
-          EOF
+          printf '<?xml version="1.0" encoding="utf-8"?>\n<paths>\n  <cache-path name="apk_cache" path="." />\n  <external-cache-path name="apk_external_cache" path="." />\n</paths>\n' > android/app/src/main/res/xml/file_paths.xml
 
       - name: Patch Android resources
         run: |
-          sed -i 's/<string name="app_name">.*<\/string>/<string name="app_name">מעקב שעות Pro<\/string>/' android/app/src/main/res/values/strings.xml || true
-          cat > android/app/src/main/res/values/colors.xml << 'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-          <resources>
-            <color name="colorPrimary">#1E3A8A</color>
-            <color name="colorPrimaryDark">#0F1F4A</color>
-            <color name="colorAccent">#2563EB</color>
-          </resources>
-          EOF
+          sed -i 's|<string name="app_name">.*</string>|<string name="app_name">מעקב שעות Pro</string>|' android/app/src/main/res/values/strings.xml || true
+          printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n  <color name="colorPrimary">#1E3A8A</color>\n  <color name="colorPrimaryDark">#0F1F4A</color>\n  <color name="colorAccent">#2563EB</color>\n</resources>\n' > android/app/src/main/res/values/colors.xml
 
       - name: Decode keystore
         run: |
@@ -99,41 +106,39 @@ jobs:
       - name: Inject signing config into build.gradle
         run: |
           GRADLE="android/app/build.gradle"
-
           sed -i '1s|^|def keystoreProps = new Properties()\nkeystoreProps.load(new FileInputStream(rootProject.file("../keystore.properties")))\n\n|' $GRADLE
+          python3 << 'PYEOF'
+import re
 
-          python3 - << 'PYEOF'
-          import re
+with open("android/app/build.gradle", "r") as f:
+    content = f.read()
 
-          with open("android/app/build.gradle", "r") as f:
-              content = f.read()
+signing_block = """
+    signingConfigs {
+        release {
+            storeFile file(keystoreProps['storeFile'])
+            storePassword keystoreProps['storePassword']
+            keyAlias keystoreProps['keyAlias']
+            keyPassword keystoreProps['keyPassword']
+        }
+    }
+"""
 
-          signing_config = """
-              signingConfigs {
-                  release {
-                      storeFile file(keystoreProps['storeFile'])
-                      storePassword keystoreProps['storePassword']
-                      keyAlias keystoreProps['keyAlias']
-                      keyPassword keystoreProps['keyPassword']
-                  }
-              }
-          """
+if 'signingConfigs {' not in content:
+    content = re.sub(r'(\s*buildTypes\s*\{)', signing_block + r'\1', content, count=1)
 
-          if 'signingConfigs {' not in content:
-              content = re.sub(r'(\s*buildTypes\s*\{)', '\n' + signing_config + r'\1', content, count=1)
+if 'signingConfig signingConfigs.release' not in content:
+    content = re.sub(
+        r'(buildTypes\s*\{[^}]*?release\s*\{)',
+        r'\1\n            signingConfig signingConfigs.release\n            minifyEnabled false\n            shrinkResources false',
+        content, count=1, flags=re.DOTALL
+    )
 
-          if 'signingConfig signingConfigs.release' not in content:
-              content = re.sub(
-                  r'(buildTypes\s*\{[^}]*?release\s*\{)',
-                  r'\1\n            signingConfig signingConfigs.release\n            minifyEnabled false\n            shrinkResources false',
-                  content,
-                  count=1,
-                  flags=re.DOTALL
-              )
+with open("android/app/build.gradle", "w") as f:
+    f.write(content)
 
-          with open("android/app/build.gradle", "w") as f:
-              f.write(content)
-          PYEOF
+print("build.gradle patched OK")
+PYEOF
 
       - name: Make gradlew executable
         run: chmod +x android/gradlew
@@ -145,11 +150,10 @@ jobs:
         env:
           GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
 
-      - name: Locate and copy APK
+      - name: Copy APK
         run: |
-          echo "=== APK files found ==="
           find android -name "*.apk" -type f
-          cp android/app/build/outputs/apk/release/app-release.apk moneytime-pro.apk || true
+          cp android/app/build/outputs/apk/release/app-release.apk moneytime-pro.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -158,14 +162,14 @@ jobs:
           path: moneytime-pro.apk
           retention-days: 30
 
-      - name: Create Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
           name: "מעקב שעות Pro v${{ github.run_number }}"
           body: |
             ## APK להתקנה
-            1. הורד moneytime-pro.apk
+            1. הורד את moneytime-pro.apk
             2. שלח לפלאפון והתקן
             3. אשר "מקורות לא ידועים"
           files: moneytime-pro.apk
@@ -174,7 +178,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push version to Firebase (triggers in-app update banner)
+      - name: Push version to Firebase
         run: |
           APP_VER=$(grep -oP "APP_VERSION='\K[0-9]+\.[0-9]+\.[0-9]+" www/index.html || echo "2.1.0")
           NOTES="עדכון v${APP_VER} — build ${{ github.run_number }}"
