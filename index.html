@@ -33,22 +33,32 @@ window.CapFS = null;
 window.CapShare = null;
 window.CapBrowser = null;
 window.CapApp = null;
-document.addEventListener('deviceready', function(){
-  if(window.Capacitor){
-    try{ window.CapFS = Capacitor.Plugins.Filesystem; }catch(e){}
-    try{ window.CapShare = Capacitor.Plugins.Share; }catch(e){}
-    try{ window.CapBrowser = Capacitor.Plugins.Browser; }catch(e){}
-    try{ window.CapApp = Capacitor.Plugins.App; }catch(e){}
-  }
-}, false);
-setTimeout(function(){
-  if(window.Capacitor && window.Capacitor.Plugins){
-    window.CapFS = window.CapFS || Capacitor.Plugins.Filesystem;
-    window.CapShare = window.CapShare || Capacitor.Plugins.Share;
-    window.CapBrowser = window.CapBrowser || Capacitor.Plugins.Browser;
-    window.CapApp = window.CapApp || Capacitor.Plugins.App;
-  }
-}, 500);
+
+function _initCapPlugins(){
+  if(!window.Capacitor||!window.Capacitor.Plugins)return;
+  try{ window.CapFS = Capacitor.Plugins.Filesystem; }catch(e){}
+  try{ window.CapShare = Capacitor.Plugins.Share; }catch(e){}
+  try{ window.CapBrowser = Capacitor.Plugins.Browser; }catch(e){}
+  try{ window.CapApp = Capacitor.Plugins.App; }catch(e){}
+}
+document.addEventListener('deviceready', _initCapPlugins, false);
+// fallback — נסה ב-500ms וב-2000ms (פלאפונים איטיים)
+setTimeout(_initCapPlugins, 500);
+setTimeout(_initCapPlugins, 2000);
+
+// המתן לCapBrowser — מחזיר Promise שמתפתר ברגע שזמין (עד timeout)
+function _waitForCapBrowser(ms){
+  ms=ms||4000;
+  return new Promise(function(resolve){
+    if(window.CapBrowser){resolve(window.CapBrowser);return;}
+    var elapsed=0;
+    var iv=setInterval(function(){
+      elapsed+=100;
+      if(window.CapBrowser){clearInterval(iv);resolve(window.CapBrowser);return;}
+      if(elapsed>=ms){clearInterval(iv);resolve(null);}
+    },100);
+  });
+}
 
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -636,9 +646,9 @@ input[type=time].fi{text-align:center}
 
   <div class="set-sec-ttl">יצירת קשר</div>
   <div class="card" style="padding:14px;text-align:center">
-    <a href="mailto:tzur669@gmail.com" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
+    <a href="/cdn-cgi/l/email-protection#6c1816191e5a5a552c0b010d0500420f0301" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
-      tzur669@gmail.com
+      <span class="__cf_email__" data-cfemail="ee9a949b9cd8d8d7ae89838f8782c08d8183">[email&#160;protected]</span>
     </a>
     <div style="font-size:11px;color:var(--t3);margin-top:6px">לתמיכה, שאלות ומשוב</div>
   </div>
@@ -847,7 +857,7 @@ input[type=time].fi{text-align:center}
   </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ---- CONSTANTS ----
 const JC=['#1E3A8A','#2563EB','#10B981','#F59E0B','#EF4444','#8B5CF6'];
 const MN=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
@@ -1972,97 +1982,43 @@ function _cancelApkUpdate(){
 async function _doApkUpdate(){
   const yesBtn=document.getElementById('updYesBtn');
   const noBtn=yesBtn?.previousElementSibling;
-  if(yesBtn){yesBtn.textContent='מוריד...';yesBtn.disabled=true;}
+  if(yesBtn){yesBtn.textContent='מכין...';yesBtn.disabled=true;}
   if(noBtn){noBtn.disabled=true;}
-  const prog=document.getElementById('updProgress');
-  const progBar=document.getElementById('updProgressBar');
   const progTxt=document.getElementById('updProgressTxt');
+  const prog=document.getElementById('updProgress');
   if(prog)prog.style.display='block';
+  if(progTxt)progTxt.innerHTML='מתחבר...';
 
-  // אם אין APK URL — פתח ב-browser כ-fallback
-  if(!_updApkUrl){
-    if(window.CapBrowser){
-      window.CapBrowser.open({url:'https://github.com/tzur669-lab/moneytime-app/releases/latest'}).catch(()=>{});
+  const apkUrl=_updApkUrl||'https://github.com/tzur669-lab/moneytime-app/releases/latest';
+
+  // המתן לCapBrowser — עד 4 שניות
+  const browser=await _waitForCapBrowser(4000);
+
+  document.getElementById('updDlg')?.remove();
+  document.getElementById('updBanner')?.remove();
+
+  if(browser){
+    // CapBrowser זמין — פתח ישירות
+    try{
+      await browser.open({url:apkUrl});
+    }catch(e){
+      // אם נכשל — נסה window.open
+      try{ window.open(apkUrl,'_blank'); }catch(e2){}
     }
-    document.getElementById('updDlg')?.remove();
-    return;
+  } else {
+    // CapBrowser לא זמין (דפדפן רגיל או בעיה) — window.open
+    try{ window.open(apkUrl,'_blank'); }catch(e){}
   }
 
-  try{
-    // הורד APK עם fetch + progress
-    const response=await fetch(_updApkUrl);
-    if(!response.ok) throw new Error('שגיאת הורדה '+response.status);
-    const contentLength=response.headers.get('content-length');
-    const total=contentLength?parseInt(contentLength):0;
-    const reader=response.body.getReader();
-    const chunks=[];
-    let received=0;
-    while(true){
-      const {done,value}=await reader.read();
-      if(done)break;
-      chunks.push(value);
-      received+=value.length;
-      if(total&&progBar){
-        const pct=Math.round((received/total)*100);
-        progBar.style.width=pct+'%';
-        if(progTxt)progTxt.textContent='מוריד... '+pct+'%';
-      }
-    }
-    if(progBar)progBar.style.width='100%';
-    if(progTxt)progTxt.textContent='כמעט מוכן...';
-
-    // המר ל-base64
-    const blob=new Blob(chunks,{type:'application/vnd.android.package-archive'});
-    const base64=await _blobToBase64(blob);
-
-    // שמור ל-Filesystem של Capacitor
-    if(window.CapFS){
-      const fileName='moneytime-update.apk';
-      await window.CapFS.writeFile({
-        path:fileName,
-        data:base64,
-        directory:'CACHE',
-        recursive:true
-      });
-      // קבל URI מלא
-      const uriResult=await window.CapFS.getUri({
-        path:fileName,
-        directory:'CACHE'
-      });
-      const fileUri=uriResult.uri;
-
-      // פתח את ה-APK דרך Android Intent
-      if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App){
-        document.getElementById('updDlg')?.remove();
-        document.getElementById('updBanner')?.remove();
-        // פתח דיאלוג Android להתקנה
-        window.location.href='intent:'+fileUri+'#Intent;scheme=file;type=application/vnd.android.package-archive;end';
-      } else {
-        // fallback — פתח ב-browser
-        window.CapBrowser&&window.CapBrowser.open({url:_updApkUrl});
-        document.getElementById('updDlg')?.remove();
-      }
-    } else {
-      // אין CapFS — פתח ב-browser ישירות
-      window.CapBrowser&&window.CapBrowser.open({url:_updApkUrl});
-      document.getElementById('updDlg')?.remove();
-    }
-  }catch(err){
-    if(progTxt)progTxt.textContent='שגיאה בהורדה. פותח בדפדפן...';
-    setTimeout(()=>{
-      window.CapBrowser&&window.CapBrowser.open({url:_updApkUrl||'https://github.com/tzur669-lab/moneytime-app/releases/latest'}).catch(()=>{});
-      document.getElementById('updDlg')?.remove();
-    },1500);
-  }
-}
-
-function _blobToBase64(blob){
-  return new Promise((res,rej)=>{
-    const reader=new FileReader();
-    reader.onloadend=()=>res(reader.result.split(',')[1]);
-    reader.onerror=rej;
-    reader.readAsDataURL(blob);
-  });
+  // הצג הנחיה לאחר הפתיחה — תוך כדי שהדפדפן נפתח
+  setTimeout(function(){
+    const note=document.createElement('div');
+    note.id='updNote';
+    note.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1E293B;border:1px solid #334155;border-radius:14px;padding:16px 20px;z-index:9999;max-width:300px;width:90%;text-align:center;font-size:13px;color:#94A3B8;line-height:1.6';
+    note.innerHTML='<div style="font-size:18px;margin-bottom:8px">📲</div><strong style="color:#F1F5F9">הורדה החלה בדפדפן</strong><br>לאחר ההורדה — פתח את הקובץ מהתראות הפלאפון.<br><span style="font-size:11px">אם תישאל על "מקורות לא ידועים" — אשר.</span><br><br><button onclick="document.getElementById(\'updNote\')?.remove()" style="background:#2563EB;border:none;color:#fff;padding:8px 20px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit">הבנתי</button>';
+    document.body.appendChild(note);
+    setTimeout(function(){const n=document.getElementById('updNote');if(n)n.remove();},15000);
+  },500);
 }
 
 // --- עדכון בדפדפן רגיל: נקה cache ורענן ---
