@@ -65,28 +65,41 @@ jobs:
           with open(path, "r") as f:
               content = f.read()
 
-          # 1. כבה cleartext
+          # 1. כבה cleartext (HTTPS בלבד)
           content = content.replace('android:usesCleartextTraffic="true"', 'android:usesCleartextTraffic="false"')
 
-          # 2. deep link — הוסף לפני </activity> הראשון בלבד
+          # 2. הוסף networkSecurityConfig ל-application tag
+          if 'networkSecurityConfig' not in content:
+              content = re.sub(
+                  r'(<application\b)',
+                  r'\1 android:networkSecurityConfig="@xml/network_security_config"',
+                  content, count=1
+              )
+
+          # 3. deep link — הוסף לפני </activity> הראשון
           deep_link = '<intent-filter><action android:name="android.intent.action.VIEW"/><category android:name="android.intent.category.DEFAULT"/><category android:name="android.intent.category.BROWSABLE"/><data android:scheme="com.tzur669.moneytime" android:host="oauth"/></intent-filter>'
           if 'android.intent.action.VIEW' not in content:
               idx = content.find('</activity>')
               if idx != -1:
                   content = content[:idx] + deep_link + content[idx:]
 
-          # 3. הרשאות — הוסף לפני <application אם לא קיים
+          # 4. הרשאות — הוסף לפני <application אם לא קיים
+          permissions_to_add = ''
+          if 'INTERNET' not in content:
+              permissions_to_add += '    <uses-permission android:name="android.permission.INTERNET"/>\n'
+          if 'ACCESS_NETWORK_STATE' not in content:
+              permissions_to_add += '    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>\n'
           if 'REQUEST_INSTALL_PACKAGES' not in content:
-              content = content.replace(
-                  '<application',
-                  '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>\n    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>\n    <application',
-                  1
-              )
+              permissions_to_add += '    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>\n'
+          if 'WRITE_EXTERNAL_STORAGE' not in content:
+              permissions_to_add += '    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>\n'
+          if permissions_to_add:
+              content = content.replace('<application', permissions_to_add + '    <application', 1)
 
-          # 4. FileProvider — הוסף לפני </application> אם לא קיים
+          # 5. FileProvider — הוסף לפני </application> אם לא קיים
           if 'FileProvider' not in content:
-              provider = '<provider android:name="androidx.core.content.FileProvider" android:authorities="com.tzur669.moneytime.fileprovider" android:exported="false" android:grantUriPermissions="true"><meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths"/></provider>'
-              content = content.replace('</application>', provider + '\n</application>', 1)
+              provider = '        <provider android:name="androidx.core.content.FileProvider" android:authorities="com.tzur669.moneytime.fileprovider" android:exported="false" android:grantUriPermissions="true"><meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths"/></provider>'
+              content = content.replace('</application>', provider + '\n    </application>', 1)
 
           with open(path, "w") as f:
               f.write(content)
@@ -97,7 +110,12 @@ jobs:
       - name: Create FileProvider paths xml
         run: |
           mkdir -p android/app/src/main/res/xml
-          printf '<?xml version="1.0" encoding="utf-8"?>\n<paths>\n  <cache-path name="apk_cache" path="." />\n  <external-cache-path name="apk_external_cache" path="." />\n</paths>\n' > android/app/src/main/res/xml/file_paths.xml
+          printf '<?xml version="1.0" encoding="utf-8"?>\n<paths>\n  <cache-path name="apk_cache" path="." />\n  <external-cache-path name="apk_external_cache" path="." />\n  <files-path name="apk_files" path="." />\n</paths>\n' > android/app/src/main/res/xml/file_paths.xml
+
+      - name: Create network security config
+        run: |
+          mkdir -p android/app/src/main/res/xml
+          printf '<?xml version="1.0" encoding="utf-8"?>\n<network-security-config>\n  <domain-config cleartextTrafficPermitted="false">\n    <domain includeSubdomains="true">firebaseio.com</domain>\n    <domain includeSubdomains="true">googleapis.com</domain>\n    <domain includeSubdomains="true">github.com</domain>\n    <domain includeSubdomains="true">githubusercontent.com</domain>\n  </domain-config>\n  <base-config cleartextTrafficPermitted="false"/>\n</network-security-config>\n' > android/app/src/main/res/xml/network_security_config.xml
 
       - name: Patch Android resources
         run: |
