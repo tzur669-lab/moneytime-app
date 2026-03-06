@@ -5,7 +5,9 @@
   "bundledWebRuntime": false,
   "android": {
     "captureInput": true,
-    "webContentsDebuggingEnabled": false
+    "webContentsDebuggingEnabled": false,
+    "allowMixedContent": true,
+    "appendUserAgent": "MoneyTime-APK"
   },
   "server": {
     "androidScheme": "https"
@@ -18,6 +20,9 @@
     },
     "Browser": {
       "presentationStyle": "fullscreen"
+    },
+    "Filesystem": {
+      "iosDatabaseLocation": "Documents"
     }
   }
 }
