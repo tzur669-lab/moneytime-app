@@ -40,6 +40,10 @@ jobs:
           NEW_VER="${BASE_VER}.${{ github.run_number }}"
           sed -i "s/APP_VERSION='[0-9]*\.[0-9]*\.[0-9]*'/APP_VERSION='${NEW_VER}'/" index.html
           echo "גרסה חדשה: ${NEW_VER}"
+          
+          # --- השורה שהתווספה לעדכון שם ה-cache ב-sw.js ---
+          sed -i "s/moneytime-v[0-9]*\.[0-9]*\.[0-9]*/moneytime-v${NEW_VER}/" sw.js
+          
           cp index.html www/index.html
           cp sw.js www/sw.js || true
           cp manifest.json www/manifest.json || true
@@ -190,4 +194,4 @@ jobs:
           curl -s -X PUT \
             "https://moneytime-app-f5a15-default-rtdb.firebaseio.com/appVersion.json" \
             -H "Content-Type: application/json" \
-            -d "{"version":"${APP_VER}","build":${{ github.run_number }},"notes":"${NOTES}","ts":$(date +%s000)}" || true
+            -d "{\"version\":\"${APP_VER}\",\"build\":${{ github.run_number }},\"notes\":\"${NOTES}\",\"ts\":$(date +%s000)}" || true
