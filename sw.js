@@ -1,4 +1,4 @@
-const CACHE = 'moneytime-v2.1.0';
+const CACHE = 'moneytime-v2.1.0'; // האוטומציה תחליף את המספרים כאן ב-NEW_VER
 const ASSETS = [
   './',
   './index.html',
@@ -15,7 +15,7 @@ self.addEventListener('install', e => {
   self.skipWaiting();
 });
 
-// הפעלה — נקה את כל ה-cache הישן (גרסאות קודמות)
+// הפעלה — מנקה את כל ה-cache הישן שאינו תואם לגרסה החדשה
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
