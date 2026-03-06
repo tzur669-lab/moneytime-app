@@ -1,4 +1,4 @@
-const CACHE = 'moneytime-v2.1.0'; // האוטומציה תחליף את המספרים כאן ב-NEW_VER
+const CACHE = 'moneytime-v2.1.0'; // האוטומציה תחליף את המספרים כאן ב-NEW_VER 
 const ASSETS = [
   './',
   './index.html',
