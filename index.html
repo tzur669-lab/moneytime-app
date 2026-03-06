@@ -191,7 +191,7 @@ async function restorePairFromCloud(){
 .upd-btn:active{transform:scale(.95)}
 .upd-x{background:none;border:none;color:#475569;font-size:20px;cursor:pointer;padding:0;line-height:1;flex-shrink:0}
 /* ---- UPDATE BANNER ---- */
-.upd-banner{position:fixed;top:calc(var(--hh) + 8px);left:12px;right:12px;background:linear-gradient(135deg,#0F172A,#1E3A5F);border:1px solid rgba(96,165,250,.45);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.5);animation:slideDownBnr .4s cubic-bezier(.34,1.56,.64,1)}
+.upd-banner{position:fixed;top:calc(var(--hh) + 8px);left:50%;transform:translateX(-50%);width:auto;max-width:300px;background:linear-gradient(135deg,#0F172A,#1E3A5F);border:1px solid rgba(96,165,250,.45);border-radius:12px;padding:8px 12px;display:flex;align-items:center;gap:8px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:slideDownBnr .4s cubic-bezier(.34,1.56,.64,1)}
 @keyframes slideDownBnr{from{transform:translateY(-120%);opacity:0}to{transform:translateY(0);opacity:1}}
 .upd-ico{font-size:22px;flex-shrink:0}
 .upd-txt{flex:1;min-width:0}
@@ -620,6 +620,17 @@ input[type=time].fi{text-align:center}
         <div style="color:#fff;font-size:14px;font-weight:600;margin-bottom:3px">כלל הנתונים מאובטחים</div>
         <div style="color:rgba(255,255,255,.75);font-size:12px;line-height:1.55">נשמרים במכשירך ובחשבון Google Drive האישי שלך בלבד — ללא גישה חיצונית</div>
       </div>
+    </div>
+  </div>
+
+  <div class="set-sec-ttl">עדכונים</div>
+  <div class="card" style="padding:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:13px;font-weight:400;color:var(--t1)" id="updSetStatus">גרסה נוכחית: <span id="updSetVer"></span></div>
+        <div style="font-size:11px;color:var(--t3);margin-top:2px" id="updSetSub">בדוק אם יש עדכון זמין</div>
+      </div>
+      <button class="btn btn-o" id="updSetBtn" onclick="_checkUpdateFromSettings(this)" style="font-size:11px;padding:6px 12px">בדוק עדכון</button>
     </div>
   </div>
 
@@ -1714,6 +1725,8 @@ function applyColorTheme(c){
 }
 
 function renderSettings(){
+  const _vEl=document.getElementById('updSetVer');
+  if(_vEl)_vEl.textContent=APP_VERSION;
   const s=D.gs();
   const c=s.colorTheme||'blue';
   document.querySelectorAll('.tpick').forEach(el=>el.classList.remove('sel'));
@@ -1823,7 +1836,6 @@ let _updApkUrl='';
 
 async function checkAppUpdate(){
   if(_updShown)return;
-  window._updCheckDone=true;
   try{
     const r=await fetch(VER_FB_URL+'?nocache='+Date.now(),{
       method:'GET',
@@ -1859,24 +1871,68 @@ function _verIsNewer(remote,local){
 function _showUpdBanner(ver,notes){
   if(_updShown)return;
   _updShown=true;
+  // עדכן את אזור ההגדרות
+  _setUpdSettingsState('available', ver, notes);
+  // הצג באנר קטן פעם אחת בלבד
   const old=document.getElementById('updBanner');
   if(old)old.remove();
-  const isApk=!!window.Capacitor;
   const el=document.createElement('div');
   el.id='updBanner';
   el.className='upd-banner';
   el.innerHTML=`
-    <div class="upd-ico">🔄</div>
-    <div class="upd-txt">
-      <div class="upd-ttl">גרסה ${ver} זמינה!</div>
-      <div class="upd-sub">${notes||'עדכון חדש עם שיפורים'}</div>
+    <div class="upd-ico" style="font-size:16px">🔄</div>
+    <div class="upd-txt" style="flex:1;min-width:0">
+      <div class="upd-ttl" style="font-size:12px">גרסה ${ver} זמינה</div>
     </div>
-    ${isApk
-      ? `<button class="upd-btn" onclick="_askApkUpdate(this)">עדכן</button>`
-      : `<button class="upd-btn" onclick="_doWebUpdate(this)">עדכן</button>`
-    }
-    <button class="upd-x" onclick="document.getElementById('updBanner')?.remove();_updShown=false">×</button>`;
+    <button class="upd-btn" style="font-size:10px;padding:5px 10px" onclick="swPage('set',document.querySelector('.ni:last-child'));document.getElementById('updBanner')?.remove()">פרטים</button>
+    <button class="upd-x" onclick="document.getElementById('updBanner')?.remove()">×</button>`;
   document.body.appendChild(el);
+  // הסר אוטומטית אחרי 8 שניות
+  setTimeout(()=>{ const b=document.getElementById('updBanner'); if(b)b.remove(); }, 8000);
+}
+
+function _setUpdSettingsState(state, ver, notes){
+  const btn=document.getElementById('updSetBtn');
+  const status=document.getElementById('updSetStatus');
+  const sub=document.getElementById('updSetSub');
+  const verEl=document.getElementById('updSetVer');
+  if(verEl) verEl.textContent=APP_VERSION;
+  if(state==='available'){
+    if(status) status.innerHTML=`גרסה נוכחית: <span id="updSetVer">${APP_VERSION}</span> <span style="color:var(--g);font-size:11px;margin-right:6px">← ${ver} זמינה</span>`;
+    if(sub) sub.textContent=notes||'עדכון חדש עם שיפורים';
+    if(btn){
+      btn.textContent='עדכן עכשיו';
+      btn.style.background='var(--g)';
+      btn.style.color='#fff';
+      btn.style.border='none';
+      btn.onclick=()=>{ const isApk=!!window.Capacitor; isApk?_askApkUpdate(btn):_doWebUpdate(btn); };
+    }
+  } else if(state==='checking'){
+    if(btn){ btn.textContent='בודק...'; btn.disabled=true; }
+    if(sub) sub.textContent='בודק אם יש עדכון...';
+  } else if(state==='latest'){
+    if(btn){ btn.textContent='עדכני ✓'; btn.disabled=false; btn.style.background=''; btn.style.color=''; btn.style.border=''; btn.onclick=()=>_checkUpdateFromSettings(btn); }
+    if(sub) sub.textContent='הגרסה האחרונה מותקנת';
+  }
+}
+
+async function _checkUpdateFromSettings(btn){
+  _setUpdSettingsState('checking');
+  try{
+    const r=await fetch(VER_FB_URL+'?nocache='+Date.now(),{method:'GET',cache:'no-store'});
+    if(!r.ok){ _setUpdSettingsState('latest'); return; }
+    const data=await r.json();
+    if(!data||!data.version){ _setUpdSettingsState('latest'); return; }
+    if(_verIsNewer(data.version,APP_VERSION)){
+      const buildNum=data.build||'';
+      _updApkUrl=buildNum?GITHUB_APK_BASE+'/v'+buildNum+'/moneytime-pro.apk':'';
+      _setUpdSettingsState('available',data.version,data.notes||'');
+    } else {
+      _setUpdSettingsState('latest');
+    }
+  }catch(e){
+    _setUpdSettingsState('latest');
+  }
 }
 
 // --- עדכון ב-APK: שאל את המשתמש, הורד והתקן ---
@@ -3260,13 +3316,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   const savedColor=D.gs().colorTheme||'blue';
   applyColorTheme(savedColor);
   initClock();renderCal();setSyncDot(false);initGD();checkPairLink();
-  // בדיקת עדכון — בדפדפן: אחרי 3 שניות. ב-APK: אחרי deviceready
-  if(window.Capacitor){
-    document.addEventListener('deviceready', function(){ setTimeout(checkAppUpdate, 2000); }, false);
-    setTimeout(checkAppUpdate, 6000);
-  } else {
-    setTimeout(checkAppUpdate, 3000);
-  }
+  // בדיקת עדכון — בדפדפן: אחרי 3 שניות. ב-APK: אחרי 5 שניות (Capacitor צריך זמן)
+  setTimeout(checkAppUpdate, window.Capacitor ? 5000 : 3000);
   document.addEventListener('resume',()=>setTimeout(checkAppUpdate,1500));
 });
 </script>
