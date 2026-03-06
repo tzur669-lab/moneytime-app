@@ -50,13 +50,6 @@ setTimeout(function(){
   }
 }, 500);
 
-// האזנה לטוקן מ-callback.html דרך postMessage
-window.addEventListener('message', function(e){
-  if(e.data && e.data.type === 'oauth_token' && e.data.token){
-    try{ window.CapBrowser && window.CapBrowser.close(); }catch(ex){}
-    if(typeof _onTokenReceived === 'function') _onTokenReceived(e.data.token);
-  }
-});
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -632,9 +625,9 @@ input[type=time].fi{text-align:center}
 
   <div class="set-sec-ttl">יצירת קשר</div>
   <div class="card" style="padding:14px;text-align:center">
-    <a href="mailto:tzur669@gmail.com" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
+    <a href="/cdn-cgi/l/email-protection#21555b545317171861464c40484d0f424e4c" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
-      tzur669@gmail.com
+      <span class="__cf_email__" data-cfemail="36424c434400000f76515b575f5a1855595b">[email&#160;protected]</span>
     </a>
     <div style="font-size:11px;color:var(--t3);margin-top:6px">לתמיכה, שאלות ומשוב</div>
   </div>
@@ -843,7 +836,7 @@ input[type=time].fi{text-align:center}
   </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ---- CONSTANTS ----
 const JC=['#1E3A8A','#2563EB','#10B981','#F59E0B','#EF4444','#8B5CF6'];
 const MN=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
@@ -1821,7 +1814,7 @@ function renderFbonChips(){
 }
 
 // ---- AUTO UPDATE ----
-const APP_VERSION='2.3.0';
+const APP_VERSION='2.1.0';
 const LIVE_URL='https://tzur669-lab.github.io/moneytime-app/';
 const VER_FB_URL='https://moneytime-app-f5a15-default-rtdb.firebaseio.com/appVersion.json';
 const GITHUB_APK_BASE='https://github.com/tzur669-lab/moneytime-app/releases/download';
@@ -1830,6 +1823,7 @@ let _updApkUrl='';
 
 async function checkAppUpdate(){
   if(_updShown)return;
+  window._updCheckDone=true;
   try{
     const r=await fetch(VER_FB_URL+'?nocache='+Date.now(),{
       method:'GET',
@@ -2138,59 +2132,30 @@ function startGoogleAuth(){
     + '&redirect_uri=' + encodeURIComponent(redirectUri)
     + '&response_type=token'
     + '&scope=' + encodeURIComponent(SCOPES)
-    + '&prompt=select_account'
-    + '&state=' + encodeURIComponent(D.gs().myUID||D.gs().myCode||'anon');
+    + '&prompt=select_account';
 
   if(window.CapApp || window.CapBrowser){
     var _appUrlHandler = null;
-    var _pollInterval = null;
-    var _authDone = false;
-
-    function _onAuthDone(token){
-      if(_authDone) return;
-      _authDone = true;
-      if(_pollInterval){ clearInterval(_pollInterval); _pollInterval = null; }
-      if(_appUrlHandler){ try{_appUrlHandler.remove();}catch(e){} }
-      try{ window.CapBrowser && window.CapBrowser.close(); }catch(e){}
-      _onTokenReceived(token);
-    }
-
-    // האזנה ל-deep link
     if(window.CapApp){
       _appUrlHandler = window.CapApp.addListener('appUrlOpen', function(data){
+        _appUrlHandler.remove();
+        try{ window.CapBrowser && window.CapBrowser.close(); }catch(e){}
         var url2 = data.url || '';
-        var token = null;
-        // חפש בכל מקום אפשרי
-        var match = url2.match(/access_token=([^&\s#]+)/);
-        if(match) token = decodeURIComponent(match[1]);
-        if(token) _onAuthDone(token);
-        else handleOAuthReturn();
+        var hashIdx = url2.indexOf('#');
+        if(hashIdx !== -1){
+          var params = new URLSearchParams(url2.substring(hashIdx+1));
+          var token = params.get('access_token');
+          if(token){ _onTokenReceived(token); return; }
+        }
+        handleOAuthReturn();
       });
     }
 
-    // פתח דפדפן
     try{ window.CapBrowser.removeAllListeners(); }catch(e){}
     window.CapBrowser.open({url: url, presentationStyle: 'fullscreen'});
-
-    // polling — בדוק Firebase כל שניה אחרי שהדפדפן נסגר
     window.CapBrowser.addListener('browserFinished', function(){
-      if(_authDone) return;
-      // בדוק אם הטוקן הגיע דרך polling על Firebase
-      var attempts = 0;
-      _pollInterval = setInterval(function(){
-        attempts++;
-        // בדוק Firebase אם callback שמר טוקן זמני
-        fetch(FB_URL + '/oauthTokens/' + (D.gs().myUID||'tmp') + '.json?nocache=' + Date.now(), {cache:'no-store'})
-          .then(function(r){ return r.json(); })
-          .then(function(data){
-            if(data && data.token && !_authDone){
-              // מחק מ-Firebase מיד
-              fetch(FB_URL + '/oauthTokens/' + (D.gs().myUID||'tmp') + '.json', {method:'DELETE'}).catch(function(){});
-              _onAuthDone(data.token);
-            }
-          }).catch(function(){});
-        if(attempts >= 10){ clearInterval(_pollInterval); _pollInterval = null; }
-      }, 1000);
+      if(_appUrlHandler){ try{_appUrlHandler.remove();}catch(e){} }
+      handleOAuthReturn();
     });
 
   } else {
@@ -3295,8 +3260,13 @@ document.addEventListener('DOMContentLoaded',()=>{
   const savedColor=D.gs().colorTheme||'blue';
   applyColorTheme(savedColor);
   initClock();renderCal();setSyncDot(false);initGD();renderSettings();checkPairLink();
-  // בדיקת עדכון
-  setTimeout(checkAppUpdate,3000);
+  // בדיקת עדכון — בדפדפן: אחרי 3 שניות. ב-APK: אחרי deviceready
+  if(window.Capacitor){
+    document.addEventListener('deviceready', function(){ setTimeout(checkAppUpdate, 2000); }, false);
+    setTimeout(checkAppUpdate, 6000);
+  } else {
+    setTimeout(checkAppUpdate, 3000);
+  }
   document.addEventListener('resume',()=>setTimeout(checkAppUpdate,1500));
 });
 </script>
