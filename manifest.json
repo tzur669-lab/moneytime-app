@@ -1,1 +1,26 @@
-{\n  "name": "MoneyTime App",\n  "short_name": "MoneyTime",\n  "start_url": "/index.html",\n  "display": "standalone",\n  "background_color": "#ffffff",\n  "theme_color": "#000000",\n  "version": "1.0.0",\n  "description": "Manage your finances easily with the MoneyTime app.",\n  "icons": [\n    {\n      "src": "images/icon-192x192.png",\n      "type": "image/png",\n      "sizes": "192x192"\n    },\n    {\n      "src": "images/icon-512x512.png",\n      "type": "image/png",\n      "sizes": "512x512"\n    }\n  ]\n}
+{
+  "name": "מעקב שעות Pro",
+  "short_name": "שעות",
+  "description": "מעקב שעות עבודה חכם",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1E3A8A",
+  "theme_color": "#1E3A8A",
+  "lang": "he",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
