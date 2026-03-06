@@ -115,7 +115,16 @@ jobs:
       - name: Create network security config
         run: |
           mkdir -p android/app/src/main/res/xml
-          printf '<?xml version="1.0" encoding="utf-8"?>\n<network-security-config>\n  <domain-config cleartextTrafficPermitted="false">\n    <domain includeSubdomains="true">firebaseio.com</domain>\n    <domain includeSubdomains="true">googleapis.com</domain>\n    <domain includeSubdomains="true">github.com</domain>\n    <domain includeSubdomains="true">githubusercontent.com</domain>\n  </domain-config>\n  <base-config cleartextTrafficPermitted="false"/>\n</network-security-config>\n' > android/app/src/main/res/xml/network_security_config.xml
+          cat > android/app/src/main/res/xml/network_security_config.xml << 'XMLEOF'
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+  <base-config cleartextTrafficPermitted="false">
+    <trust-anchors>
+      <certificates src="system"/>
+    </trust-anchors>
+  </base-config>
+</network-security-config>
+XMLEOF
 
       - name: Patch Android resources
         run: |
