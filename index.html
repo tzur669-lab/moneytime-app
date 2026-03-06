@@ -5,15 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="מעקב שעות">
+<meta name="apple-mobile-web-app-title" content="מעקב שעות Pro">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#1E3A8A" id="metaTC">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="שעות">
-<meta name="mobile-web-app-capable" content="yes">
 <title>מעקב שעות Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -190,16 +187,6 @@ async function restorePairFromCloud(){
 [data-color=orange]{--b8:#C2410C;--b7:#EA580C;--b6:#F97316;--b5:#FB923C;--b4:#FDBA74;--b1:#FED7AA;--b0:#FFF7ED;--bg:#FFF7ED;}
 [data-color=pink]{--b8:#9F1239;--b7:#BE123C;--b6:#E11D48;--b5:#F43F5E;--b4:#FB7185;--b1:#FFE4E6;--b0:#FFF1F2;--bg:#FFF1F2;}
 [data-color=teal]{--b8:#134E4A;--b7:#0F766E;--b6:#0D9488;--b5:#14B8A6;--b4:#2DD4BF;--b1:#CCFBF1;--b0:#F0FDFA;--bg:#F0FDFA;}
-/* ---- UPDATE BANNER ---- */
-.upd-banner{position:fixed;bottom:calc(var(--nh) + 10px);left:12px;right:12px;background:linear-gradient(135deg,#0F172A,#1E3A5F);border:1px solid rgba(96,165,250,.4);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;z-index:150;box-shadow:0 8px 32px rgba(0,0,0,.45);animation:slideUpBnr .4s cubic-bezier(.34,1.56,.64,1)}
-@keyframes slideUpBnr{from{transform:translateY(130%);opacity:0}to{transform:translateY(0);opacity:1}}
-.upd-ico{font-size:22px;flex-shrink:0}
-.upd-txt{flex:1}
-.upd-ttl{font-size:13px;font-weight:500;color:#F1F5F9;margin-bottom:1px}
-.upd-sub{font-size:10px;color:#94A3B8}
-.upd-btn{background:var(--b6);border:none;color:#fff;padding:8px 14px;border-radius:9px;font-family:'Inter',sans-serif;font-size:11px;font-weight:400;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .2s}
-.upd-btn:active{transform:scale(.95)}
-.upd-x{background:none;border:none;color:#475569;font-size:20px;cursor:pointer;padding:0;line-height:1;flex-shrink:0}
 /* ---- UPDATE BANNER ---- */
 .upd-banner{position:fixed;top:calc(var(--hh) + 8px);left:50%;transform:translateX(-50%);width:auto;max-width:300px;background:linear-gradient(135deg,#0F172A,#1E3A5F);border:1px solid rgba(96,165,250,.45);border-radius:12px;padding:8px 12px;display:flex;align-items:center;gap:8px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:slideDownBnr .4s cubic-bezier(.34,1.56,.64,1)}
 @keyframes slideDownBnr{from{transform:translateY(-120%);opacity:0}to{transform:translateY(0);opacity:1}}
@@ -1974,8 +1961,8 @@ function _askApkUpdate(btn){
 function _cancelApkUpdate(){
   const dlg=document.getElementById('updDlg');
   if(dlg)dlg.remove();
-  // אפשר לבטל את ה-disabled של הכפתור
-  const btn=document.querySelector('#updBanner .upd-btn');
+  // שחרר את כפתור ההגדרות (הוא זה שהפעיל _askApkUpdate)
+  const btn=document.getElementById('updSetBtn');
   if(btn){btn.disabled=false;}
 }
 
@@ -2692,16 +2679,6 @@ async function _shareFile(blob, fileName){
 
 // עדכון: expJSON, expCSV, expXLSX משתמשים ב-_shareFile
 // ---- PAIR HELPERS ----
-function _navToCouple(){
-  var btns=document.querySelectorAll('.ni');
-  var btn=btns[2]||null;
-  if(btn)swPage('couple',btn);
-}
-
-function calcPairCode(a,b){
-  var arr=[a.toUpperCase(),b.toUpperCase()].sort();
-  return arr[0]+'_'+arr[1];
-}
 
 function doConnectFromCouplePage(){
   var pc=(document.getElementById('cplPairCode')||{}).value||'';
