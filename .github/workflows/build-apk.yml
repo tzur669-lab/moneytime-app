@@ -41,7 +41,11 @@ jobs:
           sed -i "s/APP_VERSION='[0-9]*\.[0-9]*\.[0-9]*'/APP_VERSION='${NEW_VER}'/" index.html
           echo "גרסה חדשה: ${NEW_VER}"
           
-          # --- השורה שהתווספה לעדכון שם ה-cache ב-sw.js ---
+          # עדכן APP_BUILD למספר ה-build האמיתי — זה מה שמשמש להשוואה ב-APK
+          sed -i "s/const APP_BUILD=[0-9]*/const APP_BUILD=${{ github.run_number }}/" index.html
+          echo "APP_BUILD: ${{ github.run_number }}"
+          
+          # עדכן שם ה-cache ב-sw.js
           sed -i "s/moneytime-v[0-9]*\.[0-9]*\.[0-9]*/moneytime-v${NEW_VER}/" sw.js
           
           cp index.html www/index.html
