@@ -1824,15 +1824,46 @@ function renderFbonChips(){
 }
 
 // ---- AUTO UPDATE ----
-const APP_VERSION='2.1.0'; 
+// הלוגיקה:
+// - APP_VERSION = גרסת הקוד (משתנה בכל build, לא מועיל להשוואה ב-APK)
+// - APP_BUILD   = מספר ה-build שנאפה בתוך ה-APK הזה (קבוע לכל APK)
+// - localStorage('installedBuild') = ה-build שהמשתמש התקין בפועל
+// - Firebase.build = ה-build האחרון שנבנה
+// השוואה: Firebase.build > installedBuild → יש עדכון
+// אחרי לחיצת עדכן: שומרים installedBuild = Firebase.build
+
+const APP_VERSION='2.1.0';
+const APP_BUILD=0; // ← build-apk.yml מחליף את 0 במספר האמיתי בכל build
 const LIVE_URL='https://tzur669-lab.github.io/moneytime-app/';
 const VER_FB_URL='https://moneytime-app-f5a15-default-rtdb.firebaseio.com/appVersion.json';
 const GITHUB_APK_BASE='https://github.com/tzur669-lab/moneytime-app/releases/download';
+const GITHUB_RELEASES='https://github.com/tzur669-lab/moneytime-app/releases/latest';
 let _updShown=false;
 let _updApkUrl='';
+let _updAvailBuild=0;
+let _updAvailVer='';
 let _updRetryCount=0;
 const _UPD_MAX_RETRY=5;
 const _UPD_RETRY_DELAYS=[15000,30000,60000,120000,300000];
+
+// מחזיר את ה-build המותקן בפועל
+// ב-APK: מה ש-localStorage זוכר. בדפדפן: APP_BUILD עצמו.
+function _getInstalledBuild(){
+  const isApk=!!window.Capacitor;
+  if(!isApk) return APP_BUILD;
+  const stored=parseInt(localStorage.getItem('installedBuild')||'0',10);
+  // אם לא נשמר עדיין — זה ה-build הנוכחי שמותקן
+  if(!stored || stored<APP_BUILD){
+    localStorage.setItem('installedBuild', String(APP_BUILD));
+    return APP_BUILD;
+  }
+  return stored;
+}
+
+// שומר שהמשתמש עדכן לגרסה החדשה
+function _markInstalled(buildNum){
+  try{ localStorage.setItem('installedBuild', String(buildNum)); }catch(e){}
+}
 
 async function checkAppUpdate(){
   if(_updShown)return;
@@ -1851,12 +1882,27 @@ async function checkAppUpdate(){
       return;
     }
     const data=await r.json();
-    if(!data||!data.version)return;
+    if(!data||!data.build)return;
     _updRetryCount=0;
-    if(_verIsNewer(data.version,APP_VERSION)){
-      const buildNum=data.build||'';
-      _updApkUrl=buildNum?GITHUB_APK_BASE+'/v'+buildNum+'/moneytime-pro.apk':'';
-      _showUpdBanner(data.version,data.notes||'');
+
+    const remoteBuild=parseInt(data.build,10)||0;
+    const installedBuild=_getInstalledBuild();
+
+    const isApk=!!window.Capacitor;
+    let hasUpdate=false;
+    if(isApk){
+      // APK: השוואת build numbers
+      hasUpdate=(remoteBuild > installedBuild);
+    } else {
+      // דפדפן: השוואת גרסאות רגילה
+      hasUpdate=_verIsNewer(data.version||'',APP_VERSION);
+    }
+
+    if(hasUpdate){
+      _updAvailBuild=remoteBuild;
+      _updAvailVer=data.version||('build '+remoteBuild);
+      _updApkUrl=GITHUB_APK_BASE+'/v'+remoteBuild+'/moneytime-pro.apk';
+      _showUpdBanner(_updAvailVer, data.notes||'');
     }
   }catch(e){
     console.warn('[Update] Network error:',e.message);
@@ -1884,9 +1930,7 @@ function _verIsNewer(remote,local){
 function _showUpdBanner(ver,notes){
   if(_updShown)return;
   _updShown=true;
-  // עדכן את אזור ההגדרות
-  _setUpdSettingsState('available', ver, notes);
-  // הצג באנר קטן פעם אחת בלבד
+  _setUpdSettingsState('available',ver,notes);
   const old=document.getElementById('updBanner');
   if(old)old.remove();
   const el=document.createElement('div');
@@ -1900,31 +1944,33 @@ function _showUpdBanner(ver,notes){
     <button class="upd-btn" style="font-size:10px;padding:5px 10px" onclick="swPage('set',document.querySelector('.ni:last-child'));document.getElementById('updBanner')?.remove()">פרטים</button>
     <button class="upd-x" onclick="document.getElementById('updBanner')?.remove()">×</button>`;
   document.body.appendChild(el);
-  // הסר אוטומטית אחרי 8 שניות
-  setTimeout(()=>{ const b=document.getElementById('updBanner'); if(b)b.remove(); }, 8000);
+  setTimeout(function(){ const b=document.getElementById('updBanner'); if(b)b.remove(); },8000);
 }
 
-function _setUpdSettingsState(state, ver, notes){
+function _setUpdSettingsState(state,ver,notes){
   const btn=document.getElementById('updSetBtn');
   const status=document.getElementById('updSetStatus');
   const sub=document.getElementById('updSetSub');
   const verEl=document.getElementById('updSetVer');
-  if(verEl) verEl.textContent=APP_VERSION;
+  const installedBuild=_getInstalledBuild();
+  const dispVer=APP_BUILD>0?(APP_VERSION+' (build '+APP_BUILD+')'):(APP_VERSION);
+  if(verEl) verEl.textContent=dispVer;
   if(state==='available'){
-    if(status) status.innerHTML=`גרסה נוכחית: <span id="updSetVer">${APP_VERSION}</span> <span style="color:var(--g);font-size:11px;margin-right:6px">← ${ver} זמינה</span>`;
+    if(status) status.innerHTML='גרסה נוכחית: <span id="updSetVer">'+dispVer+'</span> <span style="color:var(--g);font-size:11px;margin-right:6px">← '+ver+' זמינה</span>';
     if(sub) sub.textContent=notes||'עדכון חדש עם שיפורים';
     if(btn){
       btn.textContent='עדכן עכשיו';
       btn.style.background='var(--g)';
       btn.style.color='#fff';
       btn.style.border='none';
-      btn.onclick=()=>{ const isApk=!!window.Capacitor; isApk?_askApkUpdate(btn):_doWebUpdate(btn); };
+      btn.disabled=false;
+      btn.onclick=function(){ var isApk=!!window.Capacitor; if(isApk){_askApkUpdate(btn);}else{_doWebUpdate(btn);} };
     }
   } else if(state==='checking'){
     if(btn){ btn.textContent='בודק...'; btn.disabled=true; }
     if(sub) sub.textContent='בודק אם יש עדכון...';
   } else if(state==='latest'){
-    if(btn){ btn.textContent='עדכני ✓'; btn.disabled=false; btn.style.background=''; btn.style.color=''; btn.style.border=''; btn.onclick=()=>_checkUpdateFromSettings(btn); }
+    if(btn){ btn.textContent='עדכני ✓'; btn.disabled=false; btn.style.background=''; btn.style.color=''; btn.style.border=''; btn.onclick=function(){_checkUpdateFromSettings(btn);}; }
     if(sub) sub.textContent='הגרסה האחרונה מותקנת';
   }
 }
@@ -1932,14 +1978,19 @@ function _setUpdSettingsState(state, ver, notes){
 async function _checkUpdateFromSettings(btn){
   _setUpdSettingsState('checking');
   try{
-    const r=await fetch(VER_FB_URL+'?nocache='+Date.now(),{method:'GET',cache:'no-store'});
+    const r=await fetch(VER_FB_URL+'?nc='+Date.now(),{method:'GET',cache:'no-store',headers:{'Accept':'application/json'}});
     if(!r.ok){ _setUpdSettingsState('latest'); return; }
     const data=await r.json();
-    if(!data||!data.version){ _setUpdSettingsState('latest'); return; }
-    if(_verIsNewer(data.version,APP_VERSION)){
-      const buildNum=data.build||'';
-      _updApkUrl=buildNum?GITHUB_APK_BASE+'/v'+buildNum+'/moneytime-pro.apk':'';
-      _setUpdSettingsState('available',data.version,data.notes||'');
+    if(!data||!data.build){ _setUpdSettingsState('latest'); return; }
+    const remoteBuild=parseInt(data.build,10)||0;
+    const installedBuild=_getInstalledBuild();
+    const isApk=!!window.Capacitor;
+    const hasUpdate=isApk?(remoteBuild>installedBuild):_verIsNewer(data.version||'',APP_VERSION);
+    if(hasUpdate){
+      _updAvailBuild=remoteBuild;
+      _updAvailVer=data.version||('build '+remoteBuild);
+      _updApkUrl=GITHUB_APK_BASE+'/v'+remoteBuild+'/moneytime-pro.apk';
+      _setUpdSettingsState('available',_updAvailVer,data.notes||'');
     } else {
       _setUpdSettingsState('latest');
     }
@@ -1948,10 +1999,9 @@ async function _checkUpdateFromSettings(btn){
   }
 }
 
-// --- עדכון ב-APK: שאל את המשתמש, הורד והתקן ---
+// --- עדכון ב-APK: שאל את המשתמש, פתח הורדה ---
 function _askApkUpdate(btn){
   if(btn){btn.disabled=true;}
-  // הצג דיאלוג אישור
   const dlg=document.createElement('div');
   dlg.id='updDlg';
   dlg.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
@@ -1964,12 +2014,6 @@ function _askApkUpdate(btn){
         <button onclick="_cancelApkUpdate()" style="background:#334155;border:none;color:#94A3B8;padding:12px 24px;border-radius:10px;font-size:14px;cursor:pointer;font-family:inherit">לא עכשיו</button>
         <button id="updYesBtn" onclick="_doApkUpdate()" style="background:#2563EB;border:none;color:#fff;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit">עדכן ✓</button>
       </div>
-      <div id="updProgress" style="display:none;margin-top:20px">
-        <div style="font-size:12px;color:#94A3B8;margin-bottom:8px" id="updProgressTxt">מוריד...</div>
-        <div style="background:#0F172A;border-radius:6px;height:6px;overflow:hidden">
-          <div id="updProgressBar" style="background:#2563EB;height:100%;width:0%;transition:width .3s;border-radius:6px"></div>
-        </div>
-      </div>
     </div>`;
   document.body.appendChild(dlg);
 }
@@ -1977,50 +2021,35 @@ function _askApkUpdate(btn){
 function _cancelApkUpdate(){
   const dlg=document.getElementById('updDlg');
   if(dlg)dlg.remove();
-  // שחרר את כפתור ההגדרות (הוא זה שהפעיל _askApkUpdate)
   const btn=document.getElementById('updSetBtn');
   if(btn){btn.disabled=false;}
 }
 
 async function _doApkUpdate(){
-  const yesBtn=document.getElementById('updYesBtn');
-  const noBtn=yesBtn?.previousElementSibling;
-  if(yesBtn){yesBtn.textContent='מכין...';yesBtn.disabled=true;}
-  if(noBtn){noBtn.disabled=true;}
-  const progTxt=document.getElementById('updProgressTxt');
-  const prog=document.getElementById('updProgress');
-  if(prog)prog.style.display='block';
-  if(progTxt)progTxt.innerHTML='מתחבר...';
-
-  const apkUrl=_updApkUrl||'https://github.com/tzur669-lab/moneytime-app/releases/latest';
-
-  // המתן לCapBrowser — עד 4 שניות
-  const browser=await _waitForCapBrowser(4000);
-
   document.getElementById('updDlg')?.remove();
   document.getElementById('updBanner')?.remove();
 
+  // שמור שהמשתמש התחיל תהליך עדכון — כך שבפתיחה הבאה לא יציג שוב
+  if(_updAvailBuild>0) _markInstalled(_updAvailBuild);
+
+  const apkUrl=_updApkUrl||GITHUB_RELEASES;
+  const browser=await _waitForCapBrowser(4000);
+
   if(browser){
-    // CapBrowser זמין — פתח ישירות
-    try{
-      await browser.open({url:apkUrl});
-    }catch(e){
-      // אם נכשל — נסה window.open
-      try{ window.open(apkUrl,'_blank'); }catch(e2){}
-    }
+    try{ await browser.open({url:apkUrl}); }
+    catch(e){ try{ window.open(apkUrl,'_blank'); }catch(e2){} }
   } else {
-    // CapBrowser לא זמין (דפדפן רגיל או בעיה) — window.open
     try{ window.open(apkUrl,'_blank'); }catch(e){}
   }
 
-  // הצג הנחיה לאחר הפתיחה — תוך כדי שהדפדפן נפתח
+  // הנחיה קצרה
   setTimeout(function(){
     const note=document.createElement('div');
     note.id='updNote';
     note.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1E293B;border:1px solid #334155;border-radius:14px;padding:16px 20px;z-index:9999;max-width:300px;width:90%;text-align:center;font-size:13px;color:#94A3B8;line-height:1.6';
-    note.innerHTML='<div style="font-size:18px;margin-bottom:8px">📲</div><strong style="color:#F1F5F9">הורדה החלה בדפדפן</strong><br>לאחר ההורדה — פתח את הקובץ מהתראות הפלאפון.<br><span style="font-size:11px">אם תישאל על "מקורות לא ידועים" — אשר.</span><br><br><button onclick="document.getElementById(\'updNote\')?.remove()" style="background:#2563EB;border:none;color:#fff;padding:8px 20px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit">הבנתי</button>';
+    note.innerHTML='<div style="font-size:18px;margin-bottom:8px">📲</div><strong style="color:#F1F5F9">הורדה נפתחה בדפדפן</strong><br>לאחר ההורדה — פתח את הקובץ מהתראות הפלאפון.<br><span style="font-size:11px">אם תישאל על \'מקורות לא ידועים\' — אשר.</span><br><br><button onclick="document.getElementById(\'updNote\')?.remove()" style="background:#2563EB;border:none;color:#fff;padding:8px 20px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit">הבנתי</button>';
     document.body.appendChild(note);
-    setTimeout(function(){const n=document.getElementById('updNote');if(n)n.remove();},15000);
+    setTimeout(function(){ const n=document.getElementById('updNote'); if(n)n.remove(); },15000);
   },500);
 }
 
