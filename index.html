@@ -1,4 +1,4 @@
-<!DOCTYPE html>  
+<!DOCTYPE html>   
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -1824,15 +1824,27 @@ function renderFbonChips(){
 }
 
 // ---- AUTO UPDATE ----
-const APP_VERSION='2.1.0'; 
+const APP_VERSION='2.1.0';
+const APP_BUILD=0; // CI מחליף בכל build
 const LIVE_URL='https://tzur669-lab.github.io/moneytime-app/';
 const VER_FB_URL='https://moneytime-app-f5a15-default-rtdb.firebaseio.com/appVersion.json';
 const GITHUB_APK_BASE='https://github.com/tzur669-lab/moneytime-app/releases/download';
+const GITHUB_RELEASES='https://github.com/tzur669-lab/moneytime-app/releases/latest';
 let _updShown=false;
 let _updApkUrl='';
+let _updAvailBuild=0;
+let _updAvailVer='';
 let _updRetryCount=0;
 const _UPD_MAX_RETRY=5;
 const _UPD_RETRY_DELAYS=[15000,30000,60000,120000,300000];
+
+function _getInstalledBuild(){
+  if(!window.Capacitor)return APP_BUILD;
+  const stored=parseInt(localStorage.getItem('installedBuild')||'0',10);
+  if(!stored||stored<APP_BUILD){localStorage.setItem('installedBuild',String(APP_BUILD));return APP_BUILD;}
+  return stored;
+}
+function _markInstalled(buildNum){try{localStorage.setItem('installedBuild',String(buildNum));}catch(e){}}
 
 async function checkAppUpdate(){
   if(_updShown)return;
