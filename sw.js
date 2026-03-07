@@ -27,7 +27,8 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const url = e.request.url;
-  if(url.includes('firebaseio.com') || url.includes('googleapis.com') || url.includes('accounts.google.com')){
+  // עקוף cache לגמרי עבור בקשות Firebase, Google, ועדכון (?v=)
+  if(url.includes('firebaseio.com') || url.includes('googleapis.com') || url.includes('accounts.google.com') || url.includes('?v=')){
     return;
   }
   e.respondWith(
