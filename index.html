@@ -1,4 +1,4 @@
-<!DOCTYPE html>  
+<!DOCTYPE html>   
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -1860,7 +1860,9 @@ async function checkAppUpdate(){
     const remoteBuild=parseInt(data.build,10)||0;
     const installedBuild=_getInstalledBuild();
     const isApk=!!window.Capacitor;
-    const hasUpdate=isApk?(remoteBuild>installedBuild):_verIsNewer(data.version||'',APP_VERSION);
+    // בדפדפן: הSW מטפל בעדכון אוטומטית — לא מציגים באנר
+    if(!isApk)return;
+    const hasUpdate=remoteBuild>installedBuild;
     if(hasUpdate){
       _updAvailBuild=remoteBuild;
       _updAvailVer=data.version||('build '+remoteBuild);
@@ -1918,7 +1920,8 @@ function _setUpdSettingsState(state,ver,notes){
   const status=document.getElementById('updSetStatus');
   const sub=document.getElementById('updSetSub');
   const verEl=document.getElementById('updSetVer');
-  const dispVer=APP_BUILD>0?(APP_VERSION+' (build '+APP_BUILD+')'):APP_VERSION;
+  const isApkCtx=!!window.Capacitor;
+  const dispVer=isApkCtx&&APP_BUILD>0?(APP_VERSION+' (build '+APP_BUILD+')'):APP_VERSION;
   if(verEl)verEl.textContent=dispVer;
   if(state==='available'){
     if(status)status.innerHTML='גרסה נוכחית: <span id="updSetVer">'+dispVer+'</span> <span style="color:var(--g);font-size:11px;margin-right:6px">← '+ver+' זמינה</span>';
@@ -1946,6 +1949,7 @@ async function _checkUpdateFromSettings(btn){
     const remoteBuild=parseInt(data.build,10)||0;
     const installedBuild=_getInstalledBuild();
     const isApk=!!window.Capacitor;
+    // בדפדפן: השוואת גרסאות רגילה (APP_BUILD=0 בדפדפן)
     const hasUpdate=isApk?(remoteBuild>installedBuild):_verIsNewer(data.version||'',APP_VERSION);
     if(hasUpdate){
       _updAvailBuild=remoteBuild;
