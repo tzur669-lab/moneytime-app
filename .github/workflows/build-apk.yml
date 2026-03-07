@@ -215,7 +215,7 @@ jobs:
           NOTES="עדכון v${APP_VER}"
           echo "כותב ל-Firebase: version=${APP_VER} build=${{ github.run_number }}"
           RESULT=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X PUT \
-            "https://moneytime-app-f5a15-default-rtdb.firebaseio.com/appVersion.json" \
+            "https://moneytime-app-f5a15-default-rtdb.firebaseio.com/appVersion.json?auth=${{ secrets.FIREBASE_SECRET }}" \
             -H "Content-Type: application/json" \
             -d "{\"version\":\"${APP_VER}\",\"build\":${{ github.run_number }},\"notes\":\"${NOTES}\",\"ts\":$(date +%s000)}")
           echo "תשובת Firebase: ${RESULT}"
