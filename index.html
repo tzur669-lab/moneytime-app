@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
 <title>מעקב שעות Pro</title>
-<link href="                                                       ;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- שמירת pair param מוקדמת — לפני כל דבר, כדי שלא יאבד ב-Safari PWA -->
 <script>
@@ -62,8 +62,8 @@ function _waitForCapBrowser(ms){
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 // Firebase Realtime Database — pair sync
-// Database URL:                                                   
-const FB_URL='                                                       ';
+// Database URL: https://moneytime-app-default-rtdb.firebaseio.com/
+const FB_URL='https://moneytime-app-f5a15-default-rtdb.firebaseio.com';
 
 async function fbWrite(path,data){
   try{
@@ -727,12 +727,10 @@ input[type=time].fi{text-align:center}
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <span class="fl" style="margin:0">תוספות ובונוסים</span>
         <div style="display:flex;gap:6px">
-          <button class="btn btn-g btn-sm" id="fbonPickerBtn" onclick="toggleFbonPicker()" style="padding:5px 10px;font-size:11px">+ בונוס קבוע</button>
+          <button class="btn btn-g btn-sm" onclick="openFbonPickerModal()" style="padding:5px 10px;font-size:11px">+ בונוס קבוע</button>
           <button class="btn btn-g btn-sm" onclick="addB()" style="padding:5px 10px;font-size:11px">+ בונוס</button>
         </div>
       </div>
-      <div id="dFbonPicker" style="display:none;background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:10px;margin-bottom:8px"></div>
-      <div id="dFbonChips" class="fbon-chips"></div>
       <div id="dBonList"></div>
     </div>
     <div class="fg"><label class="fl">הערה</label><input type="text" class="fi" id="dNote" placeholder="הערה אופציונלית..."></div>
@@ -894,7 +892,7 @@ input[type=time].fi{text-align:center}
 const JC=['#1E3A8A','#2563EB','#10B981','#F59E0B','#EF4444','#8B5CF6'];
 const MN=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 const CID='57616527068-9ogg9tnmgcku8icu5bjkvd7e48b9hujs.apps.googleusercontent.com';
-const SCOPES='                                                                                                                                       ';
+const SCOPES='https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email';
 let curDt=new Date(), selDt=null, mType='', per='7', rTab='gen';
 let hCh,pCh,cmpCh,cplCh,jCh;
 let aToken=null, tClient=null, dProm=null, tInt=null;
@@ -1068,12 +1066,6 @@ function openDay(k){
   document.getElementById('dNote').value=d.note||'';
   document.getElementById('dBonList').innerHTML='';
   (d.bonuses||[]).forEach(b=>addB(b.desc,b.amount));
-  // איפוס picker בונוס קבוע
-  var _picker=document.getElementById('dFbonPicker');
-  var _pbtn=document.getElementById('fbonPickerBtn');
-  if(_picker){_picker.style.display='none';}
-  if(_pbtn){_pbtn.textContent='+ בונוס קבוע';}
-  renderFbonChips();
   document.getElementById('dExtraJobList').innerHTML='';
   (d.extraJobs||[]).forEach(ej=>addExtraJob(ej.jobIdx,ej.hours,ej.rate,ej.startTime,ej.endTime));
   openM('mDay');
@@ -1685,7 +1677,7 @@ function openPair(){
     <button class="btn btn-d" onclick="unpair()" style="margin-top:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> נתק מהזוג</button>`;
     setTimeout(()=>{try{new QRCode(document.getElementById('qrB'),{text:myCode,width:130,height:130,colorDark:'#1E3A8A',colorLight:'#fff'});}catch(e){}},100);
   } else {
-    const pairLink='                                                  '+myCode;
+    const pairLink='https://tzur669-lab.github.io/moneytime-app/?pair='+myCode;
     cont.innerHTML=`
     <p style="font-size:13px;color:var(--t2);margin-bottom:14px;line-height:1.6">העתק את <strong>הקוד</strong> שלך ושלח לפרטנר — הפרטנר יזין אותו ויתחברו.</p>
     <div class="pair-box">
@@ -1841,8 +1833,25 @@ function updJC(i,col,el){
 
 // ---- FIXED BONUSES ----
 function renderFixedBonuses(){
-  const s=D.gs(),cont=document.getElementById('fbonCont');
+  const cont=document.getElementById('fbonCont');
   if(!cont)return;
+  // שמור ערכים שהמשתמש הקליד לפני ה-rebuild
+  cont.querySelectorAll('.fbon-row').forEach(function(row,i){
+    const ni=row.querySelector('.fbon-name');
+    const ai=row.querySelector('.fbon-amt');
+    const s2=D.gs();
+    if(ni&&s2.fixedBonuses&&s2.fixedBonuses[i]!==undefined){
+      const v=ni.value;
+      if(v!==undefined)s2.fixedBonuses[i].name=v;
+      D.ss(s2);
+    }
+    if(ai&&s2.fixedBonuses&&s2.fixedBonuses[i]!==undefined){
+      const v=parseFloat(ai.value)||0;
+      if(ai.value!=='')s2.fixedBonuses[i].amount=v;
+      D.ss(s2);
+    }
+  });
+  const s=D.gs();
   const fbs=s.fixedBonuses||[];
   if(!fbs.length){
     cont.innerHTML='<div style="font-size:12px;color:var(--t3);text-align:center;padding:8px 0">אין בונוסים קבועים עדיין</div>';
@@ -1850,8 +1859,8 @@ function renderFixedBonuses(){
   }
   cont.innerHTML=fbs.map((fb,i)=>`
     <div class="fbon-row">
-      <input class="fbon-name" value="${(fb.name||'').replace(/"/g,'&quot;')}" placeholder="שם הבונוס" oninput="updFixedBonus(${i},'name',this.value)" onchange="updFixedBonus(${i},'name',this.value)">
-      <input type="number" class="fbon-amt" value="${fb.amount||''}" placeholder="₪" oninput="updFixedBonus(${i},'amount',this.value)" onchange="updFixedBonus(${i},'amount',this.value)">
+      <input class="fbon-name" value="${(fb.name||'').replace(/"/g,'&quot;')}" placeholder="שם הבונוס" oninput="updFixedBonus(${i},'name',this.value)">
+      <input type="number" class="fbon-amt" value="${fb.amount||''}" placeholder="₪" oninput="updFixedBonus(${i},'amount',this.value)">
       <button class="fbon-del" onclick="delFixedBonus(${i})">×</button>
     </div>`).join('');
 }
@@ -1888,35 +1897,52 @@ function renderFbonChips(){
       return '<button class="fbon-chip" onclick="addB(\''+n+'\','+fb.amount+');vib()" style="font-size:12px;padding:6px 13px">+ '+fb.name+' <strong>&#8362;'+fb.amount+'</strong></button>';
     }).join('');
 }
-function toggleFbonPicker(){
-  var picker=document.getElementById('dFbonPicker');
-  var btn=document.getElementById('fbonPickerBtn');
-  if(!picker)return;
-  if(picker.style.display==='none'||picker.style.display===''){
-    var s=D.gs();
-    var fbs=(s.fixedBonuses||[]).filter(function(fb){return fb.name&&fb.amount>0;});
-    if(!fbs.length){
-      picker.innerHTML='<div style="font-size:12px;color:var(--t3);text-align:center;padding:4px 0">אין בונוסים קבועים מוגדרים</div>';
-    } else {
-      picker.innerHTML='<div style="font-size:10px;color:var(--t3);margin-bottom:6px">בחר בונוס קבוע:</div>'+
-        fbs.map(function(fb){
-          var n=fb.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-          return '<button class="fbon-chip" onclick="addB(\''+n+'\','+fb.amount+');toggleFbonPicker();vib()" style="font-size:12px;padding:6px 13px;display:block;width:100%;text-align:right;margin-bottom:4px">+ '+fb.name+' <strong style=\"float:left\">&#8362;'+fb.amount+'</strong></button>';
-        }).join('');
-    }
-    picker.style.display='block';
-    if(btn)btn.textContent='✕ סגור';
+
+function openFbonPickerModal(){
+  const s=D.gs();
+  const fbs=(s.fixedBonuses||[]).filter(function(fb){return fb.name&&fb.amount>0;});
+  // הסר modal קיים
+  var old=document.getElementById('fbonPickModal');
+  if(old)old.remove();
+  var modal=document.createElement('div');
+  modal.id='fbonPickModal';
+  modal.style.cssText='position:fixed;inset:0;z-index:9000;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.45)';
+  var inner='<div style="background:var(--s);border-radius:18px 18px 0 0;padding:20px;width:100%;max-width:480px;max-height:70vh;overflow-y:auto">';
+  inner+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">';
+  inner+='<span style="font-size:15px;font-weight:600;color:var(--t)">בחר בונוס קבוע</span>';
+  inner+='<button onclick="var m=document.getElementById(\'fbonPickModal\');if(m)m.remove();" style="background:none;border:none;font-size:20px;color:var(--t3);cursor:pointer;line-height:1">&#x2715;</button>';
+  inner+='</div>';
+  if(!fbs.length){
+    inner+='<div style="text-align:center;padding:20px 0;color:var(--t3);font-size:13px">אין בונוסים קבועים עדיין.<br>הגדר אותם בהגדרות ← בונוסים קבועים</div>';
   } else {
-    picker.style.display='none';
-    if(btn)btn.textContent='+ בונוס קבוע';
+    fbs.forEach(function(fb,i){
+      inner+='<div onclick="addFbonFromPicker('+i+')" style="display:flex;align-items:center;justify-content:space-between;padding:13px 12px;margin-bottom:6px;background:var(--s2);border:1px solid var(--bd);border-radius:11px;cursor:pointer">';
+      inner+='<span style="font-size:14px;color:var(--t);font-weight:500">'+fb.name+'</span>';
+      inner+='<span style="font-size:14px;font-weight:700;color:var(--g)">+&#8362;'+fb.amount+'</span>';
+      inner+='</div>';
+    });
   }
+  inner+='</div>';
+  modal.innerHTML=inner;
+  modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});
+  document.body.appendChild(modal);
+}
+
+function addFbonFromPicker(i){
+  const s=D.gs();
+  const fbs=(s.fixedBonuses||[]).filter(function(fb){return fb.name&&fb.amount>0;});
+  if(!fbs[i])return;
+  addB(fbs[i].name,fbs[i].amount);
+  var modal=document.getElementById('fbonPickModal');
+  if(modal)modal.remove();
+  vib();
 }
 
 // ---- AUTO UPDATE ----
-const APP_VERSION='2.1.235';
-const APP_BUILD=235; // CI מחליף בכל build
-const LIVE_URL='                                            ';
-const VER_FB_URL='                                                                       ';
+const APP_VERSION='2.1.222';
+const APP_BUILD=222; // CI מחליף בכל build
+const LIVE_URL='https://tzur669-lab.github.io/moneytime-app/';
+const VER_FB_URL='https://moneytime-app-f5a15-default-rtdb.firebaseio.com/appVersion.json';
 const GITHUB_APK_BASE='https://github.com/tzur669-lab/moneytime-app/releases/download';
 const GITHUB_RELEASES='https://github.com/tzur669-lab/moneytime-app/releases/latest';
 let _updShown=false;
@@ -2189,7 +2215,7 @@ function initGD(){
   const saved=localStorage.getItem('gtoken');
   if(saved){
     aToken=saved;
-    fetch('                                                            '+saved)
+    fetch('https://www.googleapis.com/oauth2/v3/tokeninfo?access_token='+saved)
       .then(r=>r.json())
       .then(info=>{
         if(info.error){
@@ -2212,7 +2238,7 @@ function initGD(){
 }
 
 function startGoogleAuth(){
-  var redirectUri = '                                                         ';
+  var redirectUri = 'https://tzur669-lab.github.io/moneytime-app/callback.html';
   var url = 'https://accounts.google.com/o/oauth2/v2/auth'
     + '?client_id=' + CID
     + '&redirect_uri=' + encodeURIComponent(redirectUri)
@@ -2355,7 +2381,7 @@ function showToast(msg){
 }
 async function fetchEmail(){
   try{
-    const r=await fetch('                                             ',{headers:{Authorization:`Bearer ${aToken}`}});
+    const r=await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:`Bearer ${aToken}`}});
     const i=await r.json();
     if(i.email)document.getElementById('drEmail').textContent=`מחובר: ${i.email}`;
     if(i.sub){
@@ -2378,27 +2404,27 @@ async function fetchEmail(){
 async function driveUpsert(fileName, body, isShared){
   const space = isShared ? 'drive' : 'appDataFolder';
   const q = encodeURIComponent(`name='${fileName}' and trashed=false`);
-  const listUrl = `                                            ${q}&spaces=${space}&fields=files(id)`;
+  const listUrl = `https://www.googleapis.com/drive/v3/files?q=${q}&spaces=${space}&fields=files(id)`;
   const list = await (await fetch(listUrl,{headers:{Authorization:`Bearer ${aToken}`}})).json();
   let fid = list.files?.[0]?.id;
   if(!fid){
     const meta = {name:fileName};
     if(!isShared) meta.parents=['appDataFolder'];
-    const cr = await (await fetch('                                         ',{
+    const cr = await (await fetch('https://www.googleapis.com/drive/v3/files',{
       method:'POST',
       headers:{Authorization:`Bearer ${aToken}`,'Content-Type':'application/json'},
       body:JSON.stringify(meta)
     })).json();
     fid = cr.id;
     if(isShared && fid){
-      await fetch(`                                          ${fid}/permissions`,{
+      await fetch(`https://www.googleapis.com/drive/v3/files/${fid}/permissions`,{
         method:'POST',
         headers:{Authorization:`Bearer ${aToken}`,'Content-Type':'application/json'},
         body:JSON.stringify({role:'reader',type:'anyone'})
       });
     }
   }
-  await fetch(`                                                 ${fid}?uploadType=media`,{
+  await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fid}?uploadType=media`,{
     method:'PATCH',
     headers:{Authorization:`Bearer ${aToken}`,'Content-Type':'application/json'},
     body
@@ -2409,9 +2435,9 @@ async function driveUpsert(fileName, body, isShared){
 async function driveRead(fileName, isShared){
   const space = isShared ? 'drive' : 'appDataFolder';
   const q = encodeURIComponent(`name='${fileName}' and trashed=false`);
-  const list = await (await fetch(`                                            ${q}&spaces=${space}&fields=files(id)`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
+  const list = await (await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=${space}&fields=files(id)`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
   if(!list.files?.length) return null;
-  const data = await (await fetch(`                                          ${list.files[0].id}?alt=media`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
+  const data = await (await fetch(`https://www.googleapis.com/drive/v3/files/${list.files[0].id}?alt=media`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
   return data;
 }
 
@@ -2509,9 +2535,9 @@ async function deleteDriveBackup(){
   if(!confirm('האם אתה בטוח שברצונך למחוק את הגיבוי מ-Google Drive? פעולה זו אינה הפיכה.')){return;}
   try{
     const q=encodeURIComponent("name='moneytime_solo.json' and trashed=false");
-    const list=await(await fetch(`                                            ${q}&spaces=appDataFolder&fields=files(id)`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
+    const list=await(await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=appDataFolder&fields=files(id)`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
     if(!list.files?.length){showToast('לא נמצא גיבוי ב-Drive');return;}
-    await fetch(`                                          ${list.files[0].id}`,{method:'DELETE',headers:{Authorization:`Bearer ${aToken}`}});
+    await fetch(`https://www.googleapis.com/drive/v3/files/${list.files[0].id}`,{method:'DELETE',headers:{Authorization:`Bearer ${aToken}`}});
     showToast('✅ הגיבוי נמחק מ-Drive');
   }catch(e){showToast('שגיאה במחיקה');}
 }
