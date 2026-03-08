@@ -1857,8 +1857,8 @@ function addFixedBonusToDay(i){
 }
 
 // ---- AUTO UPDATE ----
-const APP_VERSION='2.1.224';
-const APP_BUILD=224; // CI מחליף בכל build
+const APP_VERSION='2.1.222';
+const APP_BUILD=222; // CI מחליף בכל build
 const LIVE_URL='https://tzur669-lab.github.io/moneytime-app/';
 const VER_FB_URL='https://moneytime-app-f5a15-default-rtdb.firebaseio.com/appVersion.json';
 const GITHUB_APK_BASE='https://github.com/tzur669-lab/moneytime-app/releases/download';
@@ -1887,10 +1887,14 @@ async function checkAppUpdate(){
       if(r.status===401||r.status===403){console.warn('[Update] Firebase blocked ('+r.status+').');return;}
       _scheduleUpdRetry();return;
     }
-    const data=await r.json();
-    if(!data||!data.build)return;
-    _updRetryCount=0;
+    let data;
+    try{ data=await r.json(); }catch(e){ _scheduleUpdRetry(); return; }
+    // ולידציה — רימון ופרוקסים מחזירים HTML או JSON חסר
+    if(!data||typeof data!=='object'||!data.build)return;
     const remoteBuild=parseInt(data.build,10)||0;
+    // build חייב להיות מספר הגיוני (>100) — HTML מפורסרד כ-0
+    if(remoteBuild<100){ console.warn('[Update] invalid build from Firebase:',data); return; }
+    _updRetryCount=0;
     const installedBuild=_getInstalledBuild();
     const isApk=!!window.Capacitor;
     // בדפדפן: הSW מטפל בעדכון אוטומטית — לא מציגים באנר
@@ -1987,9 +1991,11 @@ async function _checkUpdateFromSettings(btn){
   try{
     const r=await fetch(VER_FB_URL+'?nc='+Date.now(),{method:'GET',cache:'no-store',headers:{'Accept':'application/json'}});
     if(!r.ok){_setUpdSettingsState('latest');return;}
-    const data=await r.json();
-    if(!data||!data.build){_setUpdSettingsState('latest');return;}
+    let data;
+    try{ data=await r.json(); }catch(e){ _setUpdSettingsState('latest'); return; }
+    if(!data||typeof data!=='object'||!data.build){_setUpdSettingsState('latest');return;}
     const remoteBuild=parseInt(data.build,10)||0;
+    if(remoteBuild<100){ _setUpdSettingsState('latest'); return; }
     const installedBuild=_getInstalledBuild();
     const isApk=!!window.Capacitor;
     // בדפדפן: השוואת גרסאות רגילה (APP_BUILD=0 בדפדפן)
@@ -2025,17 +2031,18 @@ function _cancelApkUpdate(){
 async function _doApkUpdate(){
   document.getElementById('updDlg')?.remove();
   document.getElementById('updBanner')?.remove();
-  if(_updAvailBuild>0){
-    _markInstalled(_updAvailBuild);
-    try{localStorage.removeItem('updBannerShown');}catch(e){}
-  }
+  // לא שומרים installedBuild כאן — רק כשה-APK החדש יפתח בפועל
+  // _getInstalledBuild יזהה את APP_BUILD החדש ויעדכן אוטומטית
+  try{localStorage.removeItem('updBannerShown');}catch(e){}
   const apkUrl=_updApkUrl||GITHUB_RELEASES;
-  const browser=await _waitForCapBrowser(4000);
-  if(browser){
-    try{await browser.open({url:apkUrl});}
-    catch(e){try{window.open(apkUrl,'_blank');}catch(e2){}}
-  } else {
-    try{window.open(apkUrl,'_blank');}catch(e){}
+  // _system פותח ב-Chrome חיצוני ולא ב-Custom Tab — חיוני להורדת APK
+  try{
+    window.open(apkUrl,'_system');
+  }catch(e){
+    // fallback — CapBrowser
+    const browser=await _waitForCapBrowser(2000);
+    if(browser){try{await browser.open({url:apkUrl});}catch(e2){}}
+    else{try{window.open(apkUrl,'_blank');}catch(e3){}}
   }
   setTimeout(function(){
     const note=document.createElement('div');
