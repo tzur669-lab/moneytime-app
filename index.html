@@ -150,7 +150,6 @@ async function restorePairFromCloud(){
     const myKeySafe=s.myCode.replace(/[.#$\[\]]/g,'_');
     for(const pairCode of Object.keys(allPairs)){
       const pair=allPairs[pairCode];
-      // מחפש לפי המפתח הבטוח (עם _ במקום תווים מיוחדים)
       const myEntry=pair[myKeySafe]||pair[s.myCode];
       if(myEntry&&myEntry.pairInfo){
         const info=myEntry.pairInfo;
@@ -164,6 +163,48 @@ async function restorePairFromCloud(){
       }
     }
   }catch(e){console.warn('restorePairFromCloud:',e);}
+  return false;
+}
+
+// בדיקה אקטיבית: האם מישהו כבר חיבר אותי מהצד שלו?
+// סורק pairs ב-Firebase — אם מוצא רשומה שבה partnerCode === myCode שלי → מחבר אוטומטית
+async function autoDetectIncomingPair(){
+  try{
+    const s=D.gs();
+    if(!s.myCode||s.pairCode)return false; // כבר מחובר
+    const allPairs=await fbRead('pairs');
+    if(!allPairs||typeof allPairs!=='object')return false;
+    const myCode=s.myCode.toUpperCase();
+    for(const pairCode of Object.keys(allPairs)){
+      const pair=allPairs[pairCode];
+      if(typeof pair!=='object')continue;
+      for(const key of Object.keys(pair)){
+        const entry=pair[key];
+        if(!entry||typeof entry!=='object')continue;
+        // מצאנו רשומה שבה הפרטנר הזין את הקוד שלי
+        if(entry.partnerCode&&entry.partnerCode.toUpperCase()===myCode&&entry.myCode){
+          const partnerMyCode=entry.myCode;
+          // חשב pairCode זהה
+          const computedPair=calcPairCode(myCode,partnerMyCode);
+          if(computedPair!==pairCode)continue; // בטיחות
+          // חבר אוטומטית
+          s.pairCode=pairCode;
+          s.partnerCode=partnerMyCode;
+          if(entry.myName&&(s.partnerName==='פרטנר'||!s.partnerName))s.partnerName=entry.myName;
+          if(entry.myColor)s.partnerColor=entry.myColor;
+          D.ss(s);
+          // כתוב גם מצדי ל-Firebase
+          await syncPairToFirebase();
+          // טען נתוני פרטנר
+          await loadPartnerFromFirebase();
+          showToast('פרטנר זוהה — חוברתם! ✅');
+          renderCouple();
+          if(aToken)saveDr();
+          return true;
+        }
+      }
+    }
+  }catch(e){console.warn('autoDetectIncomingPair:',e);}
   return false;
 }
 </script>
@@ -1840,8 +1881,8 @@ function renderFbonChips(){
 }
 
 // ---- AUTO UPDATE ----
-const APP_VERSION='2.1.230';
-const APP_BUILD=230; // CI מחליף בכל build
+const APP_VERSION='2.1.222';
+const APP_BUILD=222; // CI מחליף בכל build
 const LIVE_URL='https://tzur669-lab.github.io/moneytime-app/';
 const VER_FB_URL='https://moneytime-app-f5a15-default-rtdb.firebaseio.com/appVersion.json';
 const GITHUB_APK_BASE='https://github.com/tzur669-lab/moneytime-app/releases/download';
@@ -3263,6 +3304,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   const savedColor=D.gs().colorTheme||'blue';
   applyColorTheme(savedColor);
   initClock();renderCal();setSyncDot(false);initGD();checkPairLink();
+  // בדוק אם מישהו חיבר אותנו — 4 שניות אחרי טעינה
+  setTimeout(function(){
+    const _s=D.gs();
+    if(_s.myCode&&!_s.pairCode) autoDetectIncomingPair();
+  },4000);
   // הצג מייל יצירת קשר
   (function(){
     var u='tzur669',d='gmail.com';
@@ -3275,6 +3321,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   setTimeout(checkAppUpdate, window.Capacitor ? 6000 : 3000);
   if(window.Capacitor) setTimeout(function(){ if(!_updShown&&_updRetryCount===0) checkAppUpdate(); }, 15000);
   document.addEventListener('resume',function(){setTimeout(checkAppUpdate,2000);});
+  document.addEventListener('resume',function(){
+    const _s=D.gs();
+    if(_s.myCode&&!_s.pairCode) setTimeout(autoDetectIncomingPair,1500);
+  });
 });
 </script>
 </body>
