@@ -685,8 +685,12 @@ input[type=time].fi{text-align:center}
     <div id="dBonCont" style="margin-bottom:13px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <span class="fl" style="margin:0">תוספות ובונוסים</span>
-        <button class="btn btn-g btn-sm" onclick="addB()" style="padding:5px 10px;font-size:11px">+ בונוס</button>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sm" id="dFbonBtn" onclick="toggleFbonPicker()" style="padding:5px 10px;font-size:11px;background:var(--s2);border:1px solid var(--bd);color:var(--t2)">⭐ קבוע</button>
+          <button class="btn btn-g btn-sm" onclick="addB()" style="padding:5px 10px;font-size:11px">+ בונוס</button>
+        </div>
       </div>
+      <div id="dFbonPicker" style="display:none;background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:10px;margin-bottom:8px"></div>
       <div id="dFbonChips" class="fbon-chips"></div>
       <div id="dBonList"></div>
     </div>
@@ -1809,11 +1813,15 @@ function updFixedBonus(i,f,v){
   if(!s.fixedBonuses||!s.fixedBonuses[i])return;
   s.fixedBonuses[i][f]=f==='name'?v:(parseFloat(v)||0);
   D.ss(s);
+  // סנכרון Drive אחרי שינוי — debounce קטן כדי לא לשלוח בכל הקלדה
+  clearTimeout(window._fbonSaveTimer);
+  window._fbonSaveTimer=setTimeout(function(){if(aToken)saveDr();},1200);
 }
 function delFixedBonus(i){
   const s=D.gs();
   if(!s.fixedBonuses)return;
   s.fixedBonuses.splice(i,1);D.ss(s);renderFixedBonuses();vib();
+  if(aToken)saveDr();
 }
 function renderFbonChips(){
   const s=D.gs(),cont=document.getElementById('dFbonChips');
@@ -1821,6 +1829,31 @@ function renderFbonChips(){
   const fbs=(s.fixedBonuses||[]).filter(fb=>fb.name&&fb.amount>0);
   if(!fbs.length){cont.innerHTML='';return;}
   cont.innerHTML=fbs.map(fb=>`<button class="fbon-chip" onclick="addB('${fb.name.replace(/'/g,'\\\'')}',${fb.amount})">+ ${fb.name} ₪${fb.amount}</button>`).join('');
+}
+
+
+function toggleFbonPicker(){
+  const picker=document.getElementById('dFbonPicker');
+  if(!picker)return;
+  if(picker.style.display!=='none'){picker.style.display='none';return;}
+  const s=D.gs();
+  const fbs=(s.fixedBonuses||[]).filter(fb=>fb.name&&fb.amount>0);
+  if(!fbs.length){
+    picker.innerHTML='<div style="font-size:12px;color:var(--t3);text-align:center;padding:4px">אין בונוסים קבועים — הגדר בהגדרות</div>';
+    picker.style.display='block';return;
+  }
+  picker.innerHTML=fbs.map((fb,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 4px;border-bottom:1px solid var(--bd);cursor:pointer" onclick="addFixedBonusToDay(${i})"><span style="font-size:13px;color:var(--t)">${fb.name}</span><span style="font-size:13px;font-weight:600;color:var(--g)">&#8362;${fb.amount}</span></div>`).join('')+'<div style="text-align:center;padding-top:8px"><button onclick="document.getElementById(\'dFbonPicker\').style.display=\'none\'" style="background:none;border:none;color:var(--t3);font-size:12px;cursor:pointer">סגור</button></div>';
+  picker.style.display='block';
+}
+
+function addFixedBonusToDay(i){
+  const s=D.gs();
+  const fbs=(s.fixedBonuses||[]).filter(fb=>fb.name&&fb.amount>0);
+  if(!fbs[i])return;
+  const fb=fbs[i];
+  addB(fb.name,fb.amount);
+  document.getElementById('dFbonPicker').style.display='none';
+  vib();
 }
 
 // ---- AUTO UPDATE ----
@@ -1894,10 +1927,21 @@ function _verIsNewer(remote,local){
 
 function _showUpdBanner(ver,notes){
   if(_updShown)return;
+  // בדוק אם כבר הצגנו באנר על ה-build הזה בעבר
+  const shownBuild=parseInt(localStorage.getItem('updBannerShown')||'0',10);
+  if(_updAvailBuild>0 && shownBuild>=_updAvailBuild){
+    // כבר הצגנו — רק עדכן הגדרות בשקט
+    _setUpdSettingsState('available',ver,notes);
+    return;
+  }
   _updShown=true;
+  // שמור שהצגנו באנר על ה-build הזה
+  if(_updAvailBuild>0){
+    try{localStorage.setItem('updBannerShown',String(_updAvailBuild));}catch(e){}
+  }
   // עדכן את אזור ההגדרות
-  _setUpdSettingsState('available', ver, notes);
-  // הצג באנר קטן פעם אחת בלבד
+  _setUpdSettingsState('available',ver,notes);
+  // הצג באנר פעם אחת בלבד
   const old=document.getElementById('updBanner');
   if(old)old.remove();
   const el=document.createElement('div');
@@ -1911,8 +1955,7 @@ function _showUpdBanner(ver,notes){
     <button class="upd-btn" style="font-size:10px;padding:5px 10px" onclick="swPage('set',document.querySelector('.ni:last-child'));document.getElementById('updBanner')?.remove()">פרטים</button>
     <button class="upd-x" onclick="document.getElementById('updBanner')?.remove()">×</button>`;
   document.body.appendChild(el);
-  // הסר אוטומטית אחרי 8 שניות
-  setTimeout(()=>{ const b=document.getElementById('updBanner'); if(b)b.remove(); }, 8000);
+  setTimeout(function(){ const b=document.getElementById('updBanner'); if(b)b.remove(); },8000);
 }
 
 function _setUpdSettingsState(state,ver,notes){
@@ -1982,7 +2025,10 @@ function _cancelApkUpdate(){
 async function _doApkUpdate(){
   document.getElementById('updDlg')?.remove();
   document.getElementById('updBanner')?.remove();
-  if(_updAvailBuild>0)_markInstalled(_updAvailBuild);
+  if(_updAvailBuild>0){
+    _markInstalled(_updAvailBuild);
+    try{localStorage.removeItem('updBannerShown');}catch(e){}
+  }
   const apkUrl=_updApkUrl||GITHUB_RELEASES;
   const browser=await _waitForCapBrowser(4000);
   if(browser){
