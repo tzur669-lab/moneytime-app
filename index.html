@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>   
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -685,12 +685,8 @@ input[type=time].fi{text-align:center}
     <div id="dBonCont" style="margin-bottom:13px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <span class="fl" style="margin:0">תוספות ובונוסים</span>
-        <div style="display:flex;gap:6px">
-          <button class="btn btn-sm" id="dFbonBtn" onclick="toggleFbonPicker()" style="padding:5px 10px;font-size:11px;background:var(--s2);border:1px solid var(--bd);color:var(--t2)">⭐ קבוע</button>
-          <button class="btn btn-g btn-sm" onclick="addB()" style="padding:5px 10px;font-size:11px">+ בונוס</button>
-        </div>
+        <button class="btn btn-g btn-sm" onclick="addB()" style="padding:5px 10px;font-size:11px">+ בונוס</button>
       </div>
-      <div id="dFbonPicker" style="display:none;background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:10px;margin-bottom:8px"></div>
       <div id="dFbonChips" class="fbon-chips"></div>
       <div id="dBonList"></div>
     </div>
@@ -1770,9 +1766,15 @@ function renderJobsCont(){
   </div>`).join('');
   document.getElementById('addJobBtn').style.display=(s.jobs||[]).length>=3?'none':'inline-flex';
 }
-function addJob(){const s=D.gs();if((s.jobs||[]).length>=3)return;s.jobs.push({name:`עבודה ${(s.jobs||[]).length+1}`,color:JC[(s.jobs||[]).length%JC.length],rate:50,fixed:0});D.ss(s);renderJobsCont();vib();}
-function delJob(i){const s=D.gs();s.jobs.splice(i,1);D.ss(s);renderJobsCont();}
-function updJ(i,f,v){const s=D.gs();s.jobs[i][f]=f==='name'?v:(parseFloat(v)||0);D.ss(s);}
+function addJob(){const s=D.gs();if((s.jobs||[]).length>=3)return;s.jobs.push({name:`עבודה ${(s.jobs||[]).length+1}`,color:JC[(s.jobs||[]).length%JC.length],rate:50,fixed:0});D.ss(s);renderJobsCont();vib();if(typeof aToken!=='undefined'&&aToken)saveDr();}
+function delJob(i){const s=D.gs();s.jobs.splice(i,1);D.ss(s);renderJobsCont();if(typeof aToken!=='undefined'&&aToken)saveDr();}
+function updJ(i,f,v){
+  const s=D.gs();
+  s.jobs[i][f]=f==='name'?v:(parseFloat(v)||0);
+  D.ss(s);
+  clearTimeout(window._jobSaveT);
+  window._jobSaveT=setTimeout(function(){if(typeof aToken!=='undefined'&&aToken)saveDr();},1200);
+}
 function updJC(i,col,el){
   el.closest('.crow').querySelectorAll('.cdot').forEach(d=>d.classList.remove('sel'));
   el.classList.add('sel');
@@ -1780,6 +1782,7 @@ function updJC(i,col,el){
   if(s.jobs&&s.jobs[i]){
     s.jobs[i].color=col;
     D.ss(s);
+    if(typeof aToken!=='undefined'&&aToken)saveDr();
     const card=el.closest('.jcard');
     if(card){const badge=card.querySelector('.jcbadge');if(badge)badge.style.background=col;}
     if(card)card.style.borderRightColor=col;
@@ -1807,58 +1810,38 @@ function addFixedBonus(){
   if(!s.fixedBonuses)s.fixedBonuses=[];
   s.fixedBonuses.push({name:'',amount:0});
   D.ss(s);renderFixedBonuses();vib();
+  if(typeof aToken!=='undefined'&&aToken)saveDr();
 }
 function updFixedBonus(i,f,v){
   const s=D.gs();
   if(!s.fixedBonuses||!s.fixedBonuses[i])return;
   s.fixedBonuses[i][f]=f==='name'?v:(parseFloat(v)||0);
   D.ss(s);
-  // סנכרון Drive אחרי שינוי — debounce קטן כדי לא לשלוח בכל הקלדה
-  clearTimeout(window._fbonSaveTimer);
-  window._fbonSaveTimer=setTimeout(function(){if(aToken)saveDr();},1200);
+  clearTimeout(window._fbonSaveT);
+  window._fbonSaveT=setTimeout(function(){if(typeof aToken!=='undefined'&&aToken)saveDr();},1200);
 }
 function delFixedBonus(i){
   const s=D.gs();
   if(!s.fixedBonuses)return;
   s.fixedBonuses.splice(i,1);D.ss(s);renderFixedBonuses();vib();
-  if(aToken)saveDr();
+  if(typeof aToken!=='undefined'&&aToken)saveDr();
 }
 function renderFbonChips(){
   const s=D.gs(),cont=document.getElementById('dFbonChips');
   if(!cont)return;
   const fbs=(s.fixedBonuses||[]).filter(fb=>fb.name&&fb.amount>0);
   if(!fbs.length){cont.innerHTML='';return;}
-  cont.innerHTML=fbs.map(fb=>`<button class="fbon-chip" onclick="addB('${fb.name.replace(/'/g,'\\\'')}',${fb.amount})">+ ${fb.name} ₪${fb.amount}</button>`).join('');
-}
-
-
-function toggleFbonPicker(){
-  const picker=document.getElementById('dFbonPicker');
-  if(!picker)return;
-  if(picker.style.display!=='none'){picker.style.display='none';return;}
-  const s=D.gs();
-  const fbs=(s.fixedBonuses||[]).filter(fb=>fb.name&&fb.amount>0);
-  if(!fbs.length){
-    picker.innerHTML='<div style="font-size:12px;color:var(--t3);text-align:center;padding:4px">אין בונוסים קבועים — הגדר בהגדרות</div>';
-    picker.style.display='block';return;
-  }
-  picker.innerHTML=fbs.map((fb,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 4px;border-bottom:1px solid var(--bd);cursor:pointer" onclick="addFixedBonusToDay(${i})"><span style="font-size:13px;color:var(--t)">${fb.name}</span><span style="font-size:13px;font-weight:600;color:var(--g)">&#8362;${fb.amount}</span></div>`).join('')+'<div style="text-align:center;padding-top:8px"><button onclick="document.getElementById(\'dFbonPicker\').style.display=\'none\'" style="background:none;border:none;color:var(--t3);font-size:12px;cursor:pointer">סגור</button></div>';
-  picker.style.display='block';
-}
-
-function addFixedBonusToDay(i){
-  const s=D.gs();
-  const fbs=(s.fixedBonuses||[]).filter(fb=>fb.name&&fb.amount>0);
-  if(!fbs[i])return;
-  const fb=fbs[i];
-  addB(fb.name,fb.amount);
-  document.getElementById('dFbonPicker').style.display='none';
-  vib();
+  cont.style.marginBottom='8px';
+  cont.innerHTML='<div style="font-size:10px;color:var(--t3);margin-bottom:5px">בונוסים קבועים:</div>'+
+    fbs.map(function(fb){
+      var n=fb.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      return '<button class="fbon-chip" onclick="addB(\''+n+'\','+fb.amount+');vib()" style="font-size:12px;padding:6px 13px">+ '+fb.name+' <strong>&#8362;'+fb.amount+'</strong></button>';
+    }).join('');
 }
 
 // ---- AUTO UPDATE ----
-const APP_VERSION='2.1.228';
-const APP_BUILD=228; // CI מחליף בכל build
+const APP_VERSION='2.1.222';
+const APP_BUILD=222; // CI מחליף בכל build
 const LIVE_URL='https://tzur669-lab.github.io/moneytime-app/';
 const VER_FB_URL='https://moneytime-app-f5a15-default-rtdb.firebaseio.com/appVersion.json';
 const GITHUB_APK_BASE='https://github.com/tzur669-lab/moneytime-app/releases/download';
@@ -1887,14 +1870,10 @@ async function checkAppUpdate(){
       if(r.status===401||r.status===403){console.warn('[Update] Firebase blocked ('+r.status+').');return;}
       _scheduleUpdRetry();return;
     }
-    let data;
-    try{ data=await r.json(); }catch(e){ _scheduleUpdRetry(); return; }
-    // ולידציה — רימון ופרוקסים מחזירים HTML או JSON חסר
-    if(!data||typeof data!=='object'||!data.build)return;
-    const remoteBuild=parseInt(data.build,10)||0;
-    // build חייב להיות מספר הגיוני (>100) — HTML מפורסרד כ-0
-    if(remoteBuild<100){ console.warn('[Update] invalid build from Firebase:',data); return; }
+    const data=await r.json();
+    if(!data||!data.build)return;
     _updRetryCount=0;
+    const remoteBuild=parseInt(data.build,10)||0;
     const installedBuild=_getInstalledBuild();
     const isApk=!!window.Capacitor;
     // בדפדפן: הSW מטפל בעדכון אוטומטית — לא מציגים באנר
@@ -1931,21 +1910,10 @@ function _verIsNewer(remote,local){
 
 function _showUpdBanner(ver,notes){
   if(_updShown)return;
-  // בדוק אם כבר הצגנו באנר על ה-build הזה בעבר
-  const shownBuild=parseInt(localStorage.getItem('updBannerShown')||'0',10);
-  if(_updAvailBuild>0 && shownBuild>=_updAvailBuild){
-    // כבר הצגנו — רק עדכן הגדרות בשקט
-    _setUpdSettingsState('available',ver,notes);
-    return;
-  }
   _updShown=true;
-  // שמור שהצגנו באנר על ה-build הזה
-  if(_updAvailBuild>0){
-    try{localStorage.setItem('updBannerShown',String(_updAvailBuild));}catch(e){}
-  }
   // עדכן את אזור ההגדרות
-  _setUpdSettingsState('available',ver,notes);
-  // הצג באנר פעם אחת בלבד
+  _setUpdSettingsState('available', ver, notes);
+  // הצג באנר קטן פעם אחת בלבד
   const old=document.getElementById('updBanner');
   if(old)old.remove();
   const el=document.createElement('div');
@@ -1959,7 +1927,8 @@ function _showUpdBanner(ver,notes){
     <button class="upd-btn" style="font-size:10px;padding:5px 10px" onclick="swPage('set',document.querySelector('.ni:last-child'));document.getElementById('updBanner')?.remove()">פרטים</button>
     <button class="upd-x" onclick="document.getElementById('updBanner')?.remove()">×</button>`;
   document.body.appendChild(el);
-  setTimeout(function(){ const b=document.getElementById('updBanner'); if(b)b.remove(); },8000);
+  // הסר אוטומטית אחרי 8 שניות
+  setTimeout(()=>{ const b=document.getElementById('updBanner'); if(b)b.remove(); }, 8000);
 }
 
 function _setUpdSettingsState(state,ver,notes){
@@ -1991,11 +1960,9 @@ async function _checkUpdateFromSettings(btn){
   try{
     const r=await fetch(VER_FB_URL+'?nc='+Date.now(),{method:'GET',cache:'no-store',headers:{'Accept':'application/json'}});
     if(!r.ok){_setUpdSettingsState('latest');return;}
-    let data;
-    try{ data=await r.json(); }catch(e){ _setUpdSettingsState('latest'); return; }
-    if(!data||typeof data!=='object'||!data.build){_setUpdSettingsState('latest');return;}
+    const data=await r.json();
+    if(!data||!data.build){_setUpdSettingsState('latest');return;}
     const remoteBuild=parseInt(data.build,10)||0;
-    if(remoteBuild<100){ _setUpdSettingsState('latest'); return; }
     const installedBuild=_getInstalledBuild();
     const isApk=!!window.Capacitor;
     // בדפדפן: השוואת גרסאות רגילה (APP_BUILD=0 בדפדפן)
@@ -2031,18 +1998,14 @@ function _cancelApkUpdate(){
 async function _doApkUpdate(){
   document.getElementById('updDlg')?.remove();
   document.getElementById('updBanner')?.remove();
-  // לא שומרים installedBuild כאן — רק כשה-APK החדש יפתח בפועל
-  // _getInstalledBuild יזהה את APP_BUILD החדש ויעדכן אוטומטית
-  try{localStorage.removeItem('updBannerShown');}catch(e){}
+  if(_updAvailBuild>0)_markInstalled(_updAvailBuild);
   const apkUrl=_updApkUrl||GITHUB_RELEASES;
-  // _system פותח ב-Chrome חיצוני ולא ב-Custom Tab — חיוני להורדת APK
-  try{
-    window.open(apkUrl,'_system');
-  }catch(e){
-    // fallback — CapBrowser
-    const browser=await _waitForCapBrowser(2000);
-    if(browser){try{await browser.open({url:apkUrl});}catch(e2){}}
-    else{try{window.open(apkUrl,'_blank');}catch(e3){}}
+  const browser=await _waitForCapBrowser(4000);
+  if(browser){
+    try{await browser.open({url:apkUrl});}
+    catch(e){try{window.open(apkUrl,'_blank');}catch(e2){}}
+  } else {
+    try{window.open(apkUrl,'_blank');}catch(e){}
   }
   setTimeout(function(){
     const note=document.createElement('div');
