@@ -106,6 +106,11 @@ async function syncPairToFirebase(){
       myColor:s.myColor
     }
   };
+  // הוסף נטו חודשי לפייר sync
+  var _nowSync=new Date();
+  var _mkSync=_nowSync.getFullYear()+'-'+String(_nowSync.getMonth()+1).padStart(2,'0');
+  var _netoSync=parseFloat(localStorage.getItem('neto_'+_mkSync))||0;
+  if(_netoSync>0){var _netoObj={};_netoObj[_mkSync]=_netoSync;payload.neto=_netoObj;}
   await fbWrite(`pairs/${s.pairCode}/${myKey}`,payload);
 }
 
@@ -121,6 +126,13 @@ async function loadPartnerFromFirebase(){
       if(!ss.partnerName||ss.partnerName==='פרטנר')ss.partnerName=data.myName;
       if(data.myColor)ss.partnerColor=data.myColor;
       D.ss(ss);
+    }
+    // שמור נטו פרטנר ב-localStorage
+    if(data.neto&&typeof data.neto==='object'){
+      var _ps=D.gs();
+      Object.keys(data.neto).forEach(function(mk){
+        localStorage.setItem('pneto_'+(_ps.partnerCode||'')+'_'+mk, String(data.neto[mk]));
+      });
     }
     return true;
   }
@@ -467,6 +479,19 @@ input[type=time].fi{text-align:center}
 .div{height:1px;background:var(--bd);margin:14px 0}
 .pbar-wrap{height:6px;background:var(--bd);border-radius:3px;overflow:hidden;margin-top:6px}
 .pbar-fill{height:100%;border-radius:3px;transition:width .5s}
+/* ---- NETO CARD ---- */
+.neto-card{background:var(--s);border-radius:var(--r1);padding:14px 16px;box-shadow:var(--sh);border:1px solid var(--bd);margin-bottom:12px}
+.neto-row{display:flex;align-items:center;gap:8px}
+.neto-lbl{font-size:10px;font-weight:500;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.neto-input{flex:1;padding:9px 12px;border-radius:var(--r3);border:1.5px solid var(--bd);background:var(--s2);color:var(--t);font-family:'Inter',sans-serif;font-size:15px;font-weight:300;-webkit-appearance:none;transition:border-color .2s}
+.neto-input:focus{outline:none;border-color:var(--g);box-shadow:0 0 0 3px rgba(16,185,129,.12)}
+.neto-save{padding:9px 14px;border-radius:var(--r3);border:none;background:var(--g);color:#fff;font-family:'Inter',sans-serif;font-size:12px;font-weight:400;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.neto-save:active{transform:scale(.96)}
+.neto-saved{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.neto-val{font-size:19px;font-weight:200;color:var(--g);letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.neto-diff{font-size:11px;font-weight:300;padding:3px 8px;border-radius:20px;display:inline-block}
+.neto-diff.pos{background:var(--gl);color:var(--g)}
+.neto-diff.neg{background:var(--rl);color:var(--r)}
 </style>
 </head>
 <body>
@@ -543,6 +568,27 @@ input[type=time].fi{text-align:center}
       <span style="font-size:10px;color:var(--t3);display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border:2px solid #FDE047;border-radius:3px;display:inline-block"></span>חסר</span>
     </div>
   </div>
+  <!-- כרטיס נטו חודשי -->
+  <div class="neto-card" id="netoCard">
+    <div class="neto-lbl" id="netoLbl">נטו שהתקבל — החודש</div>
+    <div class="neto-row">
+      <input type="number" class="neto-input" id="netoInput" placeholder="₪ הזן סכום נטו..." inputmode="numeric">
+      <button class="neto-save" onclick="saveNeto()">שמור</button>
+    </div>
+    <div id="netoSavedRow" style="display:none">
+      <div class="neto-saved">
+        <div>
+          <div style="font-size:9px;color:var(--t3);margin-bottom:2px">נטו שהתקבל</div>
+          <div class="neto-val" id="netoValDisp"></div>
+        </div>
+        <div style="text-align:left">
+          <div style="font-size:9px;color:var(--t3);margin-bottom:2px">ניכויים</div>
+          <div class="neto-diff" id="netoDiff"></div>
+        </div>
+        <button onclick="editNeto()" style="background:none;border:none;color:var(--t3);font-size:12px;cursor:pointer;padding:4px 8px">עריכה</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- PAGE: REPORTS -->
@@ -553,6 +599,7 @@ input[type=time].fi{text-align:center}
     <button class="rtab" onclick="switchRTab('cmp',this)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg> השוואה</button>
     <button class="rtab" onclick="switchRTab('arc',this)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ארכיון</button>
     <button class="rtab" onclick="switchRTab('year',this)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg> שנתי</button>
+    <button class="rtab" onclick="switchRTab('neto',this)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> נטו</button>
   </div>
   <div class="pills">
     <button class="pill active" data-p="7" onclick="selPer(this)">7 ימים</button>
@@ -1046,7 +1093,12 @@ function updHdrSub(){
   Object.keys(data).forEach(k=>{if(k.startsWith(mk)){const _pr=cpDay(data[k]);h+=_pr.allHours;p+=_pr.total;}});
   if(isCurrentMonth)(s.jobs||[]).forEach(j=>p+=parseFloat(j.fixed)||0);
   const label=isCurrentMonth?'החודש':`${MN[curDt.getMonth()]} ${curDt.getFullYear()}`;
-  document.getElementById('hdrSub').textContent=`${label}: ${h.toFixed(1)} ש' | ₪${Math.round(p).toLocaleString('he-IL')}`;
+  var neto=getNetoForMonth();
+  var sub=`${label}: ${h.toFixed(1)} ש' | ₪${Math.round(p).toLocaleString('he-IL')}`;
+  if(neto>0) sub+=` | נטו: ₪${Math.round(neto).toLocaleString('he-IL')}`;
+  document.getElementById('hdrSub').textContent=sub;
+  // עדכן כרטיס נטו
+  _renderNetoCard();
 }
 
 // ---- DAY MODAL ----
@@ -1174,7 +1226,7 @@ function switchRTab(tab,btn){
   rTab=tab;
   const pillsEl=document.querySelector('.pills');
   const custRow=document.getElementById('custPRow');
-  const noPills=['cmp','arc','year'];
+  const noPills=['cmp','arc','year','neto'];
   if(pillsEl) pillsEl.style.display=noPills.includes(tab)?'none':'flex';
   if(custRow&&noPills.includes(tab)) custRow.style.display='none';
   updRep();
@@ -1182,11 +1234,12 @@ function switchRTab(tab,btn){
 function updRep(){
   if(!document.getElementById('pg-rep').classList.contains('active'))return;
   const cont=document.getElementById('repContent');
-  const noDateTabs=['cmp','arc','year'];
+  const noDateTabs=['cmp','arc','year','neto'];
   if(noDateTabs.includes(rTab)){
     if(rTab==='cmp')renderCmp(cont);
     else if(rTab==='arc')renderArc(cont);
     else if(rTab==='year')renderYear(cont);
+    else if(rTab==='neto')renderNetoReport(cont);
     return;
   }
   const dates=getPerDts(per);if(!dates.length)return;
@@ -1464,7 +1517,114 @@ function renderYear(cont,selectedYear){
   },20);
 }
 
-// ---- COUPLE PAGE ----
+// ---- NETO REPORT ----
+function renderNetoReport(cont){
+  var s=D.gs();
+  var now=new Date();
+  var thisYear=now.getFullYear();
+  var allYears=[];
+  for(var y=thisYear;y>=2015;y--)allYears.push(String(y));
+  // קרא נטו לכל 12 חודשים של השנה הנוכחית
+  var netoVals=Array(12).fill(0);
+  var brutoVals=Array(12).fill(0);
+  var partnerNetoVals=Array(12).fill(0);
+  var partnerBrutoVals=Array(12).fill(0);
+  var data=D.g(),pd=D.gp();
+  var hasPair=!!(s.pairCode&&s.partnerCode&&Object.keys(pd).length>0);
+  var totalNeto=0,totalBruto=0;
+  for(var mi=0;mi<12;mi++){
+    var mk=thisYear+'-'+String(mi+1).padStart(2,'0');
+    // ברוטו שלי
+    var bru=0;
+    Object.keys(data).forEach(function(k){if(k.startsWith(mk)){bru+=cpDay(data[k]).total;}});
+    if(mk===(now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')))(s.jobs||[]).forEach(function(j){bru+=parseFloat(j.fixed)||0;});
+    brutoVals[mi]=Math.round(bru);
+    // נטו שלי
+    var nv=parseFloat(localStorage.getItem('neto_'+mk))||0;
+    netoVals[mi]=nv;
+    totalNeto+=nv;totalBruto+=bru;
+    // פרטנר
+    if(hasPair){
+      var pbru=0;
+      Object.keys(pd).forEach(function(k){if(k.startsWith(mk)){pbru+=cp(pd[k].hours||0,pd[k].rate||50,pd[k].bonuses||[]).total;}});
+      partnerBrutoVals[mi]=Math.round(pbru);
+      var pnv=parseFloat(localStorage.getItem('pneto_'+s.partnerCode+'_'+mk))||0;
+      partnerNetoVals[mi]=pnv;
+    }
+  }
+  var dk=document.body.getAttribute('data-theme')==='dark';
+  var lb=MN.map(function(n){return n.substring(0,3);});
+  var filledMonths=netoVals.filter(function(v){return v>0;}).length;
+  var avgNeto=filledMonths>0?(totalNeto/filledMonths):0;
+  var avgDeduction=totalBruto>0?Math.round((1-(totalNeto/totalBruto))*100):0;
+  var yearSel='<div style="margin-bottom:14px;display:flex;align-items:center;gap:10px">'+
+    '<label style="font-size:12px;color:var(--t2)">שנה:</label>'+
+    '<select onchange="renderNetoReport(document.getElementById(\'repContent\'))" style="padding:7px 12px;border-radius:8px;border:1px solid var(--bd);background:var(--s);color:var(--t);font-family:\'Inter\',sans-serif;font-size:13px;flex:1">'+
+    allYears.map(function(y){return'<option value="'+y+'" '+(y===String(thisYear)?'selected':'')+'>'+y+'</option>';}).join('')+
+    '</select></div>';
+  cont.innerHTML=yearSel+
+  '<div class="stats-row">'+
+    '<div class="scard"><div class="slbl">סה"כ נטו '+thisYear+'</div><div class="sval g">₪'+Math.round(totalNeto).toLocaleString('he-IL')+'</div></div>'+
+    '<div class="scard"><div class="slbl">ממוצע ניכויים</div><div class="sval" style="color:var(--r)">'+avgDeduction+'%</div></div>'+
+  '</div>'+
+  '<div class="stats-row">'+
+    '<div class="scard"><div class="slbl">ממוצע נטו חודשי</div><div class="sval" style="color:var(--am)">₪'+Math.round(avgNeto).toLocaleString('he-IL')+'</div></div>'+
+    '<div class="scard"><div class="slbl">חודשים מוזנים</div><div class="sval b">'+filledMonths+'/12</div></div>'+
+  '</div>'+
+  '<div class="card">'+
+    '<div class="csummary"><span>📈 נטו vs ברוטו — '+thisYear+'</span></div>'+
+    '<div class="cwrap" style="height:190px"><canvas id="netoCh"></canvas></div>'+
+    '<div style="display:flex;gap:16px;justify-content:center;margin-top:8px">'+
+      '<span style="font-size:10px;color:var(--t3);display:flex;align-items:center;gap:4px"><span style="width:10px;height:3px;background:var(--g);border-radius:2px;display:inline-block"></span>נטו</span>'+
+      '<span style="font-size:10px;color:var(--t3);display:flex;align-items:center;gap:4px"><span style="width:10px;height:3px;background:var(--b6);border-radius:2px;display:inline-block"></span>ברוטו</span>'+
+    '</div>'+
+  '</div>'+
+  (hasPair?
+  '<div class="card">'+
+    '<div class="csummary"><span>👫 נטו זוגי — '+thisYear+'</span></div>'+
+    '<div class="cwrap" style="height:190px"><canvas id="netoCoupleCh"></canvas></div>'+
+  '</div>':'') +
+  '<div class="card">'+
+    '<div style="font-size:13px;font-weight:400;margin-bottom:10px">פירוט חודשי — נטו '+thisYear+'</div>'+
+    lb.map(function(m,i){
+      var nv=netoVals[i],bv=brutoVals[i];
+      if(nv===0&&bv===0)return '';
+      var pct=bv>0?Math.round((1-nv/bv)*100):0;
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--bd)">'+
+        '<div style="font-size:13px;color:var(--t)">'+MN[i]+'</div>'+
+        '<div style="text-align:left">'+
+          (nv>0?'<div style="font-size:13px;font-weight:400;color:var(--g)">נטו: ₪'+nv.toLocaleString('he-IL')+'</div>':'<div style="font-size:11px;color:var(--t3)">נטו לא הוזן</div>')+
+          (bv>0?'<div style="font-size:10px;color:var(--t3)">ברוטו: ₪'+bv.toLocaleString('he-IL')+(nv>0?' | ניכוי: '+pct+'%':'')+'</div>':'')+
+        '</div></div>';
+    }).join('')+
+  '</div>';
+  setTimeout(function(){
+    // גרף קו נטו vs ברוטו
+    if(window._netoCh){try{window._netoCh.destroy();}catch(e){}}
+    var c1=document.getElementById('netoCh');
+    if(c1){
+      var opts1=Object.assign({},cOpts(dk),{plugins:{legend:{display:false}}});
+      window._netoCh=new Chart(c1,{type:'line',data:{labels:lb,datasets:[
+        {label:'נטו',data:netoVals,borderColor:'#10B981',backgroundColor:'rgba(16,185,129,.08)',fill:true,tension:.35,pointRadius:4,pointBackgroundColor:'#10B981'},
+        {label:'ברוטו',data:brutoVals,borderColor:'#2563EB',backgroundColor:'rgba(37,99,235,.05)',fill:false,tension:.35,pointRadius:3,borderDash:[4,3]}
+      ]},options:opts1});
+    }
+    // גרף עמודות זוגי
+    if(hasPair){
+      if(window._netoCoupleCh){try{window._netoCoupleCh.destroy();}catch(e){}}
+      var c2=document.getElementById('netoCoupleCh');
+      if(c2){
+        var opts2=Object.assign({},cOpts(dk),{plugins:{legend:{display:true,labels:{font:{size:10,family:'Inter'},boxWidth:10,padding:10}}}});
+        window._netoCoupleCh=new Chart(c2,{type:'bar',data:{labels:lb,datasets:[
+          {label:s.myName,data:netoVals.map(function(v){return v||brutoVals[Array.prototype.indexOf.call(netoVals,v)];}),backgroundColor:(s.myColor||'#1E3A8A')+'CC',borderRadius:5,borderSkipped:false},
+          {label:s.partnerName,data:partnerNetoVals.map(function(v,i){return v||partnerBrutoVals[i];}),backgroundColor:(s.partnerColor||'#10B981')+'CC',borderRadius:5,borderSkipped:false}
+        ]},options:opts2});
+      }
+    }
+  },20);
+}
+
+
 function renderCouple(){
   const s=D.gs(),cont=document.getElementById('coupleContent');
   if(!s.pairCode){
@@ -1526,7 +1686,7 @@ function renderCouple(){
   const dk=document.body.getAttribute('data-theme')==='dark';
   cont.innerHTML=`
   <div id="cplStats">
-    <div class="couple-total"><div class="ct-lbl" id="cplPeriodLbl">הכנסה משותפת החודש</div><div class="ct-val" id="cplTotVal">₪0</div><div class="ct-sub" id="cplHoursLbl">0 + 0 שעות ביחד</div></div>
+    <div class="couple-total"><div class="ct-lbl" id="cplPeriodLbl">הכנסה משותפת החודש</div><div class="ct-val" id="cplTotVal">₪0</div><div class="ct-sub" id="cplHoursLbl">0 + 0 שעות ביחד</div><div id="cplNetoRow" style="display:none;margin-top:8px;font-size:12px;opacity:.85" id="cplNetoRow">נטו ביחד: <span id="cplNetoTot">₪0</span></div></div>
     <div class="ucard" id="cplMyCard" style="background:${s.myColor}18;border-color:${s.myColor}">
       <div class="uc-top"><div class="uc-av" style="background:${s.myColor}">${s.myName.charAt(0)}</div><div><div class="uc-name" style="color:${s.myColor}">${s.myName}</div><div class="uc-h" id="cplMyH">0 שעות</div></div></div>
       <div class="uc-money" id="cplMyP" style="color:${s.myColor}">₪0</div>
@@ -1626,6 +1786,21 @@ function renderCoupleStats(){
   if(el('cplPeriodLbl'))el('cplPeriodLbl').textContent=periodLabel;
   if(el('cplTotVal'))el('cplTotVal').textContent='₪'+Math.round(tot).toLocaleString('he-IL');
   if(el('cplHoursLbl'))el('cplHoursLbl').textContent=myH.toFixed(1)+' + '+pH.toFixed(1)+' שעות ביחד';
+  // נטו זוגי
+  var _now2=new Date();
+  var _mk2=_now2.getFullYear()+'-'+String(_now2.getMonth()+1).padStart(2,'0');
+  var myNeto=parseFloat(localStorage.getItem('neto_'+_mk2))||0;
+  var pNeto=parseFloat(localStorage.getItem('pneto_'+(s.partnerCode||'')+'_'+_mk2))||0;
+  var netoRow=el('cplNetoRow');
+  var netoTot=el('cplNetoTot');
+  if(netoRow&&netoTot){
+    if(myNeto>0||pNeto>0){
+      netoTot.textContent='₪'+(myNeto+pNeto).toLocaleString('he-IL');
+      netoRow.style.display='block';
+    } else {
+      netoRow.style.display='none';
+    }
+  }
   if(el('cplMyH'))el('cplMyH').textContent=myH.toFixed(1)+' שעות';
   if(el('cplMyP'))el('cplMyP').textContent='₪'+Math.round(myP).toLocaleString('he-IL');
   if(el('cplMyBar'))el('cplMyBar').style.width=myPct+'%';
@@ -1896,6 +2071,88 @@ function renderFbonChips(){
       var n=fb.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
       return '<button class="fbon-chip" onclick="addB(\''+n+'\','+fb.amount+');vib()" style="font-size:12px;padding:6px 13px">+ '+fb.name+' <strong>&#8362;'+fb.amount+'</strong></button>';
     }).join('');
+}
+
+// ---- NETO (נטו חודשי) ----
+// מפתח שמירה: neto_YYYY-MM
+function _netoKey(dt){
+  dt=dt||curDt;
+  return 'neto_'+dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');
+}
+function getNetoForMonth(dt){
+  dt=dt||curDt;
+  var v=parseFloat(localStorage.getItem(_netoKey(dt)))||0;
+  return v;
+}
+function saveNeto(){
+  var val=parseFloat(document.getElementById('netoInput').value)||0;
+  if(val<=0){showToast('הזן סכום נטו תקין');return;}
+  localStorage.setItem(_netoKey(),String(val));
+  _renderNetoCard();
+  // שמור גם ב-Firebase אם זוגי
+  _syncNetoToFirebase(val);
+  flash();vib();
+  showToast('✅ נטו נשמר לחודש זה');
+}
+function editNeto(){
+  var val=getNetoForMonth();
+  document.getElementById('netoInput').value=val||'';
+  document.getElementById('netoSavedRow').style.display='none';
+  document.getElementById('netoInput').closest('.neto-row').style.display='flex';
+  document.getElementById('netoInput').focus();
+}
+function _renderNetoCard(){
+  var mk=curDt.getFullYear()+'-'+String(curDt.getMonth()+1).padStart(2,'0');
+  var now=new Date();
+  var isCurrentMonth=mk===(now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'));
+  var label='נטו שהתקבל — '+(isCurrentMonth?'החודש':(MN[curDt.getMonth()]+' '+curDt.getFullYear()));
+  var lbl=document.getElementById('netoLbl');if(lbl)lbl.textContent=label;
+  var val=getNetoForMonth();
+  var inp=document.getElementById('netoInput');
+  var savedRow=document.getElementById('netoSavedRow');
+  var inpRow=inp&&inp.closest('.neto-row');
+  if(!inp)return;
+  if(val>0){
+    // חשב ברוטו לחודש הזה
+    var data=D.g(),s=D.gs();
+    var bruto=0;
+    Object.keys(data).forEach(function(k){if(k.startsWith(mk)){bruto+=cpDay(data[k]).total;}});
+    if(isCurrentMonth)(s.jobs||[]).forEach(function(j){bruto+=parseFloat(j.fixed)||0;});
+    var diff=val-bruto;
+    var pct=bruto>0?Math.round((diff/bruto)*100):0;
+    var diffEl=document.getElementById('netoDiff');
+    if(diffEl){
+      diffEl.textContent=(diff>=0?'+':'')+Math.round(diff).toLocaleString('he-IL')+' ₪ ('+pct+'%)';
+      diffEl.className='neto-diff '+(diff>=0?'pos':'neg');
+    }
+    var valEl=document.getElementById('netoValDisp');
+    if(valEl)valEl.textContent='₪'+val.toLocaleString('he-IL');
+    if(savedRow)savedRow.style.display='block';
+    if(inpRow)inpRow.style.display='none';
+    inp.value='';
+  } else {
+    if(savedRow)savedRow.style.display='none';
+    if(inpRow)inpRow.style.display='flex';
+    inp.value='';
+  }
+}
+async function _syncNetoToFirebase(val){
+  var s=D.gs();
+  if(!s.pairCode||!s.myCode)return;
+  var mk=curDt.getFullYear()+'-'+String(curDt.getMonth()+1).padStart(2,'0');
+  var myKey=s.myCode.replace(/[.#$\[\]]/g,'_');
+  try{
+    await fbWrite('pairs/'+s.pairCode+'/'+myKey+'/neto/'+mk, val);
+  }catch(e){}
+}
+async function _loadPartnerNeto(mk){
+  var s=D.gs();
+  if(!s.pairCode||!s.partnerCode)return null;
+  var partnerKey=s.partnerCode.replace(/[.#$\[\]]/g,'_');
+  try{
+    var v=await fbRead('pairs/'+s.pairCode+'/'+partnerKey+'/neto/'+mk);
+    return v?parseFloat(v):null;
+  }catch(e){return null;}
 }
 
 function openFbonPickerModal(){
@@ -3075,7 +3332,12 @@ function _showTableReport(detailed,filterDates,xlsxOpts){
     csvLines.push(cols.map(function(cv){return'"'+String(cv).replace(/"/g,'""')+'"';}).join(','));
   });
   csvLines.push('');
-  csvLines.push('"\u05e1\u05d4"\u05db","","'+totalH.toFixed(1)+'","\u20aa'+Math.round(totalP).toLocaleString('he-IL')+'"'+(detailed&&ox.partner?',\u05d1\u05d9\u05d7\u05d3: \u20aa'+Math.round(totalP+totalPartner).toLocaleString('he-IL'):''));
+  var _netoExport=0;
+  if(filterDates&&filterDates.length>0){var _mk2=fk(filterDates[0]).substring(0,7);_netoExport=parseFloat(localStorage.getItem('neto_'+_mk2))||0;}
+  var _totalLbl='\u05e1\u05d4\u05db';
+  var _sumLine='"'+_totalLbl+'","","'+totalH.toFixed(1)+'","\u20aa'+Math.round(totalP).toLocaleString('he-IL')+'"'+(detailed&&ox.partner?',"\u05d1\u05d9\u05d7\u05d3: \u20aa'+Math.round(totalP+totalPartner).toLocaleString('he-IL')+'"':'');
+  if(_netoExport>0) _sumLine+=',"\u05e0\u05d8\u05d5: \u20aa'+_netoExport.toLocaleString('he-IL')+'"';
+  csvLines.push(_sumLine);
   var csvText='\uFEFF'+csvLines.join('\r\n');
 
   var htmlContent='<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="UTF-8">'
