@@ -492,6 +492,27 @@ input[type=time].fi{text-align:center}
 .neto-diff{font-size:11px;font-weight:300;padding:3px 8px;border-radius:20px;display:inline-block}
 .neto-diff.pos{background:var(--gl);color:var(--g)}
 .neto-diff.neg{background:var(--rl);color:var(--r)}
+/* ---- NETO ITEMS ---- */
+.neto-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--bd)}
+.neto-item:last-child{border-bottom:none}
+.neto-item-lbl{flex:1;font-size:13px;color:var(--t);font-weight:300}
+.neto-item-inp{width:110px;padding:7px 10px;border-radius:7px;border:1px solid var(--bd);background:var(--s2);color:var(--t);font-family:'Inter',sans-serif;font-size:13px;text-align:center;-webkit-appearance:none}
+.neto-item-inp:focus{outline:none;border-color:var(--g);box-shadow:0 0 0 3px rgba(16,185,129,.12)}
+.neto-total-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0 4px;margin-top:4px;border-top:2px solid var(--bd)}
+.neto-total-lbl{font-size:12px;font-weight:500;color:var(--t2)}
+.neto-total-val{font-size:18px;font-weight:300;color:var(--g);font-variant-numeric:tabular-nums}
+/* comparison bar */
+.neto-cmp{margin-top:10px;background:var(--s2);border-radius:10px;padding:10px 12px}
+.neto-cmp-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.neto-cmp-lbl{font-size:10px;color:var(--t3)}
+.neto-cmp-val{font-size:12px;font-weight:400;font-variant-numeric:tabular-nums}
+.neto-bar-wrap{height:5px;background:var(--bd);border-radius:3px;overflow:hidden;margin-top:2px}
+.neto-bar-fill{height:100%;border-radius:3px;transition:width .4s ease}
+/* settings neto config */
+.ncfg-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bd)}
+.ncfg-row:last-child{border-bottom:none}
+.ncfg-lbl{font-size:13px;color:var(--t)}
+.ncfg-sub{font-size:10px;color:var(--t3);margin-top:1px}
 </style>
 </head>
 <body>
@@ -570,22 +591,18 @@ input[type=time].fi{text-align:center}
   </div>
   <!-- כרטיס נטו חודשי -->
   <div class="neto-card" id="netoCard">
-    <div class="neto-lbl" id="netoLbl">נטו שהתקבל — החודש</div>
-    <div class="neto-row">
-      <input type="number" class="neto-input" id="netoInput" placeholder="₪ הזן סכום נטו..." inputmode="numeric">
-      <button class="neto-save" onclick="saveNeto()">שמור</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div class="neto-lbl" id="netoLbl" style="margin:0">נטו שהתקבל — החודש</div>
+      <button onclick="openNetoModal()" style="background:none;border:none;color:var(--b6);font-size:11px;cursor:pointer;display:flex;align-items:center;gap:3px;padding:0">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        עריכה
+      </button>
     </div>
-    <div id="netoSavedRow" style="display:none">
-      <div class="neto-saved">
-        <div>
-          <div style="font-size:9px;color:var(--t3);margin-bottom:2px">נטו שהתקבל</div>
-          <div class="neto-val" id="netoValDisp"></div>
-        </div>
-        <div style="text-align:left">
-          <div style="font-size:9px;color:var(--t3);margin-bottom:2px">ניכויים</div>
-          <div class="neto-diff" id="netoDiff"></div>
-        </div>
-        <button onclick="editNeto()" style="background:none;border:none;color:var(--t3);font-size:12px;cursor:pointer;padding:4px 8px">עריכה</button>
+    <div id="netoCardBody">
+      <!-- מתמלא דינמית על ידי _renderNetoCard() -->
+      <div class="neto-row">
+        <input type="number" class="neto-input" id="netoInput" placeholder="₪ הזן סכום נטו..." inputmode="numeric">
+        <button class="neto-save" onclick="saveNetoSimple()">שמור</button>
       </div>
     </div>
   </div>
@@ -639,6 +656,12 @@ input[type=time].fi{text-align:center}
     <div style="font-size:11px;color:var(--t3);margin-bottom:10px;line-height:1.6">הגדר בונוסים חוזרים — ניתן לבחור מהם ישירות בעת רישום יום</div>
     <div id="fbonCont"></div>
     <button class="btn btn-g btn-sm" onclick="addFixedBonus()" style="margin-top:10px;width:100%">+ הוסף בונוס קבוע</button>
+  </div>
+
+  <div class="set-sec-ttl">הגדרות נטו חודשי</div>
+  <div class="card" style="padding:14px;margin-bottom:4px">
+    <div style="font-size:11px;color:var(--t3);margin-bottom:12px;line-height:1.6">הגדר אילו רכיבים ייכללו בחישוב הנטו החודשי שלך</div>
+    <div id="netoCfgCont"></div>
   </div>
 
   <div class="set-sec-ttl">הגדרות חישוב</div>
@@ -945,7 +968,9 @@ let hCh,pCh,cmpCh,cplCh,jCh;
 let aToken=null, tClient=null, dProm=null, tInt=null;
 
 // ---- STORAGE ----
-const DEF_S={jobs:[{name:'עבודה ראשית',color:'#1E3A8A',rate:50,fixed:0}],calcOvertime:false,showMissing:true,myName:'אני',myColor:'#1E3A8A',partnerName:'פרטנר',partnerColor:'#10B981',pairCode:null,partnerCode:null,myUID:null,theme:'light',fixedBonuses:[]};
+const DEF_S={jobs:[{name:'עבודה ראשית',color:'#1E3A8A',rate:50,fixed:0}],calcOvertime:false,showMissing:true,myName:'אני',myColor:'#1E3A8A',partnerName:'פרטנר',partnerColor:'#10B981',pairCode:null,partnerCode:null,myUID:null,theme:'light',fixedBonuses:[],
+  netoConfig:{splitJobs:false,includeJobs:[true,true,true],includeFixed:true,extraItems:[]}
+};
 const D={
   g:()=>{try{return JSON.parse(localStorage.getItem('wd')||'{}');}catch{return {};}},
   s:d=>{localStorage.setItem('wd',JSON.stringify(d));localStorage.setItem('wdts',Date.now());},
@@ -1951,6 +1976,7 @@ function renderSettings(){
   document.getElementById('drOn').style.display=aToken?'block':'none';
   renderJobsCont();
   renderFixedBonuses();
+  renderNetoCfg();
 }
 function setSetting(k,v){const s=D.gs();s[k]=v;D.ss(s);if(k==='showMissing')renderCal();if(k==='calcOvertime')_updXo2State();vib();}
 function _updXo2State(){
@@ -2004,6 +2030,98 @@ function updJC(i,col,el){
     if(card){const badge=card.querySelector('.jcbadge');if(badge)badge.style.background=col;}
     if(card)card.style.borderRightColor=col;
   }
+}
+
+// ---- NETO CONFIG (הגדרות נטו) ----
+function renderNetoCfg(){
+  var cont=document.getElementById('netoCfgCont');
+  if(!cont)return;
+  var s=D.gs();
+  var cfg=s.netoConfig||{};
+  var jobs=s.jobs||[];
+  var inclJobs=cfg.includeJobs||jobs.map(function(){return true;});
+  var inclFixed=cfg.includeFixed!==false;
+  var splitJobs=!!cfg.splitJobs;
+  var extraItems=cfg.extraItems||[];
+  var html='';
+  // שורת "נטו לכל עבודה בנפרד" — רק אם יש 2+ עבודות
+  if(jobs.length>1){
+    html+='<div class="ncfg-row">'+
+      '<div><div class="ncfg-lbl">נטו נפרד לכל עבודה</div>'+
+      '<div class="ncfg-sub">במקום נטו כולל אחד</div></div>'+
+      '<label class="tog-wrap"><input type="checkbox" id="ncfgSplit" onchange="_ncfgSave()" '+(splitJobs?'checked':'')+'>'+
+        '<span class="tog-sl"></span></label>'+
+    '</div>';
+  }
+  // שורה לכל עבודה — האם לכלול בברוטו המחושב
+  jobs.forEach(function(job,ji){
+    var checked=inclJobs[ji]!==false;
+    html+='<div class="ncfg-row">'+
+      '<div><div class="ncfg-lbl">כלול '+job.name+'</div>'+
+      '<div class="ncfg-sub">ברוטו מחושב</div></div>'+
+      '<label class="tog-wrap"><input type="checkbox" id="ncfgJob'+ji+'" onchange="_ncfgSave()" '+(checked?'checked':'')+'>'+
+        '<span class="tog-sl"></span></label>'+
+    '</div>';
+  });
+  // בונוסים קבועים
+  html+='<div class="ncfg-row">'+
+    '<div><div class="ncfg-lbl">כלול בונוסים קבועים</div>'+
+    '<div class="ncfg-sub">בחישוב הברוטו</div></div>'+
+    '<label class="tog-wrap"><input type="checkbox" id="ncfgFixed" onchange="_ncfgSave()" '+(inclFixed?'checked':'')+'>'+
+      '<span class="tog-sl"></span></label>'+
+  '</div>';
+  // פריטים נוספים
+  html+='<div style="margin-top:10px;font-size:11px;color:var(--t3);margin-bottom:6px">רכיבים נוספים (נסיעות, מענקים...)</div>';
+  extraItems.forEach(function(it,i){
+    html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'+
+      '<input type="text" class="fi" value="'+it.name+'" placeholder="שם רכיב" style="flex:1;margin:0" '+
+        'oninput="_ncfgExtraRename('+i+',this.value)">'+
+      '<button onclick="_ncfgExtraDel('+i+')" style="background:var(--rl);border:none;color:var(--r);border-radius:7px;padding:7px 10px;cursor:pointer;font-size:13px">✕</button>'+
+    '</div>';
+  });
+  html+='<button class="btn btn-g btn-sm" onclick="_ncfgExtraAdd()" style="width:100%;margin-top:4px">+ הוסף רכיב (נסיעות, מענק...)</button>';
+  cont.innerHTML=html;
+}
+function _ncfgSave(){
+  var s=D.gs();
+  var cfg=s.netoConfig||{};
+  var jobs=s.jobs||[];
+  var inclJobs=[];
+  jobs.forEach(function(_,ji){
+    var el=document.getElementById('ncfgJob'+ji);
+    inclJobs.push(el?el.checked:true);
+  });
+  var splitEl=document.getElementById('ncfgSplit');
+  cfg.splitJobs=splitEl?splitEl.checked:false;
+  cfg.includeJobs=inclJobs;
+  var fixEl=document.getElementById('ncfgFixed');
+  cfg.includeFixed=fixEl?fixEl.checked:true;
+  s.netoConfig=cfg;
+  D.ss(s);
+}
+function _ncfgExtraAdd(){
+  var s=D.gs();
+  var cfg=s.netoConfig||{};
+  cfg.extraItems=(cfg.extraItems||[]);
+  cfg.extraItems.push({name:''});
+  s.netoConfig=cfg;
+  D.ss(s);
+  renderNetoCfg();
+}
+function _ncfgExtraDel(i){
+  var s=D.gs();
+  var cfg=s.netoConfig||{};
+  (cfg.extraItems||[]).splice(i,1);
+  s.netoConfig=cfg;
+  D.ss(s);
+  renderNetoCfg();
+}
+function _ncfgExtraRename(i,v){
+  var s=D.gs();
+  var cfg=s.netoConfig||{};
+  if(cfg.extraItems&&cfg.extraItems[i])cfg.extraItems[i].name=v;
+  s.netoConfig=cfg;
+  D.ss(s);
 }
 
 // ---- FIXED BONUSES ----
@@ -2074,66 +2192,229 @@ function renderFbonChips(){
 }
 
 // ---- NETO (נטו חודשי) ----
-// מפתח שמירה: neto_YYYY-MM
+// מבנה שמירה: neto_YYYY-MM = JSON {items:[{id,val},...], total}
+// id של עבודה = 'job0','job1'... | בונוסים קבועים = 'fixed' | פריטים נוספים = 'extra_N'
 function _netoKey(dt){
   dt=dt||curDt;
   return 'neto_'+dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');
 }
-function getNetoForMonth(dt){
+function _getNetoData(dt){
+  // מחזיר {items:{id:val,...}, total}
   dt=dt||curDt;
-  var v=parseFloat(localStorage.getItem(_netoKey(dt)))||0;
-  return v;
+  var raw=localStorage.getItem(_netoKey(dt));
+  if(!raw) return {items:{},total:0};
+  try{
+    var p=JSON.parse(raw);
+    // תמיכה בפורמט ישן (מספר בלבד)
+    if(typeof p==='number') return {items:{job0:p},total:p};
+    return p;
+  }catch(e){return {items:{},total:0};}
 }
-function saveNeto(){
+function getNetoForMonth(dt){
+  return _getNetoData(dt).total||0;
+}
+function saveNetoSimple(){
+  // שמירה מהירה (שדה יחיד — מצב ישן/פשוט)
   var val=parseFloat(document.getElementById('netoInput').value)||0;
   if(val<=0){showToast('הזן סכום נטו תקין');return;}
-  localStorage.setItem(_netoKey(),String(val));
+  var data={items:{job0:val},total:val};
+  localStorage.setItem(_netoKey(),JSON.stringify(data));
   _renderNetoCard();
-  // שמור גם ב-Firebase אם זוגי
   _syncNetoToFirebase(val);
   flash();vib();
-  showToast('✅ נטו נשמר לחודש זה');
+  showToast('\u2705 נטו נשמר לחודש זה');
 }
-function editNeto(){
-  var val=getNetoForMonth();
-  document.getElementById('netoInput').value=val||'';
-  document.getElementById('netoSavedRow').style.display='none';
-  document.getElementById('netoInput').closest('.neto-row').style.display='flex';
-  document.getElementById('netoInput').focus();
+function saveNeto(){saveNetoSimple();}
+function editNeto(){openNetoModal();}
+
+// ---- חישוב ברוטו צפוי לפי הגדרות netoConfig ----
+function _calcExpectedBruto(mk){
+  var s=D.gs();
+  var cfg=s.netoConfig||{};
+  var inclJobs=cfg.includeJobs||[true,true,true];
+  var inclFixed=cfg.includeFixed!==false;
+  var data=D.g();
+  var jobs=s.jobs||[];
+  var now=new Date();
+  var isCurrentMonth=mk===(now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'));
+  var brutoPerJob=[];
+  jobs.forEach(function(job,ji){
+    if(inclJobs[ji]===false){brutoPerJob.push(0);return;}
+    var b=0;
+    Object.keys(data).forEach(function(k){
+      if(!k.startsWith(mk))return;
+      var d=data[k];
+      // חישוב לפי עבודה ספציפית — extraJobs או job ראשי
+      if(ji===0){
+        var r=cpDay(d);
+        b+=r.total;
+        // הפחת עבודות נוספות מהסכום
+        if(d.extraJobs&&d.extraJobs.length){
+          d.extraJobs.forEach(function(ej){b-=cpDay({hours:ej.hours,rate:ej.rate,bonuses:ej.bonuses}).total;});
+        }
+      } else {
+        if(d.extraJobs&&d.extraJobs.length>=ji){
+          var ej=d.extraJobs[ji-1];
+          b+=cpDay({hours:ej.hours,rate:ej.rate,bonuses:ej.bonuses}).total;
+        }
+      }
+    });
+    if(isCurrentMonth) b+=parseFloat(job.fixed)||0;
+    brutoPerJob.push(Math.round(b));
+  });
+  // בונוסים קבועים
+  var fixedTotal=0;
+  if(inclFixed&&isCurrentMonth){
+    (s.fixedBonuses||[]).forEach(function(fb){fixedTotal+=parseFloat(fb.amount)||0;});
+  }
+  // פריטים נוספים — ברוטו הצפוי שלהם הוא הסכום שהמשתמש הזין
+  return {perJob:brutoPerJob,fixed:fixedTotal,total:brutoPerJob.reduce(function(a,b){return a+b;},0)+fixedTotal};
 }
+
+// ---- מודל הזנת נטו ----
+function openNetoModal(){
+  var s=D.gs();
+  var cfg=s.netoConfig||{};
+  var splitJobs=cfg.splitJobs&&(s.jobs||[]).length>1;
+  var extraItems=cfg.extraItems||[];
+  var mk=curDt.getFullYear()+'-'+String(curDt.getMonth()+1).padStart(2,'0');
+  var existing=_getNetoData();
+  var old=document.getElementById('netoModal');if(old)old.remove();
+  var ov=document.createElement('div');
+  ov.id='netoModal';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:flex-end;justify-content:center';
+  var now=new Date();
+  var isCurrentMonth=mk===(now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'));
+  var monthLabel=isCurrentMonth?'החודש':(MN[curDt.getMonth()]+' '+curDt.getFullYear());
+  // בנה שורות לפי config
+  var rows=[];
+  if(splitJobs){
+    (s.jobs||[]).forEach(function(job,ji){
+      if((cfg.includeJobs||[])[ji]===false)return;
+      rows.push({id:'job'+ji,label:job.name,icon:'\ud83d\udcbc'});
+    });
+  } else {
+    rows.push({id:'job0',label:'משכורת',icon:'\ud83d\udcbc'});
+  }
+  if(extraItems.length){
+    extraItems.forEach(function(it,i){
+      rows.push({id:'extra_'+i,label:it.name,icon:'\u2795'});
+    });
+  }
+  // חשב ברוטו לכל עבודה לתצוגה
+  var bruto=_calcExpectedBruto(mk);
+  var rowsHTML=rows.map(function(row,ri){
+    var curVal=existing.items[row.id]||'';
+    var hint='';
+    if(row.id==='job0'&&!splitJobs) hint='ברוטו מחושב: \u20aa'+bruto.total.toLocaleString('he-IL');
+    else if(row.id.startsWith('job')){
+      var ji=parseInt(row.id.replace('job',''));
+      hint='ברוטו מחושב: \u20aa'+(bruto.perJob[ji]||0).toLocaleString('he-IL');
+    }
+    return '<div class="neto-item">'+
+      '<div class="neto-item-lbl">'+row.icon+' '+row.label+(hint?'<div style="font-size:9px;color:var(--t3);margin-top:1px">'+hint+'</div>':'')+'</div>'+
+      '<input type="number" class="neto-item-inp" id="nmi_'+row.id+'" value="'+(curVal||'')+'" placeholder="₪" inputmode="numeric" oninput="_netoModalSum()">'+
+    '</div>';
+  }).join('');
+  ov.innerHTML='<div style="background:var(--s);border-radius:20px 20px 0 0;padding:20px 16px 32px;width:100%;max-width:440px;max-height:85vh;overflow-y:auto">'+
+    '<div style="display:flex;align-items:center;margin-bottom:16px">'+
+      '<div style="font-size:15px;font-weight:400;flex:1">\u{1F4B0} נטו — '+monthLabel+'</div>'+
+      '<button onclick="document.getElementById(\'netoModal\').remove()" style="background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer;padding:0">\u00d7</button>'+
+    '</div>'+
+    '<div id="nmiRows">'+rowsHTML+'</div>'+
+    '<div class="neto-total-row" style="margin-top:12px">'+
+      '<div class="neto-total-lbl">\u05e1\u05d4\u05db \u05e0\u05d8\u05d5</div>'+
+      '<div class="neto-total-val" id="nmiTotal">\u20aa0</div>'+
+    '</div>'+
+    '<button onclick="_saveNetoModal()" style="width:100%;margin-top:16px;padding:13px;background:var(--g);color:#fff;border:none;border-radius:12px;font-size:14px;font-family:sans-serif;font-weight:400;cursor:pointer">\u2705 שמור נטו</button>'+
+  '</div>';
+  document.body.appendChild(ov);
+  ov.addEventListener('click',function(e){if(e.target===ov)ov.remove();});
+  _netoModalSum();
+}
+function _netoModalSum(){
+  var total=0;
+  document.querySelectorAll('[id^="nmi_"]').forEach(function(inp){
+    total+=parseFloat(inp.value)||0;
+  });
+  var el=document.getElementById('nmiTotal');
+  if(el) el.textContent='\u20aa'+Math.round(total).toLocaleString('he-IL');
+}
+function _saveNetoModal(){
+  var items={};
+  var total=0;
+  document.querySelectorAll('[id^="nmi_"]').forEach(function(inp){
+    var key=inp.id.replace('nmi_','');
+    var v=parseFloat(inp.value)||0;
+    if(v>0){items[key]=v;total+=v;}
+  });
+  if(total<=0){showToast('\u05d4\u05d6\u05df \u05e1\u05db\u05d5\u05dd \u05ea\u05e7\u05d9\u05df');return;}
+  var data={items:items,total:total};
+  localStorage.setItem(_netoKey(),JSON.stringify(data));
+  var old=document.getElementById('netoModal');if(old)old.remove();
+  _renderNetoCard();
+  _syncNetoToFirebase(total);
+  flash();vib();
+  showToast('\u2705 \u05e0\u05d8\u05d5 \u05e0\u05e9\u05de\u05e8');
+}
+
 function _renderNetoCard(){
   var mk=curDt.getFullYear()+'-'+String(curDt.getMonth()+1).padStart(2,'0');
   var now=new Date();
   var isCurrentMonth=mk===(now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'));
   var label='נטו שהתקבל — '+(isCurrentMonth?'החודש':(MN[curDt.getMonth()]+' '+curDt.getFullYear()));
   var lbl=document.getElementById('netoLbl');if(lbl)lbl.textContent=label;
-  var val=getNetoForMonth();
-  var inp=document.getElementById('netoInput');
-  var savedRow=document.getElementById('netoSavedRow');
-  var inpRow=inp&&inp.closest('.neto-row');
-  if(!inp)return;
-  if(val>0){
-    // חשב ברוטו לחודש הזה
-    var data=D.g(),s=D.gs();
-    var bruto=0;
-    Object.keys(data).forEach(function(k){if(k.startsWith(mk)){bruto+=cpDay(data[k]).total;}});
-    if(isCurrentMonth)(s.jobs||[]).forEach(function(j){bruto+=parseFloat(j.fixed)||0;});
-    var diff=val-bruto;
-    var pct=bruto>0?Math.round((diff/bruto)*100):0;
-    var diffEl=document.getElementById('netoDiff');
-    if(diffEl){
-      diffEl.textContent=(diff>=0?'+':'')+Math.round(diff).toLocaleString('he-IL')+' ₪ ('+pct+'%)';
-      diffEl.className='neto-diff '+(diff>=0?'pos':'neg');
-    }
-    var valEl=document.getElementById('netoValDisp');
-    if(valEl)valEl.textContent='₪'+val.toLocaleString('he-IL');
-    if(savedRow)savedRow.style.display='block';
-    if(inpRow)inpRow.style.display='none';
-    inp.value='';
+  var body=document.getElementById('netoCardBody');
+  if(!body)return;
+  var nd=_getNetoData();
+  var s=D.gs();
+  var cfg=s.netoConfig||{};
+  var extraItems=cfg.extraItems||[];
+  if(nd.total>0){
+    // תצוגת רכיבים שהוזנו
+    var itemsHTML='';
+    var splitJobs=cfg.splitJobs&&(s.jobs||[]).length>1;
+    Object.keys(nd.items).forEach(function(id){
+      var v=nd.items[id];
+      if(!v)return;
+      var lbl2='';
+      if(id==='job0') lbl2=splitJobs?((s.jobs[0]||{}).name||'עבודה א'):'משכורת';
+      else if(id.startsWith('job')){var ji=parseInt(id.replace('job',''));lbl2=(s.jobs[ji]||{}).name||('עבודה '+(ji+1));}
+      else if(id.startsWith('extra_')){var ei=parseInt(id.replace('extra_',''));lbl2=(extraItems[ei]||{}).name||id;}
+      else lbl2=id;
+      itemsHTML+='<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:12px">'+
+        '<span style="color:var(--t3)">'+lbl2+'</span>'+
+        '<span style="font-weight:400">\u20aa'+Math.round(v).toLocaleString('he-IL')+'</span>'+
+      '</div>';
+    });
+    // ברוטו צפוי
+    var bruto=_calcExpectedBruto(mk);
+    var diff=nd.total-bruto.total;
+    var pct=bruto.total>0?Math.round((diff/bruto.total)*100):0;
+    var diffColor=diff>=0?'var(--g)':'var(--r)';
+    var barPct=bruto.total>0?Math.min(100,Math.round((nd.total/bruto.total)*100)):100;
+    body.innerHTML=
+      '<div style="margin-bottom:8px">'+itemsHTML+'</div>'+
+      '<div class="neto-total-row" style="padding:6px 0 8px">'+
+        '<div class="neto-total-lbl">סה\u05d3\u05db נטו</div>'+
+        '<div class="neto-total-val">\u20aa'+Math.round(nd.total).toLocaleString('he-IL')+'</div>'+
+      '</div>'+
+      '<div class="neto-cmp">'+
+        '<div class="neto-cmp-row">'+
+          '<span class="neto-cmp-lbl">ברוטו מחושב</span>'+
+          '<span class="neto-cmp-val">\u20aa'+Math.round(bruto.total).toLocaleString('he-IL')+'</span>'+
+        '</div>'+
+        '<div class="neto-bar-wrap"><div class="neto-bar-fill" style="width:'+barPct+'%;background:'+(diff>=0?'var(--g)':'var(--r)')+'"></div></div>'+
+        '<div style="display:flex;justify-content:space-between;margin-top:5px">'+
+          '<span class="neto-cmp-lbl">הפרש (ניכויים)</span>'+
+          '<span style="font-size:12px;font-weight:400;color:'+diffColor+'">'+(diff>=0?'+':'')+Math.round(diff).toLocaleString('he-IL')+' \u20aa ('+pct+'%)</span>'+
+        '</div>'+
+      '</div>';
   } else {
-    if(savedRow)savedRow.style.display='none';
-    if(inpRow)inpRow.style.display='flex';
-    inp.value='';
+    body.innerHTML='<div class="neto-row">'+
+      '<input type="number" class="neto-input" id="netoInput" placeholder="\u20aa הזן סכום נטו..." inputmode="numeric">'+
+      '<button class="neto-save" onclick="openNetoModal()">הזן</button>'+
+    '</div>';
   }
 }
 async function _syncNetoToFirebase(val){
@@ -2196,8 +2477,8 @@ function addFbonFromPicker(i){
 }
 
 // ---- AUTO UPDATE ----
-const APP_VERSION='2.1.239';
-const APP_BUILD=239; // CI מחליף בכל build
+const APP_VERSION='2.1.237';
+const APP_BUILD=237; // CI מחליף בכל build
 const LIVE_URL='https://tzur669-lab.github.io/moneytime-app/';
 const VER_FB_URL='https://moneytime-app-f5a15-default-rtdb.firebaseio.com/appVersion.json';
 const GITHUB_APK_BASE='https://github.com/tzur669-lab/moneytime-app/releases/download';
