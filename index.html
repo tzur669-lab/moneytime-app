@@ -1634,13 +1634,14 @@ function renderNetoReport(cont){
   var totalNeto=0,totalBruto=0;
   for(var mi=0;mi<12;mi++){
     var mk=thisYear+'-'+String(mi+1).padStart(2,'0');
-    // ברוטו שלי
+    // ברוטו שלי — סך כל העבודות (כולל OT ובונוסים) + בונוסים קבועים
     var bru=0;
-    Object.keys(data).forEach(function(k){if(k.startsWith(mk)){bru+=cpDay(data[k]).total;}});
-    if(mk===(now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')))(s.jobs||[]).forEach(function(j){bru+=parseFloat(j.fixed)||0;});
+    (s.jobs||[]).forEach(function(_,ji){bru+=_calcJobBruto(mk,ji);});
+    bru+=_calcFixedBonusesTotal(mk);
     brutoVals[mi]=Math.round(bru);
-    // נטו שלי
-    var nv=parseFloat(localStorage.getItem('neto_'+mk))||0;
+    // נטו שלי — קח מהמבנה החדש אם קיים, אחרת legacy
+    var _nd=_getNetoData({getFullYear:function(){return parseInt(mk.split('-')[0]);},getMonth:function(){return parseInt(mk.split('-')[1])-1;}});
+    var nv=_nd.neto||_nd.total||0;
     netoVals[mi]=nv;
     totalNeto+=nv;totalBruto+=bru;
     // פרטנר
@@ -2313,7 +2314,7 @@ function editNeto(){openNetoModal();}
 
 // ---- חישוב ברוטו צפוי לפי הגדרות netoConfig ----
 function _calcJobBruto(mk, ji){
-  // מחשב שכר עבודה ji לחודש mk
+  // מחשב שכר עבודה ji לחודש mk — כולל OT, בונוסים ומשכורת קבועה
   var s=D.gs(), data=D.g();
   var now=new Date();
   var isCurrentMonth=mk===(now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'));
@@ -2322,19 +2323,33 @@ function _calcJobBruto(mk, ji){
     if(!k.startsWith(mk))return;
     var d=data[k];
     if(ji===0){
-      b+=cpDay(d).total;
-      if(d.extraJobs&&d.extraJobs.length)
-        d.extraJobs.forEach(function(ej){b-=cpDay({hours:ej.hours,rate:ej.rate,bonuses:ej.bonuses}).total;});
+      // עבודה ראשית: שעות × תעריף (כולל OT) + בונוסים ידניים של אותו יום
+      var r=cp(d.hours||0, d.rate||0, d.bonuses||[]);
+      b+=r.total;
     } else {
+      // עבודה נוספת ji: extraJobs[ji-1]
       if(d.extraJobs&&d.extraJobs.length>=ji){
         var ej=d.extraJobs[ji-1];
-        b+=cpDay({hours:ej.hours,rate:ej.rate,bonuses:ej.bonuses}).total;
+        // OT לעבודה נוספת + בונוסים שלה
+        var r2=cp(ej.hours||0, ej.rate||0, ej.bonuses||[]);
+        b+=r2.total;
       }
     }
   });
+  // משכורת קבועה של העבודה
   var job=(s.jobs||[])[ji]||{};
-  if(isCurrentMonth) b+=parseFloat(job.fixed)||0;
+  b+=parseFloat(job.fixed)||0;
   return Math.round(b);
+}
+
+function _calcFixedBonusesTotal(mk){
+  // סך בונוסים קבועים שנרשמו בימים של אותו חודש + סכום הגדרות
+  var s=D.gs(), data=D.g();
+  var total=0;
+  // בונוסים קבועים מההגדרות (סכום חודשי)
+  (s.fixedBonuses||[]).forEach(function(fb){total+=parseFloat(fb.amount)||0;});
+  // בונוסים ידניים שנרשמו בימים (שאינם חלק מעבודה) — אם יש
+  return Math.round(total);
 }
 function _calcExpectedBruto(mk){
   var s=D.gs(), cfg=s.netoConfig||{};
@@ -2396,9 +2411,8 @@ function openNetoModal(){
       '</div>';
   });
 
-  // בונוסים קבועים (אם מסומן)
-  var fixedTotal=0;
-  if(isCurrentMonth)(s.fixedBonuses||[]).forEach(function(fb){fixedTotal+=parseFloat(fb.amount)||0;});
+  // בונוסים — סך כל הבונוסים הקבועים מההגדרות
+  var fixedTotal=_calcFixedBonusesTotal(mk);
   if(fixedTotal>0){
     var savedFixed=existing.brutoItems?existing.brutoItems['fixed']:null;
     var dispFixed=savedFixed!=null?savedFixed:(inclFixed?fixedTotal:'');
@@ -2408,7 +2422,7 @@ function openNetoModal(){
           '<input type="checkbox" id="nbiChk_fixed" '+(inclFixed?'checked':'')+
             ' onchange="_nbiToggleFixed()"' +
             ' style="width:15px;height:15px;accent-color:var(--g);flex-shrink:0">' +
-          '<div class="neto-item-lbl" style="margin:0">\ud83c\udf81 \u05d1\u05d5\u05e0\u05d5\u05e1\u05d9\u05dd \u05e7\u05d1\u05d5\u05e2\u05d9\u05dd' +
+          '<div class="neto-item-lbl" style="margin:0">\ud83c\udf81 \u05d1\u05d5\u05e0\u05d5\u05e1\u05d9\u05dd' +
             '<div style="font-size:9px;color:var(--t3);margin-top:1px">\u05e1\u05d4\u05db: \u20aa'+fixedTotal.toLocaleString('he-IL')+'</div>' +
           '</div>' +
         '</label>' +
@@ -2665,8 +2679,8 @@ function addFbonFromPicker(i){
 }
 
 // ---- AUTO UPDATE ----
-const APP_VERSION='2.1.245';
-const APP_BUILD=245; // CI מחליף בכל build
+const APP_VERSION='2.1.237';
+const APP_BUILD=237; // CI מחליף בכל build
 const LIVE_URL='https://tzur669-lab.github.io/moneytime-app/';
 const VER_FB_URL='https://moneytime-app-f5a15-default-rtdb.firebaseio.com/appVersion.json';
 const GITHUB_APK_BASE='https://github.com/tzur669-lab/moneytime-app/releases/download';
