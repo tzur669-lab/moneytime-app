@@ -1,4 +1,4 @@
-const CACHE = 'moneytime-v2.1.244';
+const CACHE = 'moneytime-v2.1.245';
 const ASSETS = [
   './',
   './index.html',
