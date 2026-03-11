@@ -1621,10 +1621,11 @@ function renderYear(cont,selectedYear){
 function renderNetoReport(cont){
   var s=D.gs();
   var now=new Date();
-  var thisYear=now.getFullYear();
+  // קרא שנה מה-select אם קיים
+  var selEl=cont?cont.querySelector('select[data-neto-year]'):null;
+  var thisYear=selEl?parseInt(selEl.value):now.getFullYear();
   var allYears=[];
-  for(var y=thisYear;y>=2015;y--)allYears.push(String(y));
-  // קרא נטו לכל 12 חודשים של השנה הנוכחית
+  for(var y=now.getFullYear();y>=2015;y--)allYears.push(String(y));
   var netoVals=Array(12).fill(0);
   var brutoVals=Array(12).fill(0);
   var partnerNetoVals=Array(12).fill(0);
@@ -1660,7 +1661,7 @@ function renderNetoReport(cont){
   var avgDeduction=totalBruto>0?Math.round((1-(totalNeto/totalBruto))*100):0;
   var yearSel='<div style="margin-bottom:14px;display:flex;align-items:center;gap:10px">'+
     '<label style="font-size:12px;color:var(--t2)">שנה:</label>'+
-    '<select onchange="renderNetoReport(document.getElementById(\'repContent\'))" style="padding:7px 12px;border-radius:8px;border:1px solid var(--bd);background:var(--s);color:var(--t);font-family:\'Inter\',sans-serif;font-size:13px;flex:1">'+
+    '<select data-neto-year onchange="renderNetoReport(document.getElementById(\'repContent\'))" style="padding:7px 12px;border-radius:8px;border:1px solid var(--bd);background:var(--s);color:var(--t);font-family:\'Inter\',sans-serif;font-size:13px;flex:1">'+
     allYears.map(function(y){return'<option value="'+y+'" '+(y===String(thisYear)?'selected':'')+'>'+y+'</option>';}).join('')+
     '</select></div>';
   cont.innerHTML=yearSel+
@@ -2519,11 +2520,11 @@ function openNetoModal(){
   var fixedTotal=_calcSelectedBonusesTotal(mk);
   if(fixedTotal>0){
     var savedFixed=existing.brutoItems?existing.brutoItems['fixed']:null;
-    var dispFixed=savedFixed!=null?savedFixed:(inclFixed?fixedTotal:'');
+    var dispFixed=savedFixed!=null?savedFixed:fixedTotal;
     brutoRows+=
-      '<div class="neto-item" id="nbiRow_fixed" style="'+(inclFixed?'':'opacity:.45')+'">' +
+      '<div class="neto-item" id="nbiRow_fixed">' +
         '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex:1;min-width:0">' +
-          '<input type="checkbox" id="nbiChk_fixed" '+(inclFixed?'checked':'')+
+          '<input type="checkbox" id="nbiChk_fixed" checked'+
             ' onchange="_nbiToggleFixed()"' +
             ' style="width:15px;height:15px;accent-color:var(--g);flex-shrink:0">' +
           '<div class="neto-item-lbl" style="margin:0">🎁 \u05d1\u05d5\u05e0\u05d5\u05e1\u05d9\u05dd' +
@@ -2679,10 +2680,12 @@ function _renderNetoCard(){
         '<span style="color:var(--t3)">\ud83d\udcbc '+job.name+'</span>'+
         '<span>\u20aa'+Math.round(v).toLocaleString('he-IL')+'</span></div>';
     });
-    if(bi['fixed']){
+    // בונוסים שנבחרו בהגדרות (legacy fixed או חדש)
+    var bonusAmt=(bi['fixed']||0)||_calcSelectedBonusesTotal(mk);
+    if(bonusAmt>0){
       brutoHTML+='<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px">'+
         '<span style="color:var(--t3)">🎁 \u05d1\u05d5\u05e0\u05d5\u05e1\u05d9\u05dd</span>'+
-        '<span>\u20aa'+Math.round(bi['fixed']).toLocaleString('he-IL')+'</span></div>';
+        '<span>\u20aa'+Math.round(bonusAmt).toLocaleString('he-IL')+'</span></div>';
     }
     extraItems.forEach(function(it,i){
       var v=bi['extra_'+i];if(!v)return;
@@ -2783,8 +2786,8 @@ function addFbonFromPicker(i){
 }
 
 // ---- AUTO UPDATE ----
-const APP_VERSION='2.1.249';
-const APP_BUILD=249; // CI מחליף בכל build
+const APP_VERSION='2.1.237';
+const APP_BUILD=237; // CI מחליף בכל build
 const LIVE_URL='https://tzur669-lab.github.io/moneytime-app/';
 const VER_FB_URL='https://moneytime-app-f5a15-default-rtdb.firebaseio.com/appVersion.json';
 const GITHUB_APK_BASE='https://github.com/tzur669-lab/moneytime-app/releases/download';
