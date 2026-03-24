@@ -3197,6 +3197,33 @@ function _showTableReport(detailed,filterDates,xlsxOpts){
     rows+='</tr>';
   });
 
+  // --- תחילת תוספת: שורת סיכום לטבלת ה-HTML ---
+  rows+='<tr style="background:#1E3A8A;color:white;font-weight:bold;font-size:13px">';
+  rows+='<td>סיכום כללי</td><td></td>';
+  rows+='<td>'+totalH.toFixed(1)+'</td>'; // סך שעות עבודה
+  if(detailed&&ox.rate) rows+='<td></td>';
+  if(detailed&&ox.ot) rows+='<td></td><td></td><td></td>';
+  for(var ei=0;ei<maxExtra;ei++) rows+='<td></td><td></td>';
+  
+  rows+='<td>₪'+Math.round(totalBase).toLocaleString('he-IL')+'</td>'; // שכר בסיס שלי
+  rows+='<td>₪'+Math.round(totalP-totalBase).toLocaleString('he-IL')+'</td>'; // סך בונוסים
+  rows+='<td>₪'+Math.round(totalP).toLocaleString('he-IL')+'</td>'; // סך הכל שכר שלי
+  
+  if(detailed&&ox.note) rows+='<td></td>';
+  if(detailed&&ox.job) rows+='<td></td>';
+  if(detailed&&ox.partner) rows+='<td>'+(totalPartner>0 ? '₪'+Math.round(totalPartner).toLocaleString('he-IL') : '')+'</td>'; // סך שכר פרטנר
+  rows+='</tr>';
+
+  // שורת שכר משותף (רק אם יש פרטנר בטווח התאריכים)
+  if(detailed&&ox.partner&&totalPartner>0){
+    var colsCount = 3 + (detailed&&ox.rate?1:0) + (detailed&&ox.ot?3:0) + (maxExtra*2) + 3 + (detailed&&ox.note?1:0) + (detailed&&ox.job?1:0);
+    rows+='<tr style="background:#2563EB;color:white;font-weight:bold;font-size:14px">';
+    rows+='<td colspan="'+colsCount+'" style="text-align:left;padding-left:15px">סך הכל שכר משותף (שלי + פרטנר):</td>';
+    rows+='<td>₪'+Math.round(totalP+totalPartner).toLocaleString('he-IL')+'</td>';
+    rows+='</tr>';
+  }
+  // --- סוף תוספת ---
+
   // אותיות לעמודות: א ב ג ד
   var HEL=['\u05d0','\u05d1','\u05d2','\u05d3','\u05d4'];
   var headerCols='<th>\u05ea\u05d0\u05e8\u05d9\u05da</th><th>\u05d9\u05d5\u05dd</th><th>\u05e9\u05e2\u05d5\u05ea \u05e2\u05d1 \u05d0</th>';
@@ -3253,9 +3280,33 @@ function _showTableReport(detailed,filterDates,xlsxOpts){
     if(detailed&&ox.partner){var pp=pd[k];cols.push(pp&&pp.hours>0?Math.round(cp(pp.hours,pp.rate||50,pp.bonuses).total):'');}
     csvLines.push(cols.map(function(cv){return'"'+String(cv).replace(/"/g,'""')+'"';}).join(','));
   });
+  // --- תחילת תוספת: שורת סיכום באקסל ---
   csvLines.push('');
-  csvLines.push('"\u05e1\u05d4"\u05db","","'+totalH.toFixed(1)+'","\u20aa'+Math.round(totalP).toLocaleString('he-IL')+'"'+(detailed&&ox.partner?',\u05d1\u05d9\u05d7\u05d3: \u20aa'+Math.round(totalP+totalPartner).toLocaleString('he-IL'):''));
+  var sumCols=['סיכום כללי','',totalH.toFixed(1)];
+  if(detailed&&ox.rate) sumCols.push('');
+  if(detailed&&ox.ot) sumCols=sumCols.concat(['','','']);
+  for(var ei5=0;ei5<maxExtra;ei5++){ sumCols.push(''); sumCols.push(''); }
+  
+  sumCols.push(Math.round(totalBase)); // שכר שלי
+  sumCols.push(Math.round(totalP-totalBase)); // בונוסים
+  sumCols.push(Math.round(totalP)); // סך הכל שלי
+  
+  if(detailed&&ox.note) sumCols.push('');
+  if(detailed&&ox.job) sumCols.push('');
+  if(detailed&&ox.partner) sumCols.push(totalPartner>0 ? Math.round(totalPartner) : ''); // שכר פרטנר
+  
+  csvLines.push(sumCols.map(function(cv){return'"'+String(cv).replace(/"/g,'""')+'"';}).join(','));
+  
+  // שורה לשכר המשותף באקסל (אם יש פרטנר)
+  if(detailed&&ox.partner&&totalPartner>0){
+    var partnerSumCols = Array(sumCols.length - 1).fill('');
+    partnerSumCols[0] = 'סך הכל משותף (שלי + פרטנר):';
+    partnerSumCols.push(Math.round(totalP+totalPartner));
+    csvLines.push(partnerSumCols.map(function(cv){return'"'+String(cv).replace(/"/g,'""')+'"';}).join(','));
+  }
+  
   var csvText='\uFEFF'+csvLines.join('\r\n');
+  // --- סוף תוספת ---
 
   var htmlContent='<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="UTF-8">'
     +'<meta name="viewport" content="width=device-width,initial-scale=1">'
