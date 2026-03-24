@@ -710,7 +710,74 @@ input[type=time].fi{text-align:center}
       <button class="btn btn-o" id="updSetBtn" onclick="_checkUpdateFromSettings(this)" style="font-size:11px;padding:6px 12px">בדוק עדכון</button>
     </div>
   </div>
-
+<div class="card" style="padding:0;overflow:hidden;margin-bottom:16px">
+  <button onclick="toggleGuide()" style="width:100%;background:linear-gradient(135deg,var(--b8),var(--b6));border:none;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;text-align:right">
+    <span style="font-size:20px">📖</span>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:500;color:#fff">מדריך האפליקציה</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.7);margin-top:1px">כל הפיצ'רים שיש לאפליקציה להציע</div>
+    </div>
+    <svg id="guideArrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2" stroke-linecap="round" style="transition:transform .3s;flex-shrink:0"><polyline points="6,9 12,15 18,9"/></svg>
+  </button>
+  <div id="guideBody" style="display:none">
+    <div style="padding:4px 0">
+      <div style="padding:12px 14px;border-bottom:1px solid var(--bd)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <span style="font-size:18px">📅</span><span style="font-size:13px;font-weight:500;color:var(--t)">יומן חודשי</span>
+        </div>
+        <div style="font-size:11px;color:var(--t3);line-height:1.7;padding-right:28px">רשום שעות לכל יום בלחיצה על התאריך. הגדר שעות, תעריף ובונוסים. האפליקציה מחשבת שכר כולל שעות נוספות אוטומטית.</div>
+      </div>
+      <div style="padding:12px 14px;border-bottom:1px solid var(--bd)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <span style="font-size:18px">💼</span><span style="font-size:13px;font-weight:500;color:var(--t)">מספר מקומות עבודה</span>
+        </div>
+        <div style="font-size:11px;color:var(--t3);line-height:1.7;padding-right:28px">עד 3 עבודות עם שם, צבע ותעריף לכל אחת. ניתן לרשום שעות מכמה עבודות באותו יום ולהגדיר משכורת קבועה חודשית.</div>
+      </div>
+      <div style="padding:12px 14px;border-bottom:1px solid var(--bd)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <span style="font-size:18px">🎁</span><span style="font-size:13px;font-weight:500;color:var(--t)">בונוסים קבועים</span>
+        </div>
+        <div style="font-size:11px;color:var(--t3);line-height:1.7;padding-right:28px">הגדר בונוסים חוזרים (מענק ביצוע, תוספת ותק...) עם שם וסכום. בחר מהם בלחיצה אחת בעת רישום יום.</div>
+      </div>
+      <div style="padding:12px 14px;border-bottom:1px solid var(--bd)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <span style="font-size:18px">👫</span><span style="font-size:13px;font-weight:500;color:var(--t)">סנכרון זוגי בזמן אמת</span>
+        </div>
+        <div style="font-size:11px;color:var(--t3);line-height:1.7;padding-right:28px">חבר פרטנר עם קוד זוגי וראו הכנסות משולבות בלשונית "ביחד". סנכרון אוטומטי דרך Google Drive עם גיבוי בענן.</div>
+      </div>
+      <div style="padding:12px 14px;border-bottom:1px solid var(--bd)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <span style="font-size:18px">📤</span><span style="font-size:13px;font-weight:500;color:var(--t)">ייצוא דוחות מתקדם</span>
+        </div>
+        <div style="font-size:11px;color:var(--t3);line-height:1.7;padding-right:28px">ייצא ל-CSV או Excel עם שורת סיכום כוללת: שעות כוללות, שכר בסיס, בונוסים, סה"כ אישי וסה"כ משולב. סנן לפי טווח תאריכים.</div>
+      </div>
+      <div style="padding:12px 14px;border-bottom:1px solid var(--bd)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <span style="font-size:18px">⏱️</span><span style="font-size:13px;font-weight:500;color:var(--t)">שעון נוכחות</span>
+        </div>
+        <div style="font-size:11px;color:var(--t3);line-height:1.7;padding-right:28px">התחל/סיים משמרת בלחיצה — האפליקציה ממלאת שעות אוטומטית. מושלם כשאין אפשרות לרשום ידנית.</div>
+      </div>
+      <div style="padding:12px 14px;border-bottom:1px solid var(--bd)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <span style="font-size:18px">📊</span><span style="font-size:13px;font-weight:500;color:var(--t)">דוחות וסטטיסטיקות</span>
+        </div>
+        <div style="font-size:11px;color:var(--t3);line-height:1.7;padding-right:28px">סיכום חודשי ושנתי, גרפים לפי חודשים, השוואת שנים, וניתוח לפי עבודות. סינון לפי טווח תאריכים.</div>
+      </div>
+      <div style="padding:12px 14px;border-bottom:1px solid var(--bd)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <span style="font-size:18px">💾</span><span style="font-size:13px;font-weight:500;color:var(--t)">גיבוי ושחזור</span>
+        </div>
+        <div style="font-size:11px;color:var(--t3);line-height:1.7;padding-right:28px">גבה לקובץ JSON ושחזר בכל עת. תמיכה בסנכרון Google Drive לגיבוי אוטומטי וסנכרון זוגי.</div>
+      </div>
+      <div style="padding:12px 14px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <span style="font-size:18px">🔔</span><span style="font-size:13px;font-weight:500;color:var(--t)">התראת ימים חסרים</span>
+        </div>
+        <div style="font-size:11px;color:var(--t3);line-height:1.7;padding-right:28px">מזהה ימי חול ללא רישום ומתריע בבאנר. לחץ על יום מסומן בצהוב ביומן לתיקון. ניתן לכבות בהגדרות.</div>
+      </div>
+    </div>
+  </div>
+</div>
   <div class="set-sec-ttl">יצירת קשר</div>
   <div class="card" style="padding:14px;text-align:center">
     <a id="contactMailLink" href="#" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
@@ -3626,6 +3693,16 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(_s.myCode&&!_s.pairCode) setTimeout(autoDetectIncomingPair,1500);
   });
 });
+  // ---- פונקציה לפתיחה וסגירה של המדריך ----
+function toggleGuide(){
+  var body = document.getElementById('guideBody');
+  var arrow = document.getElementById('guideArrow');
+  if(!body) return;
+  
+  var open = (body.style.display === 'none' || body.style.display === '');
+  body.style.display = open ? 'block' : 'none';
+  if(arrow) arrow.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+}
 </script>
 </body>
 </html>
