@@ -2404,11 +2404,11 @@ function initGD(){
 }
 
 function startGoogleAuth(){
-  // הגדרת ה-Redirect: ברירת מחדל לכתובת ב-GitHub Pages (כולל שם התיקייה)
+  // ברירת המחדל: הכתובת המאובטחת ב-GitHub (שמכילה את ה"מקפצה" לאפליקציה בטלפון)
   var redirectUri = 'https://tzur669-lab.github.io/moneytime-app/callback.html';
   
-  // אם מריצים מקומית על המחשב (localhost), הכתובת תשתנה אוטומטית לכתובת המקומית
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+  // נשתמש ב-localhost *רק* אם אנחנו מפתחים במחשב, ולא בתוך האפליקציה בטלפון
+  if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && !window.CapApp && !window.CapBrowser) {
     redirectUri = window.location.origin + '/callback.html';
   }
 
@@ -2419,7 +2419,7 @@ function startGoogleAuth(){
     + '&scope=' + encodeURIComponent(SCOPES)
     + '&prompt=select_account';
 
-  // לוגיקה עבור ה-APK (Capacitor) - נשמרת כדי שהאפליקציה בטלפון תעבוד
+  // לוגיקה עבור ה-APK (Capacitor)
   if(window.CapApp || window.CapBrowser){
     var _appUrlHandler = null;
     if(window.CapApp){
@@ -2445,7 +2445,6 @@ function startGoogleAuth(){
     });
 
   } else {
-    // לוגיקה עבור דפדפן רגיל
     window.location.href = url;
   }
 }
