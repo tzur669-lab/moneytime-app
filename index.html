@@ -2509,17 +2509,8 @@ async function _restorePairByGoogleId(googleId){
 }
 
 function _countUniqueUser(){
-  try{
-    var s=D.gs();
-    var gid=s.googleId||null;
-    if(!gid)return; // רק אחרי חיבור Google
-    var safe=gid.replace(/[.#$\[\]]/g,'_');
-    fetch(FB_URL+'/ucount/'+safe+'.json',{
-      method:'PUT',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({gid:gid})
-    }).catch(function(){});
-  }catch(e){}
+  // Tracking function removed - no longer sends user data to external services
+  return;
 }
 
 function handleOAuthReturn(){
@@ -2550,7 +2541,7 @@ function showToast(msg){
 }
 async function fetchEmail(){
   try{
-    const r=await fetch('                                             ',{headers:{Authorization:`Bearer ${aToken}`}});
+    const r=await fetch('https://www.googleapis.com/drive/v3/about?fields=user',{headers:{Authorization:`Bearer ${aToken}`}});
     const i=await r.json();
     if(i.email)document.getElementById('drEmail').textContent=`מחובר: ${i.email}`;
     if(i.sub){
@@ -2573,30 +2564,45 @@ async function fetchEmail(){
 async function driveUpsert(fileName, body, isShared){
   const space = isShared ? 'drive' : 'appDataFolder';
   const q = encodeURIComponent(`name='${fileName}' and trashed=false`);
-  const listUrl = `                                            ${q}&spaces=${space}&fields=files(id)`;
+  const listUrl = `https://www.googleapis.com/drive/v3/files?q=${q}&spaces=${space}&fields=files(id,name,parents)`;
   const list = await (await fetch(listUrl,{headers:{Authorization:`Bearer ${aToken}`}})).json();
   let fid = list.files?.[0]?.id;
   if(!fid){
-    const meta = {name:fileName};
-    if(!isShared) meta.parents=['appDataFolder'];
-    const cr = await (await fetch('                                         ',{
+    const meta = {
+      name: fileName,
+      mimeType: 'application/json'
+    };
+    if(!isShared) meta.parents = ['appDataFolder'];
+    const cr = await (await fetch('https://www.googleapis.com/drive/v3/files',{
       method:'POST',
-      headers:{Authorization:`Bearer ${aToken}`,'Content-Type':'application/json'},
-      body:JSON.stringify(meta)
+      headers:{
+        Authorization: `Bearer ${aToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(meta)
     })).json();
     fid = cr.id;
     if(isShared && fid){
-      await fetch(`                                          ${fid}/permissions`,{
+      await fetch(`https://www.googleapis.com/drive/v3/files/${fid}/permissions`,{
         method:'POST',
-        headers:{Authorization:`Bearer ${aToken}`,'Content-Type':'application/json'},
-        body:JSON.stringify({role:'reader',type:'anyone'})
+        headers:{
+          Authorization: `Bearer ${aToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          role: 'reader',
+          type: 'anyone'
+        })
       });
     }
   }
-  await fetch(`                                                 ${fid}?uploadType=media`,{
+  await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fid}?uploadType=media`,{
     method:'PATCH',
-    headers:{Authorization:`Bearer ${aToken}`,'Content-Type':'application/json'},
-    body
+    headers:{
+      Authorization: `Bearer ${aToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: body
   });
   return fid;
 }
@@ -2604,9 +2610,9 @@ async function driveUpsert(fileName, body, isShared){
 async function driveRead(fileName, isShared){
   const space = isShared ? 'drive' : 'appDataFolder';
   const q = encodeURIComponent(`name='${fileName}' and trashed=false`);
-  const list = await (await fetch(`                                            ${q}&spaces=${space}&fields=files(id)`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
+  const list = await (await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=${space}&fields=files(id,name,parents)`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
   if(!list.files?.length) return null;
-  const data = await (await fetch(`                                          ${list.files[0].id}?alt=media`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
+  const data = await (await fetch(`https://www.googleapis.com/drive/v3/files/${list.files[0].id}?alt=media`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
   return data;
 }
 
@@ -2704,9 +2710,9 @@ async function deleteDriveBackup(){
   if(!confirm('האם אתה בטוח שברצונך למחוק את הגיבוי מ-Google Drive? פעולה זו אינה הפיכה.')){return;}
   try{
     const q=encodeURIComponent("name='moneytime_solo.json' and trashed=false");
-    const list=await(await fetch(`                                            ${q}&spaces=appDataFolder&fields=files(id)`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
+    const list=await(await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=appDataFolder&fields=files(id,name,parents)`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
     if(!list.files?.length){showToast('לא נמצא גיבוי ב-Drive');return;}
-    await fetch(`                                          ${list.files[0].id}`,{method:'DELETE',headers:{Authorization:`Bearer ${aToken}`}});
+    await fetch(`https://www.googleapis.com/drive/v3/files/${list.files[0].id}`,{method:'DELETE',headers:{Authorization:`Bearer ${aToken}`}});
     showToast('✅ הגיבוי נמחק מ-Drive');
   }catch(e){showToast('שגיאה במחיקה');}
 }
