@@ -3153,13 +3153,20 @@ function _showTableReport(detailed,filterDates,xlsxOpts){
 
   allKeys.forEach(function(k){
     if(activeSet&&!activeSet.has(k))return;
-    var r=d[k]; if(!(r.hours>0))return;
+    var r=d[k]; 
+    
+    // בודק אם יש בונוס כדי לא לדלג בטעות על ימים שהפרטנר עבד בהם
+    var bon=(r.bonuses||[]).reduce(function(s2,b){return s2+(parseFloat(b.amount)||0);},0);
+    if(!(r.hours>0) && !(bon>0)) return; 
     var pr=cp(r.hours,r.rate,r.bonuses);
     var dayTot=cpDay(r);
     var dt=new Date(k);
     var jobName=((jobs[r.jobIdx||0])||{}).name||'ראשי';
-    var bon=(r.bonuses||[]).reduce(function(s2,b){return s2+(parseFloat(b.amount)||0);},0);
-    totalH+=dayTot.allHours; totalBase+=dayTot.base; totalP+=dayTot.total;
+    
+    // מעגלים את הסכומים לפני החיבור כדי למנוע "פספוסי אגורות"
+    totalH+=dayTot.allHours; 
+    totalBase+=Math.round(dayTot.base); 
+    totalP+=Math.round(dayTot.total);
     rows+='<tr>';
     rows+='<td>'+(detailed?'<strong>':'')+k+(detailed?'</strong>':'')+'</td>';
     rows+='<td style="color:#64748B">'+HE[dt.getDay()]+'</td>';
@@ -3191,8 +3198,7 @@ function _showTableReport(detailed,filterDates,xlsxOpts){
     if(detailed&&ox.job)  rows+='<td style="color:#475569">'+jobName+'</td>';
     if(detailed&&ox.partner){
       var pp=pd[k];
-      if(pp&&pp.hours>0){var ppr=cp(pp.hours,pp.rate||50,pp.bonuses);totalPartner+=ppr.total;rows+='<td style="color:#0EA5E9;font-weight:500">\u20aa'+Math.round(ppr.total).toLocaleString('he-IL')+'</td>';}
-      else rows+='<td style="color:#94A3B8">-</td>';
+if(pp&&pp.hours>0){var ppr=cp(pp.hours,pp.rate||50,pp.bonuses);totalPartner+=Math.round(ppr.total);rows+='<td style="color:#0EA5E9;font-weight:500">\u20aa'+Math.round(ppr.total).toLocaleString('he-IL')+'</td>';}      else rows+='<td style="color:#94A3B8">-</td>';
     }
     rows+='</tr>';
   });
