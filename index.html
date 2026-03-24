@@ -467,6 +467,39 @@ input[type=time].fi{text-align:center}
 .div{height:1px;background:var(--bd);margin:14px 0}
 .pbar-wrap{height:6px;background:var(--bd);border-radius:3px;overflow:hidden;margin-top:6px}
 .pbar-fill{height:100%;border-radius:3px;transition:width .5s}
+.cv-pills{display:flex;background:var(--s2);border-radius:12px;padding:4px;gap:0;flex:1;border:1px solid var(--bd)}
+.cv-pill{flex:1;padding:7px 4px;border-radius:9px;border:none;font-family:'Inter',sans-serif;font-size:11px;font-weight:400;cursor:pointer;background:transparent;color:var(--t2);transition:all .2s;text-align:center;white-space:nowrap}
+.cv-pill.active{background:var(--b8);color:#fff;box-shadow:0 2px 8px rgba(30,58,138,.25)}
+[data-theme=dark] .cv-pill.active{background:var(--b5)}
+.cal-seg-row{display:flex;gap:8px;margin-bottom:12px;align-items:center}
+.wv-list{display:flex;flex-direction:column;gap:4px}
+.wv-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:var(--s2);border:1px solid var(--bd);cursor:pointer;transition:all .15s}
+.wv-row:active{transform:scale(.98)}
+.wv-row.wv-has{background:var(--b0);border-color:var(--b1)}
+.wv-row.wv-today{border-color:var(--b6);box-shadow:0 0 0 2px var(--b1)}
+.wv-row.wv-miss{border-color:rgba(250,204,21,.6)}
+.wv-name{font-size:12px;font-weight:400;color:var(--t2);width:36px;flex-shrink:0}
+.wv-date{font-size:11px;color:var(--t3);width:20px;flex-shrink:0}
+.wv-bar-wrap{flex:1;height:5px;background:var(--bd);border-radius:3px;overflow:hidden}
+.wv-bar-fill{height:100%;border-radius:3px;background:var(--b6);transition:width .3s}
+.wv-hrs{font-size:10px;color:var(--b6);font-variant-numeric:tabular-nums;width:30px;text-align:left;flex-shrink:0}
+.wv-pay{font-size:10px;color:var(--g);font-variant-numeric:tabular-nums;width:54px;text-align:left;flex-shrink:0}
+.dv-card{background:var(--s2);border-radius:12px;padding:14px;border:1px solid var(--bd);margin-bottom:8px}
+.dv-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.dv-title{font-size:18px;font-weight:300;color:var(--t)}
+.dv-sub{font-size:10px;color:var(--t3);margin-top:2px}
+.dv-nav{display:flex;gap:4px}
+.dv-nav-btn{width:28px;height:28px;border-radius:8px;border:1px solid var(--bd);background:var(--s);color:var(--t2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;transition:all .15s}
+.dv-nav-btn:active{background:var(--b0)}
+.dv-metrics{display:flex;gap:6px;margin-bottom:12px}
+.dv-metric{flex:1;background:var(--s);border-radius:10px;padding:10px 8px;border:1px solid var(--bd);text-align:center}
+.dv-metric-val{font-size:17px;font-weight:300;color:var(--b8);font-variant-numeric:tabular-nums}
+.dv-metric-lbl{font-size:8px;color:var(--t3);margin-top:3px;letter-spacing:.4px}
+.dv-detail{display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid var(--bd);font-size:11px;color:var(--t2)}
+.dv-detail:last-child{border-bottom:none}
+.dv-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dv-val{margin-right:auto;font-weight:400;color:var(--t)}
+.dv-empty{text-align:center;padding:24px 0;color:var(--t3);font-size:12px}
 </style>
 </head>
 <body>
@@ -522,25 +555,32 @@ input[type=time].fi{text-align:center}
   </div>
   <div class="card">
     <div class="cal-nav">
-      <button class="btn-nav" onclick="navMonth(-1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,18 15,12 9,6"/></svg></button>
+      <button class="btn-nav" onclick="navCal(-1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,18 15,12 9,6"/></svg></button>
       <div style="text-align:center">
         <div class="cal-title" id="calTitle"></div>
         <div id="calYear" style="font-size:11px;color:var(--t3);line-height:1;margin-top:1px"></div>
       </div>
-      <div style="display:flex;gap:6px">
+      <div style="display:flex;gap:6px;align-items:center">
         <button class="btn-today" onclick="goToday()">היום</button>
-        <button class="btn-nav" onclick="navMonth(1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg></button>
+        <button class="btn-nav" onclick="navCal(1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg></button>
       </div>
     </div>
-    <div class="jump-row">
-      <input type="date" class="fi" id="jDate" style="flex:1;margin:0">
-      <button class="btn btn-g btn-sm" onclick="jumpDate()">קפוץ</button>
+    <div class="cal-seg-row">
+      <div class="cv-pills">
+        <button class="cv-pill active" id="cvp-month" onclick="switchCalView('month')">חודש</button>
+        <button class="cv-pill" id="cvp-week" onclick="switchCalView('week')">שבוע</button>
+        <button class="cv-pill" id="cvp-day" onclick="switchCalView('day')">יום</button>
+      </div>
+      <input type="date" class="cal-date-inp" id="jDate" style="padding:7px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--s2);font-size:11px;font-family:'Inter',sans-serif">
+      <button class="cal-jump-btn" onclick="jumpDate()" style="padding:7px 12px;border-radius:8px;background:var(--b0);color:var(--b6);border:1px solid var(--bd);font-size:11px;font-family:'Inter',sans-serif;cursor:pointer;white-space:nowrap">קפוץ</button>
     </div>
-    <div class="cal-grid" id="calGrid"></div>
-    <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
-      <span style="font-size:10px;color:var(--t3);display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;background:var(--b0);border:1.5px solid var(--b6);border-radius:3px;display:inline-block"></span>היום</span>
-      <span style="font-size:10px;color:var(--t3);display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;background:var(--b0);border-radius:3px;display:inline-block"></span>יש נתונים</span>
-      <span style="font-size:10px;color:var(--t3);display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border:2px solid #FDE047;border-radius:3px;display:inline-block"></span>חסר</span>
+    <div id="calViewBody">
+      <div class="cal-grid" id="calGrid"></div>
+      <div id="calLegend" style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+        <span style="font-size:10px;color:var(--t3);display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;background:var(--b0);border:1.5px solid var(--b6);border-radius:3px;display:inline-block"></span>היום</span>
+        <span style="font-size:10px;color:var(--t3);display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;background:var(--b0);border-radius:3px;display:inline-block"></span>יש נתונים</span>
+        <span style="font-size:10px;color:var(--t3);display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border:2px solid #FDE047;border-radius:3px;display:inline-block"></span>חסר</span>
+      </div>
     </div>
   </div>
 </div>
@@ -994,7 +1034,43 @@ function swPage(p,btn){
 }
 
 // ---- CALENDAR ----
+var _calView=localStorage.getItem('calView')||'month';
+
+function switchCalView(v){
+  _calView=v;
+  localStorage.setItem('calView',v);
+  ['month','week','day'].forEach(function(k){
+    var el=document.getElementById('cvp-'+k);
+    if(el)el.classList.toggle('active',k===v);
+  });
+  renderCal();
+}
+
+function navCal(d){
+  vib();
+  if(_calView==='week'){curDt.setDate(curDt.getDate()+(d*7));}
+  else if(_calView==='day'){curDt.setDate(curDt.getDate()+d);}
+  else{curDt.setMonth(curDt.getMonth()+d);}
+  renderCal();
+}
+
 function renderCal(){
+  // נקה תצוגות קודמות
+  var existing;
+  existing=document.getElementById('calWeekBody');if(existing)existing.remove();
+  existing=document.getElementById('calDayBody');if(existing)existing.remove();
+  
+  var _grid=document.getElementById('calGrid');
+  var _legend=document.getElementById('calLegend');
+  
+  // בדוק איזו תצוגה להציג
+  if(_calView==='week'){if(_grid)_grid.style.display='none';if(_legend)_legend.style.display='none';renderWeekView();updHdrSub();return;}
+  if(_calView==='day'){if(_grid)_grid.style.display='none';if(_legend)_legend.style.display='none';renderDayView();updHdrSub();return;}
+  
+  // תצוגת חודש — קוד מקורי
+  if(_grid)_grid.style.display='grid';
+  if(_legend)_legend.style.display='flex';
+  
   const y=curDt.getFullYear(),m=curDt.getMonth();
   document.getElementById('calTitle').textContent=MN[m];
   const yearEl=document.getElementById('calYear');if(yearEl)yearEl.textContent=y;
@@ -1036,7 +1112,126 @@ function renderCal(){
     pb.style.display=(!sNow.pairCode && !dismissed)?'flex':'none';
   }
 }
-function navMonth(d){vib();curDt.setMonth(curDt.getMonth()+d);renderCal();}
+
+function renderWeekView(){
+  var body=document.getElementById('calViewBody');
+  if(!body)return;
+  var legend=document.getElementById('calLegend');
+  if(legend)legend.style.display='none';
+  var grid=document.getElementById('calGrid');
+  if(grid)grid.style.display='none';
+
+  // מצא ראשון השבוע (ראשון = 0)
+  var d=new Date(curDt);
+  var day=d.getDay(); // 0=ראשון
+  d.setDate(d.getDate()-day); // חזור לראשון
+
+  var data=D.g(),s=D.gs(),pd=D.gp();
+  var today=new Date();today.setHours(0,0,0,0);
+  var tk=fk(today);
+
+  // חשב מקסימום שעות בשבוע לסקאלת הbar
+  var maxH=0;
+  for(var i=0;i<7;i++){
+    var dd=new Date(d);dd.setDate(d.getDate()+i);
+    var k=fk(dd);
+    var pr=cpDay(data[k]);
+    if(pr.allHours>maxH)maxH=pr.allHours;
+  }
+  if(maxH<1)maxH=1;
+
+  var DN=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+  var html='<div class="wv-list">';
+  for(var i=0;i<7;i++){
+    var dd=new Date(d);dd.setDate(d.getDate()+i);
+    var k=fk(dd);
+    var pr=cpDay(data[k]);
+    var hasData=pr.allHours>0;
+    var isToday=k===tk;
+    var isPast=dd<today&&!isToday;
+    var isMiss=s.showMissing&&isPast&&dd.getDay()!==6&&!hasData;
+    var cls='wv-row'+(hasData?' wv-has':'')+(isToday?' wv-today':'')+(isMiss?' wv-miss':'');
+    var pct=Math.round((pr.allHours/maxH)*100);
+    var hrsStr=hasData?(pr.allHours%1===0?pr.allHours:pr.allHours.toFixed(1))+"ש'":'—';
+    var payStr=hasData?'₪'+Math.round(pr.total).toLocaleString('he-IL'):'';
+    html+='<div class="'+cls+'" onclick="vib();openDay(\''+k+'\')">'+
+      '<span class="wv-name"'+(isToday?' style="color:var(--b6);font-weight:500"':'')+'>'+DN[dd.getDay()]+'</span>'+
+      '<span class="wv-date"'+(isToday?' style="color:var(--b6)"':'')+'>'+dd.getDate()+'</span>'+
+      '<div class="wv-bar-wrap"><div class="wv-bar-fill" style="width:'+pct+'%"></div></div>'+
+      '<span class="wv-hrs">'+hrsStr+'</span>'+
+      '<span class="wv-pay">'+payStr+'</span>'+
+    '</div>';
+  }
+  html+='</div>';
+
+  // כותרת: טווח תאריכים השבוע
+  var wEnd=new Date(d);wEnd.setDate(d.getDate()+6);
+  var titleStr=d.getDate()+'–'+wEnd.getDate()+' '+MN[wEnd.getMonth()];
+  var yearStr=wEnd.getFullYear();
+  document.getElementById('calTitle').textContent=titleStr;
+  var yearEl=document.getElementById('calYear');if(yearEl)yearEl.textContent=yearStr;
+
+  var existing=document.getElementById('calWeekBody');
+  if(existing)existing.remove();
+  var div=document.createElement('div');
+  div.id='calWeekBody';
+  div.innerHTML=html;
+  body.appendChild(div);
+}
+
+function renderDayView(){
+  var body=document.getElementById('calViewBody');
+  if(!body)return;
+  var legend=document.getElementById('calLegend');
+  if(legend)legend.style.display='none';
+  var grid=document.getElementById('calGrid');
+  if(grid)grid.style.display='none';
+
+  var data=D.g(),s=D.gs();
+  var k=fk(curDt);
+  var pr=cpDay(data[k]);
+  var hasData=pr.allHours>0;
+  var DN=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+  var dayName=DN[curDt.getDay()];
+  var dateStr=curDt.getDate()+' '+MN[curDt.getMonth()]+' '+curDt.getFullYear();
+
+  document.getElementById('calTitle').textContent=dayName+', '+curDt.getDate();
+  var yearEl=document.getElementById('calYear');if(yearEl)yearEl.textContent=MN[curDt.getMonth()]+' '+curDt.getFullYear();
+
+  var html='<div class="dv-card">';
+  if(!hasData){
+    html+='<div class="dv-empty">אין נתונים ליום זה<br><span style="font-size:10px;color:var(--b6);cursor:pointer" onclick="openDay(\''+k+'\')">+ הוסף</span></div>';
+  } else {
+    var rate=(data[k]&&data[k].rate)||0;
+    html+='<div class="dv-metrics">'+
+      '<div class="dv-metric"><div class="dv-metric-val">'+(pr.allHours%1===0?pr.allHours:pr.allHours.toFixed(1))+'</div><div class="dv-metric-lbl">שעות</div></div>'+
+      '<div class="dv-metric"><div class="dv-metric-val">₪'+Math.round(pr.total).toLocaleString('he-IL')+'</div><div class="dv-metric-lbl">שכר</div></div>'+
+      '<div class="dv-metric"><div class="dv-metric-val">₪'+rate+'</div><div class="dv-metric-lbl">תעריף</div></div>'+
+    '</div>';
+    // פרטי שעות נוספות
+    if(pr.ot1>0)html+='<div class="dv-detail"><div class="dv-dot" style="background:var(--b5)"></div><span>שע"ן 125%</span><span class="dv-val">'+pr.ot1.toFixed(2)+'ש\'</span></div>';
+    if(pr.ot2>0)html+='<div class="dv-detail"><div class="dv-dot" style="background:var(--b7)"></div><span>שע"ן 150%</span><span class="dv-val">'+pr.ot2.toFixed(2)+'ש\'</span></div>';
+    // בונוסים
+    var bons=data[k].bonuses||[];
+    bons.forEach(function(b){
+      if(!b||!b.amount)return;
+      html+='<div class="dv-detail"><div class="dv-dot" style="background:var(--g)"></div><span>'+(b.name||'בונוס')+'</span><span class="dv-val">₪'+Math.round(b.amount).toLocaleString('he-IL')+'</span></div>';
+    });
+    // הערה
+    if(data[k].note)html+='<div class="dv-detail"><div class="dv-dot" style="background:var(--t3)"></div><span>'+data[k].note+'</span></div>';
+    // כפתור עריכה
+    html+='<div style="text-align:center;margin-top:10px"><button onclick="openDay(\''+k+'\')" style="padding:6px 16px;border-radius:8px;border:1px solid var(--b1);background:var(--b0);color:var(--b6);font-size:11px;cursor:pointer">עריכה</button></div>';
+  }
+  html+='</div>';
+
+  var existing=document.getElementById('calDayBody');
+  if(existing)existing.remove();
+  var div=document.createElement('div');
+  div.id='calDayBody';
+  div.innerHTML=html;
+  body.appendChild(div);
+}
+
 function goToday(){vib();curDt=new Date();renderCal();}
 function jumpDate(){const v=document.getElementById('jDate').value;if(v){curDt=new Date(v);renderCal();}}
 function updHdrSub(){
@@ -3335,6 +3530,12 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   const savedColor=D.gs().colorTheme||'blue';
   applyColorTheme(savedColor);
+  // שחזר תצוגת יומן שמורה
+  _calView=localStorage.getItem('calView')||'month';
+  ['month','week','day'].forEach(function(k){
+    var el=document.getElementById('cvp-'+k);
+    if(el)el.classList.toggle('active',k===_calView);
+  });
   initClock();renderCal();setSyncDot(false);initGD();checkPairLink();
   // בדוק אם מישהו חיבר אותנו — 4 שניות אחרי טעינה
   setTimeout(function(){
