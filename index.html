@@ -63,8 +63,7 @@ function _waitForCapBrowser(ms){
 <script>
 // Firebase Realtime Database — pair sync
 // Database URL:                                                   
-const FB_URL='                                                       ';
-
+const FB_URL='https://moneytime-app-f5a15-default-rtdb.firebaseio.com';
 async function fbWrite(path,data){
   try{
     const r=await fetch(`${FB_URL}/${path}.json`,{
@@ -934,8 +933,7 @@ input[type=time].fi{text-align:center}
 const JC=['#1E3A8A','#2563EB','#10B981','#F59E0B','#EF4444','#8B5CF6'];
 const MN=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 const CID='57616527068-9ogg9tnmgcku8icu5bjkvd7e48b9hujs.apps.googleusercontent.com';
-const SCOPES='https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email';
-let curDt=new Date(), selDt=null, mType='', per='7', rTab='gen';
+const SCOPES='https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email';let curDt=new Date(), selDt=null, mType='', per='7', rTab='gen';
 let hCh,pCh,cmpCh,cplCh,jCh;
 let aToken=null, tClient=null, dProm=null, tInt=null;
 
@@ -2111,8 +2109,7 @@ function toggleFbonPicker(){
 const APP_VERSION='2.1.268';
 const APP_BUILD=268; // CI מחליף בכל build
 const LIVE_URL='https://tzur669-lab.github.io/moneytime-app/';
-const VER_FB_URL='https://moneytime-app-f5a15-default-rtdb.firebaseio.com/appVersion.json';
-const GITHUB_APK_BASE='https://github.com/tzur669-lab/moneytime-app/releases/download';
+const VER_FB_URL='https://moneytime-app-f5a15-default-rtdb.firebaseio.com/appVersion.json';const GITHUB_APK_BASE='https://github.com/tzur669-lab/moneytime-app/releases/download';
 const GITHUB_RELEASES='https://github.com/tzur669-lab/moneytime-app/releases/latest';
 let _updShown=false;
 let _updApkUrl='';
@@ -2407,7 +2404,14 @@ function initGD(){
 }
 
 function startGoogleAuth(){
-  var redirectUri = window.location.origin + '/callback.html';
+  // הגדרת ה-Redirect: ברירת מחדל לכתובת ב-GitHub Pages (כולל שם התיקייה)
+  var redirectUri = 'https://tzur669-lab.github.io/moneytime-app/callback.html';
+  
+  // אם מריצים מקומית על המחשב (localhost), הכתובת תשתנה אוטומטית לכתובת המקומית
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    redirectUri = window.location.origin + '/callback.html';
+  }
+
   var url = 'https://accounts.google.com/o/oauth2/v2/auth'
     + '?client_id=' + CID
     + '&redirect_uri=' + encodeURIComponent(redirectUri)
@@ -2415,6 +2419,7 @@ function startGoogleAuth(){
     + '&scope=' + encodeURIComponent(SCOPES)
     + '&prompt=select_account';
 
+  // לוגיקה עבור ה-APK (Capacitor) - נשמרת כדי שהאפליקציה בטלפון תעבוד
   if(window.CapApp || window.CapBrowser){
     var _appUrlHandler = null;
     if(window.CapApp){
@@ -2440,6 +2445,7 @@ function startGoogleAuth(){
     });
 
   } else {
+    // לוגיקה עבור דפדפן רגיל
     window.location.href = url;
   }
 }
@@ -2509,7 +2515,7 @@ async function _restorePairByGoogleId(googleId){
 }
 
 function _countUniqueUser(){
-  // Tracking function removed - no longer sends user data to external services
+  console.log("Tracking disabled.");
   return;
 }
 
