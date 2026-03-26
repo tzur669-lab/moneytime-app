@@ -64,6 +64,7 @@ function _waitForCapBrowser(ms){
 // Firebase Realtime Database — pair sync
 // Database URL:                                                   
 const FB_URL='https://moneytime-app-f5a15-default-rtdb.firebaseio.com';
+
 async function fbWrite(path,data){
   try{
     const r=await fetch(`${FB_URL}/${path}.json`,{
@@ -710,74 +711,7 @@ input[type=time].fi{text-align:center}
       <button class="btn btn-o" id="updSetBtn" onclick="_checkUpdateFromSettings(this)" style="font-size:11px;padding:6px 12px">בדוק עדכון</button>
     </div>
   </div>
-<div class="card" style="padding:0;overflow:hidden;margin-bottom:16px">
-  <button onclick="toggleGuide()" style="width:100%;background:linear-gradient(135deg,var(--b8),var(--b6));border:none;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;text-align:right">
-    <span style="font-size:20px">📖</span>
-    <div style="flex:1">
-      <div style="font-size:13px;font-weight:500;color:#fff">מדריך האפליקציה</div>
-      <div style="font-size:10px;color:rgba(255,255,255,.7);margin-top:1px">כל הפיצ'רים שיש לאפליקציה להציע</div>
-    </div>
-    <svg id="guideArrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2" stroke-linecap="round" style="transition:transform .3s;flex-shrink:0"><polyline points="6,9 12,15 18,9"/></svg>
-  </button>
-  <div id="guideBody" style="display:none">
-    <div style="padding:4px 0">
-      <div style="padding:12px 14px;border-bottom:1px solid var(--bd)">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-          <span style="font-size:18px">📅</span><span style="font-size:13px;font-weight:500;color:var(--t)">יומן חודשי</span>
-        </div>
-        <div style="font-size:11px;color:var(--t3);line-height:1.7;padding-right:28px">רשום שעות לכל יום בלחיצה על התאריך. הגדר שעות, תעריף ובונוסים. האפליקציה מחשבת שכר כולל שעות נוספות אוטומטית.</div>
-      </div>
-      <div style="padding:12px 14px;border-bottom:1px solid var(--bd)">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-          <span style="font-size:18px">💼</span><span style="font-size:13px;font-weight:500;color:var(--t)">מספר מקומות עבודה</span>
-        </div>
-        <div style="font-size:11px;color:var(--t3);line-height:1.7;padding-right:28px">עד 3 עבודות עם שם, צבע ותעריף לכל אחת. ניתן לרשום שעות מכמה עבודות באותו יום ולהגדיר משכורת קבועה חודשית.</div>
-      </div>
-      <div style="padding:12px 14px;border-bottom:1px solid var(--bd)">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-          <span style="font-size:18px">🎁</span><span style="font-size:13px;font-weight:500;color:var(--t)">בונוסים קבועים</span>
-        </div>
-        <div style="font-size:11px;color:var(--t3);line-height:1.7;padding-right:28px">הגדר בונוסים חוזרים (מענק ביצוע, תוספת ותק...) עם שם וסכום. בחר מהם בלחיצה אחת בעת רישום יום.</div>
-      </div>
-      <div style="padding:12px 14px;border-bottom:1px solid var(--bd)">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-          <span style="font-size:18px">👫</span><span style="font-size:13px;font-weight:500;color:var(--t)">סנכרון זוגי בזמן אמת</span>
-        </div>
-        <div style="font-size:11px;color:var(--t3);line-height:1.7;padding-right:28px">חבר פרטנר עם קוד זוגי וראו הכנסות משולבות בלשונית "ביחד". סנכרון אוטומטי דרך Google Drive עם גיבוי בענן.</div>
-      </div>
-      <div style="padding:12px 14px;border-bottom:1px solid var(--bd)">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-          <span style="font-size:18px">📤</span><span style="font-size:13px;font-weight:500;color:var(--t)">ייצוא דוחות מתקדם</span>
-        </div>
-        <div style="font-size:11px;color:var(--t3);line-height:1.7;padding-right:28px">ייצא ל-CSV או Excel עם שורת סיכום כוללת: שעות כוללות, שכר בסיס, בונוסים, סה"כ אישי וסה"כ משולב. סנן לפי טווח תאריכים.</div>
-      </div>
-      <div style="padding:12px 14px;border-bottom:1px solid var(--bd)">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-          <span style="font-size:18px">⏱️</span><span style="font-size:13px;font-weight:500;color:var(--t)">שעון נוכחות</span>
-        </div>
-        <div style="font-size:11px;color:var(--t3);line-height:1.7;padding-right:28px">התחל/סיים משמרת בלחיצה — האפליקציה ממלאת שעות אוטומטית. מושלם כשאין אפשרות לרשום ידנית.</div>
-      </div>
-      <div style="padding:12px 14px;border-bottom:1px solid var(--bd)">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-          <span style="font-size:18px">📊</span><span style="font-size:13px;font-weight:500;color:var(--t)">דוחות וסטטיסטיקות</span>
-        </div>
-        <div style="font-size:11px;color:var(--t3);line-height:1.7;padding-right:28px">סיכום חודשי ושנתי, גרפים לפי חודשים, השוואת שנים, וניתוח לפי עבודות. סינון לפי טווח תאריכים.</div>
-      </div>
-      <div style="padding:12px 14px;border-bottom:1px solid var(--bd)">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-          <span style="font-size:18px">💾</span><span style="font-size:13px;font-weight:500;color:var(--t)">גיבוי ושחזור</span>
-        </div>
-        <div style="font-size:11px;color:var(--t3);line-height:1.7;padding-right:28px">גבה לקובץ JSON ושחזר בכל עת. תמיכה בסנכרון Google Drive לגיבוי אוטומטי וסנכרון זוגי.</div>
-      </div>
-      <div style="padding:12px 14px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-          <span style="font-size:18px">🔔</span><span style="font-size:13px;font-weight:500;color:var(--t)">התראת ימים חסרים</span>
-        </div>
-        <div style="font-size:11px;color:var(--t3);line-height:1.7;padding-right:28px">מזהה ימי חול ללא רישום ומתריע בבאנר. לחץ על יום מסומן בצהוב ביומן לתיקון. ניתן לכבות בהגדרות.</div>
-      </div>
-    </div>
-  </div>
-</div>
+
   <div class="set-sec-ttl">יצירת קשר</div>
   <div class="card" style="padding:14px;text-align:center">
     <a id="contactMailLink" href="#" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
@@ -2173,8 +2107,8 @@ function toggleFbonPicker(){
 }
 
 // ---- AUTO UPDATE ----
-const APP_VERSION='2.1.281';
-const APP_BUILD=281; // CI מחליף בכל build
+const APP_VERSION='2.1.277';
+const APP_BUILD=277; // CI מחליף בכל build
 const LIVE_URL='https://tzur669-lab.github.io/moneytime-app/';
 const VER_FB_URL='https://moneytime-app-f5a15-default-rtdb.firebaseio.com/appVersion.json';const GITHUB_APK_BASE='https://github.com/tzur669-lab/moneytime-app/releases/download';
 const GITHUB_RELEASES='https://github.com/tzur669-lab/moneytime-app/releases/latest';
@@ -2445,10 +2379,23 @@ function _navToCouple(){
 
 function initGD(){
   handleOAuthReturn();
+  
+  // הוסף listener ל-postMessage מ-callback popup
+  window.addEventListener('message', function(e){
+    // אבטחה - רק מהדומיין שלנו
+    if(e.origin !== 'https://tzur669-lab.github.io' && 
+       e.origin !== window.location.origin) return;
+    
+    if(e.data && e.data.type === 'oauth_token' && e.data.token){
+      _onTokenReceived(e.data.token);
+      showToast('✅ חובר ל-Google Drive בהצלחה!');
+    }
+  });
+  
   const saved=localStorage.getItem('gtoken');
   if(saved){
     aToken=saved;
-    fetch('                                                            '+saved)
+    fetch('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token='+saved)
       .then(r=>r.json())
       .then(info=>{
         if(info.error){
@@ -2471,7 +2418,12 @@ function initGD(){
 }
 
 function startGoogleAuth(){
-  // ברירת המחדל: הכתובת המאובטחת ב-GitHub (שמכילה את ה"מקפצה" לאפליקציה בטלפון)
+  // יצירת state ייחודי למשתמש (לזיהוי במערכת הכפולה)
+  var uid = localStorage.getItem('gdk') || localStorage.getItem('myUID') || ('anon-' + Date.now() + '-' + Math.random().toString(36).substring(2,8));
+  if(!localStorage.getItem('gdk')) localStorage.setItem('gdk', uid);
+  var state = btoa(uid).replace(/[=+/]/g, '');
+  
+  // ברירת המחדל: הכתובת המאובטחת ב-GitHub
   var redirectUri = 'https://tzur669-lab.github.io/moneytime-app/callback.html';
   
   // נשתמש ב-localhost *רק* אם אנחנו מפתחים במחשב, ולא בתוך האפליקציה בטלפון
@@ -2484,10 +2436,32 @@ function startGoogleAuth(){
     + '&redirect_uri=' + encodeURIComponent(redirectUri)
     + '&response_type=token'
     + '&scope=' + encodeURIComponent(SCOPES)
+    + '&state=' + state
     + '&prompt=select_account';
 
-  // לוגיקה עבור ה-APK (Capacitor)
+  // מצב APK (Capacitor) - דפדפן חיצוני + Firebase polling
   if(window.CapApp || window.CapBrowser){
+    // התחל polling על Firebase לקבלת token
+    var safeState = state.replace(/[.#$\[\]\/]/g,'_');
+    var pollInterval = setInterval(function(){
+      fetch(FB_URL + '/oauthTokens/' + safeState + '.json')
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          if(data && data.token){
+            clearInterval(pollInterval);
+            _onTokenReceived(data.token);
+            // נקה את ה-token מ-Firebase אחרי שימוש (אבטחה)
+            fetch(FB_URL + '/oauthTokens/' + safeState + '.json', {method: 'DELETE'}).catch(function(){});
+            showToast('✅ חובר ל-Google Drive!');
+          }
+        })
+        .catch(function(){});
+    }, 2000); // polling כל 2 שניות
+    
+    // timeout - עצור polling אחרי 5 דקות
+    setTimeout(function(){ clearInterval(pollInterval); }, 300000);
+    
+    // deep link listener (גיבוי)
     var _appUrlHandler = null;
     if(window.CapApp){
       _appUrlHandler = window.CapApp.addListener('appUrlOpen', function(data){
@@ -2498,25 +2472,36 @@ function startGoogleAuth(){
         if(hashIdx !== -1){
           var params = new URLSearchParams(url2.substring(hashIdx+1));
           var token = params.get('access_token');
-          if(token){ _onTokenReceived(token); return; }
+          if(token){ 
+            clearInterval(pollInterval);
+            _onTokenReceived(token); 
+            return; 
+          }
         }
-        handleOAuthReturn();
       });
     }
 
+    // פתח דפדפן חיצוני
     try{ window.CapBrowser.removeAllListeners(); }catch(e){}
     window.CapBrowser.open({url: url, presentationStyle: 'fullscreen'});
     window.CapBrowser.addListener('browserFinished', function(){
       if(_appUrlHandler){ try{_appUrlHandler.remove();}catch(e){} }
-      handleOAuthReturn();
     });
 
   } else {
-    window.location.href = url;
+    // מצב PWA - פתיחת popup
+    var popup = window.open(url, 'GoogleAuth', 'width=500,height=600,scrollbars=yes');
+    
+    // טיפול במקרה של popup חסום
+    if(!popup || popup.closed || typeof popup.closed === 'undefined'){
+      // fallback - redirect מלא
+      window.location.href = url;
+    }
   }
 }
 function _onTokenReceived(token){
   if(!token)return;
+  console.log('✓ OAuth token received');
   aToken = token;
   localStorage.setItem('gtoken', token);
   localStorage.setItem('syen', '1');
@@ -2528,6 +2513,7 @@ function _onTokenReceived(token){
       loadDr();
       showToast('✅ חובר ל-Google Drive בהצלחה!');
       _countUniqueUser();
+      console.log('✓ Google Drive connected successfully');
     });
   }, 300);
 }
@@ -3220,20 +3206,13 @@ function _showTableReport(detailed,filterDates,xlsxOpts){
 
   allKeys.forEach(function(k){
     if(activeSet&&!activeSet.has(k))return;
-    var r=d[k]; 
-    
-    // בודק אם יש בונוס כדי לא לדלג בטעות על ימים שהפרטנר עבד בהם
-    var bon=(r.bonuses||[]).reduce(function(s2,b){return s2+(parseFloat(b.amount)||0);},0);
-    if(!(r.hours>0) && !(bon>0)) return; 
+    var r=d[k]; if(!(r.hours>0))return;
     var pr=cp(r.hours,r.rate,r.bonuses);
     var dayTot=cpDay(r);
     var dt=new Date(k);
     var jobName=((jobs[r.jobIdx||0])||{}).name||'ראשי';
-    
-    // מעגלים את הסכומים לפני החיבור כדי למנוע "פספוסי אגורות"
-    totalH+=dayTot.allHours; 
-    totalBase+=Math.round(dayTot.base); 
-    totalP+=Math.round(dayTot.total);
+    var bon=(r.bonuses||[]).reduce(function(s2,b){return s2+(parseFloat(b.amount)||0);},0);
+    totalH+=dayTot.allHours; totalBase+=dayTot.base; totalP+=dayTot.total;
     rows+='<tr>';
     rows+='<td>'+(detailed?'<strong>':'')+k+(detailed?'</strong>':'')+'</td>';
     rows+='<td style="color:#64748B">'+HE[dt.getDay()]+'</td>';
@@ -3265,7 +3244,8 @@ function _showTableReport(detailed,filterDates,xlsxOpts){
     if(detailed&&ox.job)  rows+='<td style="color:#475569">'+jobName+'</td>';
     if(detailed&&ox.partner){
       var pp=pd[k];
-if(pp&&pp.hours>0){var ppr=cp(pp.hours,pp.rate||50,pp.bonuses);totalPartner+=Math.round(ppr.total);rows+='<td style="color:#0EA5E9;font-weight:500">\u20aa'+Math.round(ppr.total).toLocaleString('he-IL')+'</td>';}      else rows+='<td style="color:#94A3B8">-</td>';
+      if(pp&&pp.hours>0){var ppr=cp(pp.hours,pp.rate||50,pp.bonuses);totalPartner+=ppr.total;rows+='<td style="color:#0EA5E9;font-weight:500">\u20aa'+Math.round(ppr.total).toLocaleString('he-IL')+'</td>';}
+      else rows+='<td style="color:#94A3B8">-</td>';
     }
     rows+='</tr>';
   });
@@ -3638,6 +3618,29 @@ document.querySelectorAll('.modal').forEach(m=>{m.addEventListener('click',e=>{i
 function vib(){try{navigator.vibrate?.(10);}catch(e){}}
 function flash(){const el=document.getElementById('sf');el.className='sf show';setTimeout(()=>{el.className='sf bye';setTimeout(()=>el.className='sf',300);},900);}
 
+// ניקוי tokens ישנים מ-Firebase (אבטחה)
+function _cleanupOldTokens(){
+  try{
+    fetch(FB_URL + '/oauthTokens.json')
+      .then(function(r){ return r.json(); })
+      .then(function(tokens){
+        if(!tokens || typeof tokens !== 'object') return;
+        var now = Date.now();
+        var deleted = 0;
+        Object.keys(tokens).forEach(function(state){
+          var entry = tokens[state];
+          // מחק tokens שעברו 10 דקות
+          if(entry && entry.expires && entry.expires < now){
+            fetch(FB_URL + '/oauthTokens/' + state + '.json', {method: 'DELETE'}).catch(function(){});
+            deleted++;
+          }
+        });
+        if(deleted > 0) console.log('נוקו ' + deleted + ' tokens ישנים מ-Firebase');
+      })
+      .catch(function(){});
+  }catch(e){}
+}
+
 // ---- KEYBOARD ----
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape')document.querySelectorAll('.modal.active').forEach(m=>m.classList.remove('active'));
@@ -3671,6 +3674,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(el)el.classList.toggle('active',k===_calView);
   });
   initClock();renderCal();setSyncDot(false);initGD();checkPairLink();
+  // נקה tokens ישנים מ-Firebase (אחת לכמה שעות)
+  _cleanupOldTokens();
   // בדוק אם מישהו חיבר אותנו — 4 שניות אחרי טעינה
   setTimeout(function(){
     const _s=D.gs();
@@ -3693,16 +3698,6 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(_s.myCode&&!_s.pairCode) setTimeout(autoDetectIncomingPair,1500);
   });
 });
-  // ---- פונקציה לפתיחה וסגירה של המדריך ----
-function toggleGuide(){
-  var body = document.getElementById('guideBody');
-  var arrow = document.getElementById('guideArrow');
-  if(!body) return;
-  
-  var open = (body.style.display === 'none' || body.style.display === '');
-  body.style.display = open ? 'block' : 'none';
-  if(arrow) arrow.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
-}
 </script>
 </body>
 </html>
