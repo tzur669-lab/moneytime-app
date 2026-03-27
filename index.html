@@ -122,6 +122,10 @@ async function loadPartnerFromFirebase(){
       if(data.myColor)ss.partnerColor=data.myColor;
       D.ss(ss);
     }
+
+    // הנה השורה שהוספנו! מעדכנת את התצוגה אחרי שהנתונים ירדו מהשרת
+    updatePartnerDaySummary();
+
     return true;
   }
   return false;
@@ -500,6 +504,95 @@ input[type=time].fi{text-align:center}
 .dv-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .dv-val{margin-right:auto;font-weight:400;color:var(--t)}
 .dv-empty{text-align:center;padding:24px 0;color:var(--t3);font-size:12px}
+  /* Partner Daily Summary */
+.partner-day-summary {
+  margin-top: 20px;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--b0) 0%, var(--s2) 100%);
+  border-radius: 12px;
+  border: 1px solid var(--bd);
+  border-top: 2px solid var(--am);
+}
+.pds-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--bd);
+}
+.pds-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--t2);
+}
+.pds-title svg {
+  color: var(--am);
+}
+.pds-total {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--am);
+  font-variant-numeric: tabular-nums;
+}
+.pds-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pds-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  padding: 6px 8px;
+  background: var(--s);
+  border-radius: 8px;
+  border: 1px solid var(--bd);
+}
+.pds-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--t3);
+  font-weight: 500;
+}
+.pds-label svg {
+  flex-shrink: 0;
+}
+.pds-value {
+  color: var(--t);
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+}
+.pds-value strong {
+  font-weight: 600;
+  color: var(--am);
+}
+.pds-bonus {
+  color: var(--g);
+  font-weight: 600;
+}
+.pds-note {
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: var(--s);
+  border-radius: 8px;
+  border-right: 3px solid var(--am);
+  font-size: 11px;
+  color: var(--t2);
+  line-height: 1.4;
+}
+/* Dark mode adjustments */
+[data-theme=dark] .pds-total {
+  color: var(--am);
+}
+[data-theme=dark] .pds-value strong {
+  color: var(--am);
+}
 </style>
 </head>
 <body>
@@ -731,6 +824,7 @@ input[type=time].fi{text-align:center}
 <div class="sf" id="sf">✓</div>
 
 <!-- MODAL: DAILY -->
+
 <div class="modal" id="mDay">
   <div class="msh">
     <div class="mhdl"></div>
@@ -776,11 +870,55 @@ input[type=time].fi{text-align:center}
       <div id="dBonList"></div>
     </div>
     <div class="fg"><label class="fl">הערה</label><input type="text" class="fi" id="dNote" placeholder="הערה אופציונלית..."></div>
+
     <div class="btn-row">
       <button class="btn btn-p" onclick="saveDay()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg> שמור</button>
       <button class="btn btn-o" onclick="closeM('mDay')">ביטול</button>
     </div>
     <div style="height:8px"></div>
+
+    <div id="partnerDaySummary" class="partner-day-summary" style="display:none">
+      <div class="pds-header">
+        <div class="pds-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span id="pdsPartnerName">פרטנר</span>
+        </div>
+        <div class="pds-total" id="pdsTotal">₪0</div>
+      </div>
+
+      <div class="pds-breakdown">
+        <div class="pds-row">
+          <span class="pds-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            עבודה
+          </span>
+          <span class="pds-value">
+            <span id="pdsHours">0</span> שעות ×
+            <span id="pdsRate">₪0</span>/שעה =
+            <strong id="pdsBase">₪0</strong>
+          </span>
+        </div>
+
+        <div class="pds-row" id="pdsBonusRow" style="display:none">
+          <span class="pds-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+            </svg>
+            בונוסים
+          </span>
+          <span class="pds-value pds-bonus" id="pdsBonus">₪0</span>
+        </div>
+      </div>
+
+      <div class="pds-note" id="pdsNote" style="display:none"></div>
+    </div>
+
   </div>
 </div>
 
@@ -1246,6 +1384,7 @@ function updHdrSub(){
 }
 
 // ---- DAY MODAL ----
+// ---- DAY MODAL ----
 function openDay(k){
   selDt=new Date(k);const data=D.g(),s=D.gs();
   const d=data[k]||{hours:'',rate:s.jobs?.[0]?.rate||50,note:'',bonuses:[],jobIdx:0,startTime:'',endTime:'',extraJobs:[]};
@@ -1270,6 +1409,10 @@ function openDay(k){
   renderFbonChips();
   document.getElementById('dExtraJobList').innerHTML='';
   (d.extraJobs||[]).forEach(ej=>addExtraJob(ej.jobIdx,ej.hours,ej.rate,ej.startTime,ej.endTime));
+
+  // הנה השורה שהוספנו! מפעילה את סיכום הפרטנר לפני פתיחת החלון
+  updatePartnerDaySummary();
+
   openM('mDay');
 }
 function onJobCh(){const s=D.gs(),ji=parseInt(document.getElementById('dJob').value);const j=s.jobs?.[ji];if(j)document.getElementById('dR').value=j.rate||'';}
@@ -3698,6 +3841,74 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(_s.myCode&&!_s.pairCode) setTimeout(autoDetectIncomingPair,1500);
   });
 });
+  /**
+ * Update partner's daily earnings summary in day modal
+ */
+function updatePartnerDaySummary() {
+  const summaryEl = document.getElementById('partnerDaySummary');
+  if (!summaryEl) return;
+
+  const settings = D.gs();
+
+  // Check if paired
+  if (!settings.pairCode || !settings.partnerCode) {
+    summaryEl.style.display = 'none';
+    return;
+  }
+
+  // Get selected date
+  const date = selDt ? fk(selDt) : fk(new Date());
+
+  // Get partner's data for this date
+  const partnerData = D.gp()[date] || {};
+
+  // If no data, hide summary
+  if (!partnerData.hours && !partnerData.bonus) {
+    summaryEl.style.display = 'none';
+    return;
+  }
+
+  // Calculate earnings
+  const hours = parseFloat(partnerData.hours) || 0;
+  const rate = parseFloat(partnerData.rate) || 0;
+  const bonus = parseFloat(partnerData.bonus) || 0;
+  const base = hours * rate;
+  const total = base + bonus;
+
+  // Update UI
+  summaryEl.style.display = 'block';
+
+  // Partner name
+  document.getElementById('pdsPartnerName').textContent =
+    settings.partnerName || 'פרטנר';
+
+  // Total
+  document.getElementById('pdsTotal').textContent =
+    '₪' + total.toFixed(0);
+
+  // Base earnings breakdown
+  document.getElementById('pdsHours').textContent = hours.toFixed(1);
+  document.getElementById('pdsRate').textContent = '₪' + rate.toFixed(0);
+  document.getElementById('pdsBase').textContent = '₪' + base.toFixed(0);
+
+  // Bonus (show only if exists)
+  const bonusRow = document.getElementById('pdsBonusRow');
+  if (bonus > 0) {
+    bonusRow.style.display = 'flex';
+    document.getElementById('pdsBonus').textContent = '₪' + bonus.toFixed(0);
+  } else {
+    bonusRow.style.display = 'none';
+  }
+
+  // Note (show only if exists)
+  const noteEl = document.getElementById('pdsNote');
+  if (partnerData.note && partnerData.note.trim()) {
+    noteEl.style.display = 'block';
+    noteEl.textContent = '📝 ' + partnerData.note;
+  } else {
+    noteEl.style.display = 'none';
+  }
+}
 </script>
 </body>
 </html>
