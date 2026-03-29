@@ -1067,10 +1067,9 @@ input[type=time].fi{text-align:center}
 const JC=['#1E3A8A','#2563EB','#10B981','#F59E0B','#EF4444','#8B5CF6'];
 const MN=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 const CID='57616527068-9ogg9tnmgcku8icu5bjkvd7e48b9hujs.apps.googleusercontent.com';
-const SCOPES='https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/drive';let curDt=new Date(), selDt=null, mType='', per='7', rTab='gen';
+const SCOPES='https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email';let curDt=new Date(), selDt=null, mType='', per='7', rTab='gen';
 let hCh,pCh,cmpCh,cplCh,jCh;
 let aToken=null, tClient=null, dProm=null, tInt=null;
-let refreshToken=null; // ← נוסף: שמירת refresh token
 
 // ---- STORAGE ----
 const DEF_S={jobs:[{name:'עבודה ראשית',color:'#1E3A8A',rate:50,fixed:0}],calcOvertime:false,showMissing:true,myName:'אני',myColor:'#1E3A8A',partnerName:'פרטנר',partnerColor:'#10B981',pairCode:null,partnerCode:null,myUID:null,theme:'light',fixedBonuses:[]};
@@ -2246,8 +2245,8 @@ function toggleFbonPicker(){
 }
 
 // ---- AUTO UPDATE ----
-const APP_VERSION='2.1.290';
-const APP_BUILD=290; // CI מחליף בכל build
+const APP_VERSION='2.1.288';
+const APP_BUILD=288; // CI מחליף בכל build
 const LIVE_URL='https://tzur669-lab.github.io/moneytime-app/';
 const VER_FB_URL='https://moneytime-app-f5a15-default-rtdb.firebaseio.com/appVersion.json';const GITHUB_APK_BASE='https://github.com/tzur669-lab/moneytime-app/releases/download';
 const GITHUB_RELEASES='https://github.com/tzur669-lab/moneytime-app/releases/latest';
@@ -2517,7 +2516,6 @@ function _navToCouple(){
 }
 
 function initGD(){
-  console.log('🔐 Initializing Google Drive auth...');
   handleOAuthReturn();
   
   // הוסף listener ל-postMessage מ-callback popup
@@ -2527,34 +2525,21 @@ function initGD(){
        e.origin !== window.location.origin) return;
     
     if(e.data && e.data.type === 'oauth_token' && e.data.token){
-      _onTokenReceived(e.data.token, e.data.refresh);
+      _onTokenReceived(e.data.token);
       showToast('✅ חובר ל-Google Drive בהצלחה!');
     }
   });
   
   const saved=localStorage.getItem('gtoken');
-  const savedRefresh = localStorage.getItem('grefresh');
   if(saved){
     aToken=saved;
-    refreshToken = savedRefresh; // ← טעינת refresh token
-    console.log('Found saved token, validating...');
     fetch('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token='+saved)
       .then(r=>r.json())
       .then(info=>{
         if(info.error){
-          console.warn('Token invalid:', info.error);
-          // אם הטוקן לא תקף, נסה לרענן אותו
-          if(refreshToken){
-            tryRefreshToken().then(()=>{
-              renderSettings();
-              loadDr();
-            });
-          } else {
-            localStorage.removeItem('gtoken');localStorage.removeItem('syen');
-            aToken=null;setSyncDot(false);renderSettings();
-          }
+          localStorage.removeItem('gtoken');localStorage.removeItem('syen');
+          aToken=null;setSyncDot(false);renderSettings();
         } else {
-          console.log('Token valid, fetching user info...');
           fetchEmail().then(()=>{
             renderSettings();
             setSyncDot(true);
@@ -2563,57 +2548,11 @@ function initGD(){
             // סנכרן זוג מחדש ל-Firebase בכל פתיחה
             const _s=D.gs();
             if(_s.pairCode&&_s.myCode) syncPairToFirebase().catch(()=>{});
-          }).catch((e)=>{
-            console.error('Failed to fetch email:', e);
-            // אם נכשל, נסה לרענן
-            if(refreshToken){
-              tryRefreshToken().then(()=>{
-                renderSettings();
-                loadDr();
-              });
-            } else {
-              // אם נכשל, נסה שוב עם טוקן חדש
-              aToken=null;
-              localStorage.removeItem('gtoken');
-              localStorage.removeItem('syen');
-              setSyncDot(false);
-              renderSettings();
-            }
           });
         }
-      }).catch((e)=>{
-        console.error('Token validation failed:', e);
-        // אם הבקשה עצמה נכשלה, ננסה להשתמש בטוקן ונראה אם הוא עובד
-        fetchEmail().then(()=>{
-          console.log('Token works despite validation failure');
-          renderSettings();
-          setSyncDot(true);
-          loadDr();
-        }).catch(()=>{
-          console.log('Token completely invalid, trying refresh...');
-          if(refreshToken){
-            tryRefreshToken().then(()=>{
-              renderSettings();
-              loadDr();
-            });
-          } else {
-            localStorage.removeItem('gtoken');
-            localStorage.removeItem('syen');
-            aToken=null;
-            setSyncDot(false);
-            renderSettings();
-          }
-        });
-      });
+      }).catch(()=>{fetchEmail().then(()=>{renderSettings();setSyncDot(true);});});
   }
-  
-  // ודא שהאלמנטים קיימים לפני שימוש
-  const authBtn = document.getElementById('authBtn');
-  if(authBtn) {
-    authBtn.onclick=()=>{vib();startGoogleAuth();};
-  }
-  
-  console.log('🔐 Google Drive auth initialization completed');
+  document.getElementById('authBtn').onclick=()=>{vib();startGoogleAuth();};
 }
 
 function startGoogleAuth(){
@@ -2633,11 +2572,10 @@ function startGoogleAuth(){
   var url = 'https://accounts.google.com/o/oauth2/v2/auth'
     + '?client_id=' + CID
     + '&redirect_uri=' + encodeURIComponent(redirectUri)
-    + '&response_type=code'  // ← שונה מ-'token' ל-'code' כדי לקבל refresh token
+    + '&response_type=token'
     + '&scope=' + encodeURIComponent(SCOPES)
     + '&state=' + state
-    + '&prompt=select_account'
-    + '&access_type=offline';  // ← הוספתי כדי לקבל refresh token
+    + '&prompt=select_account';
 
   // מצב APK (Capacitor) - דפדפן חיצוני + Firebase polling
   if(window.CapApp || window.CapBrowser){
@@ -2649,7 +2587,7 @@ function startGoogleAuth(){
         .then(function(data){
           if(data && data.token){
             clearInterval(pollInterval);
-            _onTokenReceived(data.token, data.refresh);
+            _onTokenReceived(data.token);
             // נקה את ה-token מ-Firebase אחרי שימוש (אבטחה)
             fetch(FB_URL + '/oauthTokens/' + safeState + '.json', {method: 'DELETE'}).catch(function(){});
             showToast('✅ חובר ל-Google Drive!');
@@ -2699,19 +2637,11 @@ function startGoogleAuth(){
     }
   }
 }
-function _onTokenReceived(token, refresh){
+function _onTokenReceived(token){
   if(!token)return;
   console.log('✓ OAuth token received');
   aToken = token;
   localStorage.setItem('gtoken', token);
-  
-  // שמור refresh token אם התקבל
-  if(refresh){
-    refreshToken = refresh;
-    localStorage.setItem('grefresh', refresh);
-    console.log('✓ Refresh token saved');
-  }
-  
   localStorage.setItem('syen', '1');
   localStorage.removeItem('oauth_done');
   setTimeout(function(){
@@ -2807,20 +2737,8 @@ function showToast(msg){
 async function fetchEmail(){
   try{
     const r=await fetch('https://www.googleapis.com/drive/v3/about?fields=user',{headers:{Authorization:`Bearer ${aToken}`}});
-    if(r.status===401){
-      // טוקן פג תוקף - נסה לרענן או נתק
-      console.warn('Token expired, attempting refresh...');
-      await tryRefreshToken();
-      return;
-    }
     const i=await r.json();
-    if(i.error){
-      throw new Error(i.error);
-    }
-    if(i.email){
-      const drEmailEl = document.getElementById('drEmail');
-      if(drEmailEl) drEmailEl.textContent=`מחובר: ${i.email}`;
-    }
+    if(i.email)document.getElementById('drEmail').textContent=`מחובר: ${i.email}`;
     if(i.sub){
       // שמור Google ID קבוע
       const s=D.gs();
@@ -2834,73 +2752,7 @@ async function fetchEmail(){
         _savePairByGoogleId(i.sub);
       }
     }
-  }catch(e){
-    console.error('Drive auth error:', e);
-    // אם הטוקן לא תקף, נקה אותו
-    if(e.message.includes('invalid') || e.message.includes('expired') || e.message.includes('401')){
-      aToken=null;
-      localStorage.removeItem('gtoken');
-      localStorage.removeItem('syen');
-      setSyncDot(false);
-      renderSettings();
-      showToast('החיבור ל-Google Drive פג תוקף. יש להתחבר מחדש.');
-    }
-  }
-}
-
-// ---- TOKEN REFRESH ----
-async function tryRefreshToken(){
-  try{
-    if(refreshToken){
-      console.log('🔄 Using refresh token to get new access token...');
-      const response = await fetch('https://oauth2.googleapis.com/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          client_id: CID,
-          refresh_token: refreshToken,
-          grant_type: 'refresh_token'
-        })
-      });
-      
-      if(response.ok){
-        const data = await response.json();
-        aToken = data.access_token;
-        localStorage.setItem('gtoken', aToken);
-        
-        // אם קיבלנו refresh token חדש, נשמור אותו
-        if(data.refresh_token){
-          refreshToken = data.refresh_token;
-          localStorage.setItem('grefresh', refreshToken);
-        }
-        
-        console.log('✅ Token refreshed successfully');
-        showToast('✅ החיבור ל-Google Drive חודש אוטומטית');
-        return true;
-      }
-    }
-    
-    // אם אין refresh token או הריענון נכשל
-    console.warn('❌ No refresh token or refresh failed');
-    await forceReauth();
-    
-  }catch(e){
-    console.error('Refresh failed:', e);
-    await forceReauth();
-  }
-}
-
-async function forceReauth(){
-  aToken=null;
-  refreshToken=null;
-  localStorage.removeItem('gtoken');
-  localStorage.removeItem('grefresh');
-  localStorage.removeItem('syen');
-  setSyncDot(false);
-  renderSettings();
-  showToast('החיבור ל-Google Drive פג תוקף. יש להתחבר מחדש.');
+  }catch(e){}
 }
 
 // ---- DRIVE HELPERS ----
@@ -3047,7 +2899,7 @@ async function manualSync(){
     showToast('סנכרון הושלם');
   }catch(e){showToast('שגיאה בסנכרון');}
 }
-function disconnDrive(){if(confirm('לנתק?')){aToken=null;refreshToken=null;localStorage.removeItem('syen');localStorage.removeItem('gtoken');localStorage.removeItem('grefresh');renderSettings();setSyncDot(false);}}
+function disconnDrive(){if(confirm('לנתק?')){aToken=null;localStorage.removeItem('syen');localStorage.removeItem('gtoken');renderSettings();setSyncDot(false);}}
 async function deleteDriveBackup(){
   if(!aToken){showToast('יש לחבר Google Drive תחילה');return;}
   if(!confirm('האם אתה בטוח שברצונך למחוק את הגיבוי מ-Google Drive? פעולה זו אינה הפיכה.')){return;}
@@ -3959,7 +3811,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     var el=document.getElementById('cvp-'+k);
     if(el)el.classList.toggle('active',k===_calView);
   });
-  initClock();renderCal();setSyncDot(false);setTimeout(initGD,100);checkPairLink();
+  initClock();renderCal();setSyncDot(false);initGD();checkPairLink();
   // נקה tokens ישנים מ-Firebase (אחת לכמה שעות)
   _cleanupOldTokens();
   // בדוק אם מישהו חיבר אותנו — 4 שניות אחרי טעינה
