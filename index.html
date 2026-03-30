@@ -1066,7 +1066,7 @@ input[type=time].fi{text-align:center}
 // ---- CONSTANTS ----
 const JC=['#1E3A8A','#2563EB','#10B981','#F59E0B','#EF4444','#8B5CF6'];
 const MN=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
-const CID='57616527068-9ogg9tnmgcku8icu5bjkvd7e48b9hujs.apps.googleusercontent.com';
+const CID='57616527068-scie5kcm7sqdp1jatcveair70feld7sq.apps.googleusercontent.com';
 const SCOPES='https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email';let curDt=new Date(), selDt=null, mType='', per='7', rTab='gen';
 let hCh,pCh,cmpCh,cplCh,jCh;
 let aToken=null, tClient=null, dProm=null, tInt=null;
@@ -2482,13 +2482,93 @@ function handleClock(){
 }
 
 // ---- GOOGLE DRIVE ----
+
+// PKCE helpers
+function _b64url(buffer){
+  return btoa(String.fromCharCode(...new Uint8Array(buffer)))
+    .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+async function _pkce(){
+  const verifier=_b64url(crypto.getRandomValues(new Uint8Array(48)));
+  const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier));
+  const challenge=_b64url(hash);
+  return {verifier,challenge};
+}
+
+// Token storage helpers
+function _saveTokens(access, refresh, expiresIn){
+  if(access)  localStorage.setItem('gtoken', access);
+  if(refresh) localStorage.setItem('grefresh', refresh);
+  if(expiresIn){
+    const exp=Date.now()+(expiresIn-120)*1000; // 2 min early
+    localStorage.setItem('gtokenexp', String(exp));
+  }
+}
+function _getStoredToken(){ return localStorage.getItem('gtoken'); }
+function _getRefreshToken(){ return localStorage.getItem('grefresh'); }
+function _isTokenExpired(){
+  const exp=parseInt(localStorage.getItem('gtokenexp')||'0');
+  return !exp || Date.now()>exp;
+}
+function _clearTokens(){
+  ['gtoken','grefresh','gtokenexp','syen','oauth_done'].forEach(k=>localStorage.removeItem(k));
+}
+
+// Silent token refresh using stored refresh_token
+async function _refreshAccessToken(){
+  const rt=_getRefreshToken();
+  if(!rt) return null;
+  try{
+    const r=await fetch('https://oauth2.googleapis.com/token',{
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:new URLSearchParams({
+        client_id: CID,
+        grant_type: 'refresh_token',
+        refresh_token: rt
+      })
+    });
+    if(!r.ok){
+      const err=await r.json().catch(()=>({}));
+      // refresh token revoked or expired — need full re-auth
+      if(err.error==='invalid_grant'){_clearTokens();aToken=null;renderSettings();setSyncDot(false);}
+      return null;
+    }
+    const data=await r.json();
+    _saveTokens(data.access_token, data.refresh_token||null, data.expires_in||3600);
+    return data.access_token;
+  }catch(e){
+    console.warn('[Auth] Token refresh failed:',e.message);
+    return null;
+  }
+}
+
+// Get a valid access token — refresh silently if needed
+async function _getValidToken(){
+  if(aToken && !_isTokenExpired()) return aToken;
+  const fresh=await _refreshAccessToken();
+  if(fresh){ aToken=fresh; return aToken; }
+  return null;
+}
+
+// Schedule proactive refresh 5 minutes before expiry
+function _scheduleTokenRefresh(){
+  clearTimeout(window._tokenRefreshTimer);
+  const exp=parseInt(localStorage.getItem('gtokenexp')||'0');
+  if(!exp) return;
+  const delay=Math.max(exp-Date.now()-300000, 30000); // 5 min before exp, min 30s
+  window._tokenRefreshTimer=setTimeout(async()=>{
+    const fresh=await _refreshAccessToken();
+    if(fresh){ aToken=fresh; setSyncDot(true); _scheduleTokenRefresh(); }
+  }, delay);
+}
+
 function checkPairLink(){
   try{
     const params=new URLSearchParams(window.location.search);
     let partnerCode=params.get('pair');
-    if(!partnerCode)partnerCode=sessionStorage.getItem('pendingPair');
+    if(!partnerCode) partnerCode=sessionStorage.getItem('pendingPair');
     if(!partnerCode){
-      // אין קישור זוג — נסה לשחזר חיבור קיים מה-cloud
       const s=D.gs();
       if(s.myCode&&!s.pairCode){
         restorePairFromCloud().then(function(restored){
@@ -2512,148 +2592,191 @@ function checkPairLink(){
 function _navToCouple(){
   var btns=document.querySelectorAll('.ni');
   var coupleBtn=btns[2]||null;
-  if(coupleBtn)swPage('couple',coupleBtn);
+  if(coupleBtn) swPage('couple',coupleBtn);
 }
 
-function initGD(){
-  handleOAuthReturn();
-  
-  // הוסף listener ל-postMessage מ-callback popup
-  window.addEventListener('message', function(e){
-    // אבטחה - רק מהדומיין שלנו
-    if(e.origin !== 'https://tzur669-lab.github.io' && 
-       e.origin !== window.location.origin) return;
-    
-    if(e.data && e.data.type === 'oauth_token' && e.data.token){
+async function initGD(){
+  // Handle PKCE callback (code + state in URL)
+  await _handlePkceCallback();
+
+  // postMessage listener (PWA popup flow)
+  window.addEventListener('message',function(e){
+    if(e.origin!=='https://tzur669-lab.github.io'&&e.origin!==window.location.origin) return;
+    if(e.data&&e.data.type==='oauth_code'&&e.data.code){
+      _exchangeCode(e.data.code, e.data.state);
+    }
+    // legacy token flow (keep for backwards compat)
+    if(e.data&&e.data.type==='oauth_token'&&e.data.token){
       _onTokenReceived(e.data.token);
-      showToast('✅ חובר ל-Google Drive בהצלחה!');
     }
   });
-  
-  const saved=localStorage.getItem('gtoken');
-  if(saved){
-    aToken=saved;
-    fetch('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token='+saved)
-      .then(r=>r.json())
-      .then(info=>{
-        if(info.error){
-          localStorage.removeItem('gtoken');localStorage.removeItem('syen');
-          aToken=null;setSyncDot(false);renderSettings();
-        } else {
-          fetchEmail().then(()=>{
-            renderSettings();
-            setSyncDot(true);
-            loadDr();
-            _countUniqueUser();
-            // סנכרן זוג מחדש ל-Firebase בכל פתיחה
-            const _s=D.gs();
-            if(_s.pairCode&&_s.myCode) syncPairToFirebase().catch(()=>{});
-          });
-        }
-      }).catch(()=>{fetchEmail().then(()=>{renderSettings();setSyncDot(true);});});
+
+  // Attempt silent restore on every startup
+  const rt=_getRefreshToken();
+  const saved=_getStoredToken();
+  if(rt){
+    // We have a refresh token — try to get a valid access token silently
+    if(saved && !_isTokenExpired()){
+      aToken=saved;
+      _onTokenRestored();
+    } else {
+      // Token expired — refresh silently
+      const fresh=await _refreshAccessToken();
+      if(fresh){
+        aToken=fresh;
+        _onTokenRestored();
+      } else {
+        // Refresh failed (revoked?) — clear and show login button
+        renderSettings();setSyncDot(false);
+      }
+    }
+  } else if(saved){
+    // Old implicit-flow token in storage — validate it
+    try{
+      const r=await fetch('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token='+saved);
+      const info=await r.json();
+      if(info.error){
+        _clearTokens();aToken=null;setSyncDot(false);renderSettings();
+      } else {
+        aToken=saved;
+        // No refresh token available for old tokens — user will need to re-auth next time
+        // but for now, use what we have
+        _onTokenRestored();
+      }
+    }catch(e){_onTokenRestored();}
   }
+
   document.getElementById('authBtn').onclick=()=>{vib();startGoogleAuth();};
 }
 
-function startGoogleAuth(){
-  // יצירת state ייחודי למשתמש (לזיהוי במערכת הכפולה)
-  var uid = localStorage.getItem('gdk') || localStorage.getItem('myUID') || ('anon-' + Date.now() + '-' + Math.random().toString(36).substring(2,8));
-  if(!localStorage.getItem('gdk')) localStorage.setItem('gdk', uid);
-  var state = btoa(uid).replace(/[=+/]/g, '');
-  
-  // ברירת המחדל: הכתובת המאובטחת ב-GitHub
-  var redirectUri = 'https://tzur669-lab.github.io/moneytime-app/callback.html';
-  
-  // נשתמש ב-localhost *רק* אם אנחנו מפתחים במחשב, ולא בתוך האפליקציה בטלפון
-  if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && !window.CapApp && !window.CapBrowser) {
-    redirectUri = window.location.origin + '/callback.html';
-  }
+async function _onTokenRestored(){
+  await fetchEmail();
+  renderSettings();
+  setSyncDot(true);
+  loadDr();
+  _countUniqueUser();
+  _scheduleTokenRefresh();
+  const _s=D.gs();
+  if(_s.pairCode&&_s.myCode) syncPairToFirebase().catch(()=>{});
+}
 
-  var url = 'https://accounts.google.com/o/oauth2/v2/auth'
-    + '?client_id=' + CID
-    + '&redirect_uri=' + encodeURIComponent(redirectUri)
-    + '&response_type=token'
-    + '&scope=' + encodeURIComponent(SCOPES)
-    + '&state=' + state
-    + '&prompt=select_account';
+async function startGoogleAuth(){
+  const {verifier,challenge}=await _pkce();
+  const state=_b64url(crypto.getRandomValues(new Uint8Array(12)));
+  // Store verifier for callback
+  sessionStorage.setItem('pkce_v',verifier);
+  sessionStorage.setItem('pkce_s',state);
 
-  // מצב APK (Capacitor) - דפדפן חיצוני + Firebase polling
-  if(window.CapApp || window.CapBrowser){
-    // התחל polling על Firebase לקבלת token
-    var safeState = state.replace(/[.#$\[\]\/]/g,'_');
-    var pollInterval = setInterval(function(){
-      fetch(FB_URL + '/oauthTokens/' + safeState + '.json')
-        .then(function(r){ return r.json(); })
-        .then(function(data){
-          if(data && data.token){
-            clearInterval(pollInterval);
-            _onTokenReceived(data.token);
-            // נקה את ה-token מ-Firebase אחרי שימוש (אבטחה)
-            fetch(FB_URL + '/oauthTokens/' + safeState + '.json', {method: 'DELETE'}).catch(function(){});
-            showToast('✅ חובר ל-Google Drive!');
-          }
-        })
-        .catch(function(){});
-    }, 2000); // polling כל 2 שניות
-    
-    // timeout - עצור polling אחרי 5 דקות
-    setTimeout(function(){ clearInterval(pollInterval); }, 300000);
-    
-    // deep link listener (גיבוי)
-    var _appUrlHandler = null;
-    if(window.CapApp){
-      _appUrlHandler = window.CapApp.addListener('appUrlOpen', function(data){
-        _appUrlHandler.remove();
-        try{ window.CapBrowser && window.CapBrowser.close(); }catch(e){}
-        var url2 = data.url || '';
-        var hashIdx = url2.indexOf('#');
-        if(hashIdx !== -1){
-          var params = new URLSearchParams(url2.substring(hashIdx+1));
-          var token = params.get('access_token');
-          if(token){ 
-            clearInterval(pollInterval);
-            _onTokenReceived(token); 
-            return; 
-          }
+  const redirectUri=_getRedirectUri();
+  const url='https://accounts.google.com/o/oauth2/v2/auth'
+    +'?client_id='+CID
+    +'&redirect_uri='+encodeURIComponent(redirectUri)
+    +'&response_type=code'
+    +'&scope='+encodeURIComponent(SCOPES)
+    +'&state='+state
+    +'&code_challenge='+challenge
+    +'&code_challenge_method=S256'
+    +'&access_type=offline'   // request refresh token
+    +'&prompt=consent';       // force consent so refresh token is always returned
+
+  if(window.CapBrowser){
+    // APK: open in external browser, poll Firebase for result
+    const safeState=state.replace(/[.#$[\]/]/g,'_');
+    let pollCount=0;
+    const pollInterval=setInterval(async()=>{
+      pollCount++;
+      if(pollCount>150){clearInterval(pollInterval);return;} // 5 min timeout
+      try{
+        const r=await fetch(FB_URL+'/oauthTokens/'+safeState+'.json');
+        const data=await r.json();
+        if(data&&data.code){
+          clearInterval(pollInterval);
+          fetch(FB_URL+'/oauthTokens/'+safeState+'.json',{method:'DELETE'}).catch(()=>{});
+          await _exchangeCode(data.code, data.state, verifier);
         }
-      });
-    }
-
-    // פתח דפדפן חיצוני
-    try{ window.CapBrowser.removeAllListeners(); }catch(e){}
-    window.CapBrowser.open({url: url, presentationStyle: 'fullscreen'});
-    window.CapBrowser.addListener('browserFinished', function(){
-      if(_appUrlHandler){ try{_appUrlHandler.remove();}catch(e){} }
-    });
-
+      }catch(e){}
+    },2000);
+    try{window.CapBrowser.removeAllListeners();}catch(e){}
+    window.CapBrowser.open({url, presentationStyle:'fullscreen'});
   } else {
-    // מצב PWA - פתיחת popup
-    var popup = window.open(url, 'GoogleAuth', 'width=500,height=600,scrollbars=yes');
-    
-    // טיפול במקרה של popup חסום
-    if(!popup || popup.closed || typeof popup.closed === 'undefined'){
-      // fallback - redirect מלא
-      window.location.href = url;
+    // PWA: popup
+    const popup=window.open(url,'GoogleAuth','width=500,height=640,scrollbars=yes');
+    if(!popup||popup.closed){
+      window.location.href=url; // fallback: redirect
     }
   }
 }
-function _onTokenReceived(token){
-  if(!token)return;
-  console.log('✓ OAuth token received');
-  aToken = token;
-  localStorage.setItem('gtoken', token);
-  localStorage.setItem('syen', '1');
-  localStorage.removeItem('oauth_done');
-  setTimeout(function(){
-    fetchEmail().then(function(){
-      renderSettings();
-      setSyncDot(true);
-      loadDr();
-      showToast('✅ חובר ל-Google Drive בהצלחה!');
-      _countUniqueUser();
-      console.log('✓ Google Drive connected successfully');
+
+function _getRedirectUri(){
+  if(window.CapBrowser) return 'https://tzur669-lab.github.io/moneytime-app/callback.html';
+  if(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1'){
+    return window.location.origin+'/callback.html';
+  }
+  return 'https://tzur669-lab.github.io/moneytime-app/callback.html';
+}
+
+// Exchange auth code for tokens (PKCE — no secret needed for desktop clients)
+async function _exchangeCode(code, returnedState, verifierOverride){
+  const verifier=verifierOverride||sessionStorage.getItem('pkce_v');
+  const expectedState=sessionStorage.getItem('pkce_s');
+  // State check (skip for APK Firebase relay where state may differ slightly)
+  if(expectedState&&returnedState&&expectedState!==returnedState&&!window.CapBrowser){
+    console.warn('[Auth] State mismatch — possible CSRF');
+    showToast('שגיאת אבטחה — נסה שוב');
+    return;
+  }
+  sessionStorage.removeItem('pkce_v');
+  sessionStorage.removeItem('pkce_s');
+  if(!verifier||!code){
+    showToast('שגיאה: חסרים פרטי אימות');
+    return;
+  }
+  try{
+    const r=await fetch('https://oauth2.googleapis.com/token',{
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:new URLSearchParams({
+        client_id: CID,
+        redirect_uri: _getRedirectUri(),
+        grant_type: 'authorization_code',
+        code_verifier: verifier,
+        code
+      })
     });
-  }, 300);
+    const data=await r.json();
+    if(data.error){
+      console.error('[Auth] Token exchange error:',data.error,data.error_description);
+      showToast('שגיאה: '+( data.error_description||data.error));
+      return;
+    }
+    _saveTokens(data.access_token, data.refresh_token, data.expires_in||3600);
+    aToken=data.access_token;
+    showToast('✅ חובר ל-Google Drive!');
+    _onTokenRestored();
+  }catch(e){
+    console.error('[Auth] Code exchange failed:',e);
+    showToast('שגיאת חיבור: '+e.message);
+  }
+}
+
+// Handle PKCE callback when page loads with ?code= in URL
+async function _handlePkceCallback(){
+  const params=new URLSearchParams(window.location.search);
+  const code=params.get('code');
+  const state=params.get('state');
+  if(!code) return;
+  history.replaceState(null,'',location.pathname);
+  await _exchangeCode(code, state);
+}
+
+// Keep _onTokenReceived for legacy backwards-compat with old callback.html
+function _onTokenReceived(token){
+  if(!token) return;
+  aToken=token;
+  _saveTokens(token, null, 3600);
+  setTimeout(()=>{
+    fetchEmail().then(()=>{renderSettings();setSyncDot(true);loadDr();_countUniqueUser();});
+  },300);
 }
 
 // שמירת חיבור זוג ב-Firebase לפי Google ID
@@ -2708,25 +2831,6 @@ function _countUniqueUser(){
   return;
 }
 
-function handleOAuthReturn(){
-  var oauthDone = localStorage.getItem('oauth_done');
-  var savedToken = localStorage.getItem('gtoken');
-  if(oauthDone && savedToken && !aToken){
-    localStorage.removeItem('oauth_done');
-    _onTokenReceived(savedToken);
-    return;
-  }
-  var hash = window.location.hash;
-  if(hash && hash.includes('access_token')){
-    var params = new URLSearchParams(hash.substring(1));
-    var token = params.get('access_token');
-    if(token){
-      history.replaceState(null,'',location.pathname);
-      _onTokenReceived(token);
-    }
-  }
-}
-
 function showToast(msg){
   const t=document.createElement('div');
   t.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--g);color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:300;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.3);white-space:nowrap';
@@ -2734,9 +2838,12 @@ function showToast(msg){
   document.body.appendChild(t);
   setTimeout(()=>t.remove(),3000);
 }
+
 async function fetchEmail(){
   try{
-    const r=await fetch('https://www.googleapis.com/drive/v3/about?fields=user',{headers:{Authorization:`Bearer ${aToken}`}});
+    const token = await _getValidToken();
+    if(!token) return;
+    const r=await fetch('https://www.googleapis.com/drive/v3/about?fields=user',{headers:{Authorization:`Bearer ${token}`}});
     const i=await r.json();
     if(i.email)document.getElementById('drEmail').textContent=`מחובר: ${i.email}`;
     if(i.sub){
@@ -2757,10 +2864,13 @@ async function fetchEmail(){
 
 // ---- DRIVE HELPERS ----
 async function driveUpsert(fileName, body, isShared){
+  const token = await _getValidToken();
+  if(!token){ setSyncDot(false); return null; }
+
   const space = isShared ? 'drive' : 'appDataFolder';
   const q = encodeURIComponent(`name='${fileName}' and trashed=false`);
   const listUrl = `https://www.googleapis.com/drive/v3/files?q=${q}&spaces=${space}&fields=files(id,name,parents)`;
-  const list = await (await fetch(listUrl,{headers:{Authorization:`Bearer ${aToken}`}})).json();
+  const list = await (await fetch(listUrl,{headers:{Authorization:`Bearer ${token}`}})).json();
   let fid = list.files?.[0]?.id;
   if(!fid){
     const meta = {
@@ -2771,7 +2881,7 @@ async function driveUpsert(fileName, body, isShared){
     const cr = await (await fetch('https://www.googleapis.com/drive/v3/files',{
       method:'POST',
       headers:{
-        Authorization: `Bearer ${aToken}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(meta)
@@ -2781,7 +2891,7 @@ async function driveUpsert(fileName, body, isShared){
       await fetch(`https://www.googleapis.com/drive/v3/files/${fid}/permissions`,{
         method:'POST',
         headers:{
-          Authorization: `Bearer ${aToken}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -2794,7 +2904,7 @@ async function driveUpsert(fileName, body, isShared){
   await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fid}?uploadType=media`,{
     method:'PATCH',
     headers:{
-      Authorization: `Bearer ${aToken}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json'
     },
     body: body
@@ -2803,11 +2913,14 @@ async function driveUpsert(fileName, body, isShared){
 }
 
 async function driveRead(fileName, isShared){
+  const token = await _getValidToken();
+  if(!token) return null;
+
   const space = isShared ? 'drive' : 'appDataFolder';
   const q = encodeURIComponent(`name='${fileName}' and trashed=false`);
-  const list = await (await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=${space}&fields=files(id,name,parents)`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
+  const list = await (await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=${space}&fields=files(id,name,parents)`,{headers:{Authorization:`Bearer ${token}`}})).json();
   if(!list.files?.length) return null;
-  const data = await (await fetch(`https://www.googleapis.com/drive/v3/files/${list.files[0].id}?alt=media`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
+  const data = await (await fetch(`https://www.googleapis.com/drive/v3/files/${list.files[0].id}?alt=media`,{headers:{Authorization:`Bearer ${token}`}})).json();
   return data;
 }
 
@@ -2817,7 +2930,9 @@ async function saveDr(){
     if(s.pairCode&&s.myCode){
       await syncPairToFirebase();
     }
-    if(aToken){
+    const token = await _getValidToken();
+    if(token){
+      aToken = token;
       // שמור הכל — כולל הגדרות זוג, בונוסים, תעריפים, ערכת צבע
       await driveUpsert('moneytime_solo.json', JSON.stringify({workData:D.g(),settings:s,timestamp:Date.now()}), false);
     }
@@ -2836,7 +2951,10 @@ async function loadDr(){
   try{
     if(s.pairCode&&s.myCode) await syncPairToFirebase();
     if(s.pairCode&&s.partnerCode) await loadPartnerFromFirebase();
-    if(aToken){
+    
+    const token = await _getValidToken();
+    if(token){
+      aToken = token;
       const data=await driveRead('moneytime_solo.json', false);
       if(data){
         const cTs=data.timestamp||0, lTs=parseInt(localStorage.getItem('wdts'))||0;
@@ -2894,32 +3012,50 @@ async function manualSync(){
       const got=await loadPartnerFromFirebase();
       if(got)renderCouple();
     }
-    if(aToken) await driveUpsert('moneytime_solo.json', JSON.stringify({workData:D.g(),settings:s,timestamp:Date.now()}), false);
+    const token = await _getValidToken();
+    if(token){
+      aToken = token;
+      await driveUpsert('moneytime_solo.json', JSON.stringify({workData:D.g(),settings:s,timestamp:Date.now()}), false);
+    }
     renderCal();
     showToast('סנכרון הושלם');
   }catch(e){showToast('שגיאה בסנכרון');}
 }
-function disconnDrive(){if(confirm('לנתק?')){aToken=null;localStorage.removeItem('syen');localStorage.removeItem('gtoken');renderSettings();setSyncDot(false);}}
+
+function disconnDrive(){
+  if(confirm('לנתק?')){
+    aToken=null;
+    _clearTokens();
+    renderSettings();
+    setSyncDot(false);
+  }
+}
+
 async function deleteDriveBackup(){
-  if(!aToken){showToast('יש לחבר Google Drive תחילה');return;}
+  const token = await _getValidToken();
+  if(!token){showToast('יש לחבר Google Drive תחילה');return;}
   if(!confirm('האם אתה בטוח שברצונך למחוק את הגיבוי מ-Google Drive? פעולה זו אינה הפיכה.')){return;}
   try{
     const q=encodeURIComponent("name='moneytime_solo.json' and trashed=false");
-    const list=await(await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=appDataFolder&fields=files(id,name,parents)`,{headers:{Authorization:`Bearer ${aToken}`}})).json();
+    const list=await(await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=appDataFolder&fields=files(id,name,parents)`,{headers:{Authorization:`Bearer ${token}`}})).json();
     if(!list.files?.length){showToast('לא נמצא גיבוי ב-Drive');return;}
-    await fetch(`https://www.googleapis.com/drive/v3/files/${list.files[0].id}`,{method:'DELETE',headers:{Authorization:`Bearer ${aToken}`}});
+    await fetch(`https://www.googleapis.com/drive/v3/files/${list.files[0].id}`,{method:'DELETE',headers:{Authorization:`Bearer ${token}`}});
     showToast('✅ הגיבוי נמחק מ-Drive');
   }catch(e){showToast('שגיאה במחיקה');}
 }
+
 function setSyncDot(on){const d=document.getElementById('sdot');if(d)d.className='sdot'+(on?'':' off');}
-window.addEventListener('online',()=>{
+
+window.addEventListener('online', async ()=>{
   const s=D.gs();
   if(s.pairCode&&s.myCode) syncPairToFirebase();
-  if(aToken) driveUpsert('moneytime_solo.json', JSON.stringify({workData:D.g(),settings:s,timestamp:Date.now()}), false).catch(()=>{});
+  const token = await _getValidToken();
+  if(token) driveUpsert('moneytime_solo.json', JSON.stringify({workData:D.g(),settings:s,timestamp:Date.now()}), false).catch(()=>{});
 });
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&aToken)saveDr();});
-window.addEventListener('beforeunload',()=>{if(aToken)saveDr();});
-window.addEventListener('pagehide',()=>{if(aToken)saveDr();});
+
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&_getStoredToken())saveDr();});
+window.addEventListener('beforeunload',()=>{if(_getStoredToken())saveDr();});
+window.addEventListener('pagehide',()=>{if(_getStoredToken())saveDr();});
 
 // ---- PDF ----
 function tpdf(id){const el=document.getElementById(id);el.classList.toggle('on');el.textContent=el.classList.contains('on')?'✓':'';}
