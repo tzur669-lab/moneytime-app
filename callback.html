@@ -79,14 +79,19 @@
 // Firebase Realtime Database URL
 const FB_URL = 'https://moneytime-app-f5a15-default-rtdb.firebaseio.com';
 
-// חילוץ token ו-state מה-URL
-var hash = window.location.hash || window.location.search;
-var params = new URLSearchParams(hash.replace(/^[#?]/, ''));
-var token = params.get('access_token');
-var state = params.get('state') || 'anon';
+// חילוץ פרמטרים גם משורת החיפוש (?) וגם מההאש (#)
+var params = new URLSearchParams(window.location.search.replace(/^[#?]/, ''));
+var hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
 
-function updateStatus(msg){
-  document.getElementById('status').textContent = msg;
+// קבלת קוד האימות החדש (PKCE Flow)
+var code = params.get('code') || hashParams.get('code');
+var state = params.get('state') || hashParams.get('state') || 'anon';
+
+// תמיכה לאחור בטוקן הישן (Implicit Flow) למקרה שצריך
+var token = params.get('access_token') || hashParams.get('access_token');
+
+function updateStatus(msg){ 
+  document.getElementById('status').textContent = msg; 
 }
 
 function showSuccess(){
@@ -96,95 +101,73 @@ function showSuccess(){
   document.getElementById('subtitle').textContent = 'חוזר לאפליקציה...';
 }
 
-if(token){
-  updateStatus('שומר את פרטי ההתחברות...');
-  
-  // 1. שמירה ב-localStorage (עבור PWA במקרה של redirect מלא)
-  try{
-    localStorage.setItem('gtoken', token);
-    localStorage.setItem('syen', '1');
-    localStorage.setItem('oauth_done', '1');
-    updateStatus('✓ נשמר ב-localStorage');
-  }catch(e){
-    updateStatus('⚠ שגיאה ב-localStorage: ' + e.message);
-  }
-  
-  // 2. שמירה ב-Firebase (עבור APK polling)
+function fallbackRedirect(){
+  showSuccess();
+  setTimeout(function(){ window.location.href = 'index.html'; }, 1200);
+}
+
+if(code){
+  updateStatus('מחליף קוד ל-token...');
   var safeState = state.replace(/[.#$\[\]\/]/g, '_');
+  
+  // 1. שמירה ב-Firebase (עבור APK polling)
   fetch(FB_URL + '/oauthTokens/' + safeState + '.json', {
     method: 'PUT',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      token: token,
-      ts: Date.now(),
-      // Token יימחק אוטומטית אחרי 10 דקות (אבטחה)
-      expires: Date.now() + 600000
-    })
-  }).then(function(){
-    updateStatus('✓ נשמר ב-Firebase');
-  }).catch(function(e){
-    updateStatus('⚠ שגיאה ב-Firebase: ' + e.message);
-  });
-  
-  // 3. ניסיון deep link ל-APK (אם זה Capacitor)
-  var deepLink = 'com.tzur669.moneytime://oauth#access_token=' + token;
-  setTimeout(function(){
-    try{
-      window.location.href = deepLink;
-      updateStatus('✓ ניסיון deep link ל-APK');
-    }catch(e){
-      // deep link נכשל - זה בסדר, זה אומר שאנחנו לא ב-APK
-    }
-  }, 500);
-  
-  // 4. postMessage לחלון אב (PWA popup)
+    body: JSON.stringify({ code: code, state: state, ts: Date.now(), expires: Date.now() + 600000 })
+  }).then(function(){ 
+    updateStatus('✓ קוד נשמר ב-Firebase'); 
+  }).catch(function(){});
+
+  // 2. שליחה לחלון אב (PWA popup)
   if(window.opener && !window.opener.closed){
     try{
-      window.opener.postMessage({
-        type: 'oauth_token',
-        token: token,
-        state: state
-      }, '*'); // יעבוד גם ב-localhost וגם ב-production
-      updateStatus('✓ נשלח ל-popup opener');
-      
-      // הצלחה! סגור חלון
+      window.opener.postMessage({ type: 'oauth_code', code: code, state: state }, '*');
+      updateStatus('✓ קוד נשלח לאפליקציה');
       showSuccess();
-      setTimeout(function(){
-        window.close();
-      }, 1500);
-    }catch(e){
-      updateStatus('⚠ שגיאה ב-postMessage: ' + e.message);
-      // אם postMessage נכשל, נסה redirect
-      fallbackRedirect();
+      setTimeout(function(){ window.close(); }, 1500);
+    }catch(e){ 
+      fallbackRedirect(); 
     }
   } else {
-    // אין חלון אב - כנראה redirect מלא
-    updateStatus('אין popup opener - redirect מלא');
+    // 3. מצב Redirect מלא - שמור את הקוד ב-sessionStorage וחזור לאפליקציה
+    try{ 
+      sessionStorage.setItem('pkce_code', code); 
+      sessionStorage.setItem('pkce_state', state); 
+    }catch(e){}
     fallbackRedirect();
   }
-  
-} else {
-  // אין token - שגיאה או ביטול
-  document.getElementById('title').textContent = 'ההתחברות נכשלה';
-  document.getElementById('subtitle').textContent = 'לא התקבל access token';
-  document.getElementById('spinner').style.display = 'none';
-  updateStatus('⚠ נסה שוב או בדוק הרשאות');
-  
-  setTimeout(function(){
-    if(window.opener && !window.opener.closed){
-      window.close();
-    } else {
-      window.location.href = 'index.html';
-    }
-  }, 3000);
-}
 
-// fallback - חזרה לדף הראשי
-function fallbackRedirect(){
-  showSuccess();
+} else if(token){
+  // תמיכה אחורנית - במידה וקיבלנו טוקן ישיר (Implicit flow)
+  updateStatus('שומר token ישן...');
+  try{ 
+    localStorage.setItem('gtoken', token); 
+    localStorage.setItem('syen','1'); 
+  }catch(e){}
+  
+  if(window.opener && !window.opener.closed){
+    try{
+      window.opener.postMessage({ type: 'oauth_token', token: token, state: state }, '*');
+      showSuccess();
+      setTimeout(function(){ window.close(); }, 1500);
+    }catch(e){ 
+      fallbackRedirect(); 
+    }
+  } else { 
+    fallbackRedirect(); 
+  }
+
+} else {
+  // שגיאה - לא התקבל כלום
+  document.getElementById('title').textContent = 'ההתחברות נכשלה';
+  document.getElementById('subtitle').textContent = 'לא התקבל קוד אישור מגוגל';
+  document.getElementById('spinner').style.display = 'none';
+  
   setTimeout(function(){
-    window.location.href = 'index.html';
-  }, 1500);
+    if(window.opener && !window.opener.closed) window.close();
+    else window.location.href = 'index.html';
+  }, 3000);
 }
 </script>
 </body>
