@@ -504,6 +504,328 @@ input[type=time].fi{text-align:center}
 .dv-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .dv-val{margin-right:auto;font-weight:400;color:var(--t)}
 .dv-empty{text-align:center;padding:24px 0;color:var(--t3);font-size:12px}
+  /* ============================================================
+   TOGETHER DASHBOARD — CSS
+   הדבק לפני </style>
+   ============================================================ */
+
+/* --- Together Tabs --- */
+.tog-tabs {
+  display: flex;
+  background: var(--s2);
+  border-radius: 14px;
+  padding: 4px;
+  gap: 2px;
+  margin-bottom: 14px;
+  border: 1px solid var(--bd);
+}
+.tog-tab {
+  flex: 1;
+  padding: 9px 4px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--t3);
+  cursor: pointer;
+  transition: all .2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  line-height: 1.2;
+}
+.tog-tab .tog-tab-icon { font-size: 16px; }
+.tog-tab.active {
+  background: var(--s);
+  color: var(--b8);
+  box-shadow: var(--sh);
+  font-weight: 600;
+}
+[data-theme=dark] .tog-tab.active { color: var(--b4); }
+
+/* --- KPI Cards row --- */
+.tog-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.tog-kpi {
+  background: var(--s);
+  border-radius: 14px;
+  padding: 14px 12px;
+  border: 1px solid var(--bd);
+  box-shadow: var(--sh);
+  position: relative;
+  overflow: hidden;
+}
+.tog-kpi::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--kpi-color, var(--b6));
+  border-radius: 14px 14px 0 0;
+}
+.tog-kpi-icon { font-size: 18px; margin-bottom: 6px; display: block; }
+.tog-kpi-val {
+  font-size: 20px;
+  font-weight: 200;
+  letter-spacing: -.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--t);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.tog-kpi-lbl {
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--t3);
+  text-transform: uppercase;
+  letter-spacing: .8px;
+}
+
+/* --- Hero card (joint total) --- */
+.tog-hero {
+  background: linear-gradient(135deg, var(--b8) 0%, var(--b6) 100%);
+  border-radius: var(--r1);
+  padding: 20px 18px;
+  margin-bottom: 12px;
+  color: #fff;
+  box-shadow: var(--shl);
+  position: relative;
+  overflow: hidden;
+}
+.tog-hero::after {
+  content: '';
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.06);
+  pointer-events: none;
+}
+.tog-hero-lbl {
+  font-size: 9px;
+  opacity: .65;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 300;
+  margin-bottom: 4px;
+}
+.tog-hero-val {
+  font-size: 36px;
+  font-weight: 100;
+  letter-spacing: -1.5px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+.tog-hero-row {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  opacity: .8;
+}
+.tog-hero-person {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tog-hero-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* --- Ratio bar --- */
+.tog-ratio-wrap {
+  background: var(--s);
+  border-radius: 14px;
+  padding: 14px;
+  border: 1px solid var(--bd);
+  margin-bottom: 12px;
+  box-shadow: var(--sh);
+}
+.tog-ratio-bar {
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  display: flex;
+  margin: 10px 0 8px;
+}
+.tog-ratio-fill {
+  height: 100%;
+  transition: width .6s cubic-bezier(.34,1.56,.64,1);
+}
+.tog-ratio-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--t2);
+}
+.tog-ratio-pct {
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.tog-ratio-names {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--t3);
+  margin-bottom: 4px;
+}
+
+/* --- Period picker (shared between tabs) --- */
+.tog-period-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.tog-period-sel {
+  flex: 1;
+  min-width: 120px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--bd);
+  background: var(--s2);
+  color: var(--t);
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+}
+.tog-period-sel:focus { outline: none; border-color: var(--b6); }
+
+/* --- Stacked chart card --- */
+.tog-chart-card {
+  background: var(--s);
+  border-radius: 14px;
+  padding: 14px;
+  border: 1px solid var(--bd);
+  box-shadow: var(--sh);
+  margin-bottom: 12px;
+}
+.tog-chart-title {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--t2);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.tog-chart-legend {
+  display: flex;
+  gap: 12px;
+  font-size: 10px;
+  color: var(--t3);
+}
+.tog-chart-legend span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.tog-legend-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.tog-ch-wrap { position: relative; height: 175px; width: 100%; }
+
+/* --- Archive drill-down --- */
+.tog-arc-list { display: flex; flex-direction: column; gap: 4px; }
+.tog-arc-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  background: var(--s2);
+  border-radius: 10px;
+  border: 1px solid var(--bd);
+  cursor: pointer;
+  transition: all .15s;
+}
+.tog-arc-row:active { transform: scale(.98); }
+.tog-arc-row.best { background: var(--b0); border-color: var(--b1); }
+[data-theme=dark] .tog-arc-row.best { background: rgba(30,58,138,.25); }
+.tog-arc-label { flex: 1; font-size: 13px; font-weight: 400; }
+.tog-arc-label span { font-size: 10px; color: var(--t3); margin-right: 4px; }
+.tog-arc-bar-wrap { width: 60px; height: 4px; background: var(--bd); border-radius: 2px; overflow: hidden; }
+.tog-arc-bar-fill { height: 100%; border-radius: 2px; transition: width .4s; }
+.tog-arc-val { font-size: 12px; font-weight: 500; color: var(--g); font-variant-numeric: tabular-nums; min-width: 70px; text-align: left; }
+.tog-arc-chevron { font-size: 11px; color: var(--t3); }
+
+/* back button */
+.tog-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--b6);
+  cursor: pointer;
+  margin-bottom: 12px;
+  background: none;
+  border: none;
+  font-family: 'Inter', sans-serif;
+  padding: 0;
+}
+
+/* --- Streak / badges row --- */
+.tog-badges {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.tog-badge {
+  flex: 1;
+  min-width: 80px;
+  background: var(--s);
+  border-radius: 12px;
+  padding: 12px 10px;
+  border: 1px solid var(--bd);
+  text-align: center;
+  box-shadow: var(--sh);
+}
+.tog-badge-icon { font-size: 20px; margin-bottom: 4px; }
+.tog-badge-val { font-size: 15px; font-weight: 400; color: var(--t); font-variant-numeric: tabular-nums; }
+.tog-badge-lbl { font-size: 9px; color: var(--t3); text-transform: uppercase; letter-spacing: .6px; margin-top: 2px; }
+
+/* --- Comparison tab --- */
+.tog-cmp-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  gap: 8px;
+  border-bottom: 1px solid var(--bd);
+}
+.tog-cmp-row:last-child { border-bottom: none; }
+.tog-cmp-name { font-size: 12px; color: var(--t2); width: 60px; flex-shrink: 0; }
+.tog-cmp-bars { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.tog-cmp-bar-row { display: flex; align-items: center; gap: 6px; }
+.tog-cmp-bar-bg { flex: 1; height: 6px; background: var(--bd); border-radius: 3px; overflow: hidden; }
+.tog-cmp-bar-fill { height: 100%; border-radius: 3px; transition: width .5s ease; }
+.tog-cmp-bar-val { font-size: 10px; font-variant-numeric: tabular-nums; min-width: 54px; text-align: left; color: var(--t3); }
+.tog-cmp-winner { font-size: 12px; }
+
+/* winner badge */
+.tog-winner-banner {
+  background: linear-gradient(135deg, #10B981, #059669);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #fff;
+  margin-bottom: 10px;
+}
   /* Partner Daily Summary */
 .partner-day-summary {
   margin-top: 20px;
@@ -1805,109 +2127,652 @@ function renderYear(cont,selectedYear){
 }
 
 // ---- COUPLE PAGE ----
-function renderCouple(){
-  const s=D.gs(),cont=document.getElementById('coupleContent');
-  if(!s.pairCode){
-    const pending=sessionStorage.getItem('pendingPair');
-    if(!s.myCode){var _ss=D.gs();_ss.myCode=genCode();D.ss(_ss);}
-    var _myName=s.myName||'אני';
-    var _pName=s.partnerName||'פרטנר';
-    if(pending){
-      cont.innerHTML=
-        '<div class="card" style="margin-top:8px">'+
-        '<div style="text-align:center;padding:4px 0 16px">'+
-        '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--b6)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg>'+
-        '<div style="font-size:17px;font-weight:500;margin-top:10px;color:var(--t)">חיבור לפרטנר</div>'+
-        '<div style="font-size:13px;color:var(--t2);margin-top:4px">קוד הפרטנר זוהה אוטומטית</div></div>'+
-        '<div class="fg"><label class="fl">קוד הפרטנר</label>'+
-        '<input type="text" class="fi" id="cplPairCode" value="'+pending+'" readonly style="text-align:center;font-size:20px;letter-spacing:8px;font-weight:500;background:rgba(16,185,129,0.1);border-color:var(--g);color:var(--g)"></div>'+
-        '<div class="fg"><label class="fl">השם שלי</label>'+
-        '<input type="text" class="fi" id="cplMyName" placeholder="השם שלך" value="'+_myName+'"></div>'+
-        '<div class="fg"><label class="fl">שם הפרטנר</label>'+
-        '<input type="text" class="fi" id="cplPartnerName" placeholder="שם הפרטנר" value="'+_pName+'"></div>'+
-        '<button class="btn btn-p" onclick="doConnectFromCouplePage()" style="font-size:15px;padding:14px">התחבר לפרטנר</button>'+
-        '<button class="btn" onclick="doCancelPairConnect()" style="margin-top:8px;background:var(--s2);color:var(--t2)">ביטול</button>'+
+// TOGETHER DASHBOARD — JS
+// ---- state for Together tabs & drill-down ----
+var _togTab = 'overview';      // 'overview' | 'archive' | 'compare'
+var _togArcYear = null;        // e.g. '2025'
+var _togArcMonth = null;       // e.g. '2025-04'  (drill-down level 2)
+var _togArcWeek = null;        // 0-4             (drill-down level 3, display only)
+var _togCmpYear = null;
+var _togCharts = {};           // { overview: ChartInstance, archive: ..., compare: ... }
+
+function _togDestroyChart(key) {
+  if (_togCharts[key]) {
+    try { _togCharts[key].destroy(); } catch(e) {}
+    _togCharts[key] = null;
+  }
+}
+
+// ---- Main entry point (replaces old renderCouple) ----
+function renderCouple() {
+  var s = D.gs();
+  var cont = document.getElementById('coupleContent');
+
+  // ── not paired ──────────────────────────────────────────
+  if (!s.pairCode) {
+    var pending = sessionStorage.getItem('pendingPair');
+    if (!s.myCode) { var _ss = D.gs(); _ss.myCode = genCode(); D.ss(_ss); }
+    var _myName = s.myName || 'אני';
+    var _pName  = s.partnerName || 'פרטנר';
+
+    if (pending) {
+      cont.innerHTML =
+        '<div class="card" style="margin-top:8px">' +
+        '<div style="text-align:center;padding:4px 0 16px">' +
+        '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--b6)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg>' +
+        '<div style="font-size:17px;font-weight:500;margin-top:10px;color:var(--t)">חיבור לפרטנר</div>' +
+        '<div style="font-size:13px;color:var(--t2);margin-top:4px">קוד הפרטנר זוהה אוטומטית</div></div>' +
+        '<div class="fg"><label class="fl">קוד הפרטנר</label>' +
+        '<input type="text" class="fi" id="cplPairCode" value="' + pending + '" readonly style="text-align:center;font-size:20px;letter-spacing:8px;font-weight:500;background:rgba(16,185,129,0.1);border-color:var(--g);color:var(--g)"></div>' +
+        '<div class="fg"><label class="fl">השם שלי</label>' +
+        '<input type="text" class="fi" id="cplMyName" placeholder="השם שלך" value="' + _myName + '"></div>' +
+        '<div class="fg"><label class="fl">שם הפרטנר</label>' +
+        '<input type="text" class="fi" id="cplPartnerName" placeholder="שם הפרטנר" value="' + _pName + '"></div>' +
+        '<button class="btn btn-p" onclick="doConnectFromCouplePage()" style="font-size:15px;padding:14px">התחבר לפרטנר</button>' +
+        '<button class="btn" onclick="doCancelPairConnect()" style="margin-top:8px;background:var(--s2);color:var(--t2)">ביטול</button>' +
         '</div>';
     } else {
-      cont.innerHTML=
-        '<div class="empty"><div class="empty-ico" style="font-size:0"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>'+
-        '<div class="empty-ttl">לא מחוברים לזוג</div>'+
-        '<div class="empty-sub">שלח לפרטנר את הקישור שלך, או הזן את הקוד שלו</div>'+
-        '<button class="btn btn-p" style="width:auto;padding:12px 28px;margin:20px auto 0;display:block" onclick="openPair()">חבר פרטנר</button>'+
+      cont.innerHTML =
+        '<div class="empty"><div class="empty-ico" style="font-size:0">' +
+        '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>' +
+        '<div class="empty-ttl">לא מחוברים לזוג</div>' +
+        '<div class="empty-sub">שלח לפרטנר את הקישור שלך, או הזן את הקוד שלו</div>' +
+        '<button class="btn btn-p" style="width:auto;padding:12px 28px;margin:20px auto 0;display:block" onclick="openPair()">חבר פרטנר</button>' +
         '</div>';
     }
     return;
   }
-  // יש pairCode — בדוק אם פרטנר כבר חיבר
-  const myD=D.g(),pd=D.gp();
-  const partnerHasData=Object.keys(pd).length>0;
-  if(!partnerHasData){
-    // בדוק ב-Firebase
-    checkPartnerConnected().then(function(connected){
-      if(connected){
-        // פרטנר חיבר — טען נתונים
-        loadPartnerFromFirebase().then(function(got){
-          if(got){renderCouple();showToast('הפרטנר התחבר! נטענו הנתונים ✅');}
+
+  // ── check if partner has data yet ───────────────────────
+  var pd = D.gp();
+  var partnerHasData = Object.keys(pd).length > 0;
+  if (!partnerHasData) {
+    checkPartnerConnected().then(function(connected) {
+      if (connected) {
+        loadPartnerFromFirebase().then(function(got) {
+          if (got) { renderCouple(); showToast('הפרטנר התחבר! נטענו הנתונים ✅'); }
         });
-      } else {
-        // פרטנר עוד לא חיבר — הצג הודעת המתנה
-        const cont2=document.getElementById('coupleContent');
-        if(cont2&&cont2.querySelector('.waiting-partner'))return;
-        const waitDiv=document.createElement('div');
-        waitDiv.className='waiting-partner';
-        waitDiv.style.cssText='background:var(--s);border:1px solid var(--bd);border-radius:14px;padding:20px;text-align:center;margin-bottom:12px';
-        waitDiv.innerHTML='<div style="font-size:28px;margin-bottom:8px">⏳</div>'
-          +'<div style="font-size:15px;font-weight:500;color:var(--t);margin-bottom:6px">ממתינים לפרטנר</div>'
-          +'<div style="font-size:12px;color:var(--t3)">שלח לפרטנר את הקישור שלך כדי שיתחבר מהצד שלו</div>';
-        if(cont2)cont2.insertBefore(waitDiv,cont2.firstChild);
       }
     });
   }
-  const dk=document.body.getAttribute('data-theme')==='dark';
-  cont.innerHTML=`
-  <div id="cplStats">
-    <div class="couple-total"><div class="ct-lbl" id="cplPeriodLbl">הכנסה משותפת החודש</div><div class="ct-val" id="cplTotVal">₪0</div><div class="ct-sub" id="cplHoursLbl">0 + 0 שעות ביחד</div></div>
-    <div class="ucard" id="cplMyCard" style="background:${s.myColor}18;border-color:${s.myColor}">
-      <div class="uc-top"><div class="uc-av" style="background:${s.myColor}">${s.myName.charAt(0)}</div><div><div class="uc-name" style="color:${s.myColor}">${s.myName}</div><div class="uc-h" id="cplMyH">0 שעות</div></div></div>
-      <div class="uc-money" id="cplMyP" style="color:${s.myColor}">₪0</div>
-      <div class="pbar-wrap" style="margin-top:10px"><div class="pbar-fill" id="cplMyBar" style="width:50%;background:${s.myColor}"></div></div>
-      <div style="font-size:11px;color:var(--t3);margin-top:4px" id="cplMyPct">50% מסה"כ</div>
-    </div>
-    <div class="ucard" id="cplPCard" style="background:${s.partnerColor}18;border-color:${s.partnerColor}">
-      <div class="uc-top"><div class="uc-av" style="background:${s.partnerColor}">${s.partnerName.charAt(0)}</div><div><div class="uc-name" style="color:${s.partnerColor}">${s.partnerName}</div><div class="uc-h" id="cplPH">0 שעות</div></div></div>
-      <div class="uc-money" id="cplPP" style="color:${s.partnerColor}">₪0</div>
-      <div class="pbar-wrap" style="margin-top:10px"><div class="pbar-fill" id="cplPBar" style="width:50%;background:${s.partnerColor}"></div></div>
-      <div style="font-size:11px;color:var(--t3);margin-top:4px" id="cplPPct">50% מסה"כ</div>
-    </div>
-  </div>
-  <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div style="font-size:11px;color:var(--t2)">השוואה</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <select id="cplViewSel" onchange="renderCoupleChart()" style="padding:4px 8px;border-radius:6px;border:1px solid var(--bd);background:var(--s2);color:var(--t);font-family:'Inter',sans-serif;font-size:11px">
-          <option value="month">חודש נוכחי</option>
-          <option value="custom_month">בחר חודש</option>
-          <option value="year">שנה נוכחית</option>
-          <option value="custom_year">בחר שנה</option>
-        </select>
-        <select id="cplMonthSel" onchange="renderCoupleChart()" style="display:none;padding:4px 8px;border-radius:6px;border:1px solid var(--bd);background:var(--s2);color:var(--t);font-family:'Inter',sans-serif;font-size:11px">
-          ${MN.map((m,i)=>'<option value="'+i+'">'+m+'</option>').join('')}
-        </select>
-        <select id="cplYearSel" onchange="renderCoupleChart()" style="display:none;padding:4px 8px;border-radius:6px;border:1px solid var(--bd);background:var(--s2);color:var(--t);font-family:'Inter',sans-serif;font-size:11px">
-          ${Array.from({length:new Date().getFullYear()-2014},(_,i)=>new Date().getFullYear()-i).map(y=>'<option value="'+y+'">'+y+'</option>').join('')}
-        </select>
-      </div>
-    </div>
-    <div class="cwrap"><canvas id="cplCh"></canvas></div>
-  </div>
-  <div class="card">
-    <div style="font-size:10px;color:var(--t3);margin-bottom:8px">קוד זוג: <strong style="letter-spacing:2px;color:var(--b8)">${s.pairCode}</strong></div>
-    <button class="btn btn-g" onclick="manualSync()" style="margin-bottom:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> סנכרן פרטנר</button>
-    <button class="btn btn-o" onclick="openPair()" style="font-size:12px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> הגדרות זוג</button>
-  </div>`;
-  renderCoupleChart();
-  renderCoupleStats();
+
+  // ── scaffold ─────────────────────────────────────────────
+  cont.innerHTML =
+    // tab bar
+    '<div class="tog-tabs">' +
+      _togTabBtn('overview', '📊', 'סקירה') +
+      _togTabBtn('archive',  '📅', 'ארכיון') +
+      _togTabBtn('compare',  '⚖️',  'השוואה') +
+    '</div>' +
+    '<div id="togBody"></div>' +
+    // settings footer
+    '<div class="card" style="margin-top:8px">' +
+      '<div style="font-size:10px;color:var(--t3);margin-bottom:8px">קוד זוג: <strong style="letter-spacing:2px;color:var(--b8)">' + s.pairCode + '</strong></div>' +
+      '<button class="btn btn-g" onclick="manualSync()" style="margin-bottom:8px">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> סנכרן פרטנר' +
+      '</button>' +
+      '<button class="btn btn-o" onclick="openPair()" style="font-size:12px">הגדרות זוג</button>' +
+    '</div>';
+
+  _togRenderTab(_togTab);
 }
+
+function _togTabBtn(id, icon, label) {
+  var active = _togTab === id ? ' active' : '';
+  return '<button class="tog-tab' + active + '" onclick="_togSwitchTab(\'' + id + '\')">' +
+    '<span class="tog-tab-icon">' + icon + '</span>' + label + '</button>';
+}
+
+function _togSwitchTab(tab) {
+  _togTab = tab;
+  // reset drill-down when switching tabs
+  if (tab !== 'archive') { _togArcYear = null; _togArcMonth = null; _togArcWeek = null; }
+  // re-render tab bar active state
+  document.querySelectorAll('.tog-tab').forEach(function(btn, i) {
+    var tabs = ['overview','archive','compare'];
+    btn.classList.toggle('active', tabs[i] === tab);
+  });
+  _togRenderTab(tab);
+  vib();
+}
+
+function _togRenderTab(tab) {
+  var body = document.getElementById('togBody');
+  if (!body) return;
+  // destroy all charts before re-render
+  Object.keys(_togCharts).forEach(function(k) { _togDestroyChart(k); });
+
+  if (tab === 'overview') _togRenderOverview(body);
+  else if (tab === 'archive') _togRenderArchive(body, _togArcYear, _togArcMonth);
+  else if (tab === 'compare') _togRenderCompare(body, _togCmpYear);
+}
+
+// ─────────────────────────────────────────────────────────
+// TAB 1 — OVERVIEW
+// ─────────────────────────────────────────────────────────
+function _togRenderOverview(body) {
+  var s   = D.gs();
+  var myD = D.g();
+  var pd  = D.gp();
+  var now = new Date();
+
+  // period selector state
+  var selPer = localStorage.getItem('togOverviewPer') || 'month';
+  var dates = _togGetDates(selPer, now);
+
+  var myH = 0, myP = 0, pH = 0, pP = 0;
+  var labels = [], myVals = [], pVals = [];
+  var myPeak = { p: 0, d: '' }, pPeak = { p: 0, d: '' };
+  var sharedDays = 0;
+
+  dates.forEach(function(d) {
+    var k = fk(d);
+    var lbl = d.getDate() + '/' + (d.getMonth() + 1);
+    labels.push(lbl);
+    var mv = 0, pv = 0;
+    if (myD[k] && myD[k].hours > 0) {
+      var pr = cpDay(myD[k]);
+      mv = pr.total; myH += pr.allHours; myP += pr.total;
+      if (mv > myPeak.p) { myPeak.p = mv; myPeak.d = k; }
+    }
+    if (pd[k] && pd[k].hours > 0) {
+      var ppr = cp(pd[k].hours, pd[k].rate || 50, pd[k].bonuses);
+      pv = ppr.total; pH += pd[k].hours; pP += ppr.total;
+      if (pv > pPeak.p) { pPeak.p = pv; pPeak.d = k; }
+    }
+    if (mv > 0 && pv > 0) sharedDays++;
+    myVals.push(Math.round(mv));
+    pVals.push(Math.round(pv));
+  });
+
+  var total = myP + pP;
+  var myPct = total > 0 ? Math.round(myP / total * 100) : 50;
+  var pPct  = 100 - myPct;
+  var winner = myP > pP ? s.myName : (pP > myP ? s.partnerName : null);
+
+  var periodOpts = _togPeriodOpts(selPer);
+
+  body.innerHTML =
+    // period picker
+    '<div class="tog-period-row">' +
+      '<select class="tog-period-sel" onchange="_togOverviewChangePer(this.value)">' + periodOpts + '</select>' +
+    '</div>' +
+
+    // hero
+    '<div class="tog-hero">' +
+      '<div class="tog-hero-lbl">הכנסה משותפת</div>' +
+      '<div class="tog-hero-val">₪' + Math.round(total).toLocaleString('he-IL') + '</div>' +
+      '<div class="tog-hero-row">' +
+        '<div class="tog-hero-person"><div class="tog-hero-dot" style="background:' + s.myColor + '"></div>' + s.myName + ' — ₪' + Math.round(myP).toLocaleString('he-IL') + '</div>' +
+        '<div class="tog-hero-dot" style="background:rgba(255,255,255,.3);width:1px;height:14px;border-radius:0"></div>' +
+        '<div class="tog-hero-person"><div class="tog-hero-dot" style="background:' + s.partnerColor + '"></div>' + s.partnerName + ' — ₪' + Math.round(pP).toLocaleString('he-IL') + '</div>' +
+      '</div>' +
+    '</div>' +
+
+    // KPI row
+    '<div class="tog-kpi-row">' +
+      _togKpi('⏱', (myH + pH).toFixed(1) + " ש'", 'שעות ביחד', 'var(--b6)') +
+      _togKpi('📅', sharedDays + ' ימים', 'עבדנו יחד', 'var(--am)') +
+      _togKpi('👤', myH.toFixed(1) + " ש'", s.myName, s.myColor) +
+      _togKpi('🤝', pH.toFixed(1) + " ש'", s.partnerName, s.partnerColor) +
+    '</div>' +
+
+    // winner banner
+    (winner ? '<div class="tog-winner-banner">🏆 <span>' + winner + ' הוביל/ה בתקופה זו!</span></div>' : '') +
+
+    // ratio bar
+    '<div class="tog-ratio-wrap">' +
+      '<div style="font-size:11px;font-weight:500;color:var(--t2)">יחס תרומה</div>' +
+      '<div class="tog-ratio-names"><span>' + s.myName + '</span><span>' + s.partnerName + '</span></div>' +
+      '<div class="tog-ratio-bar">' +
+        '<div class="tog-ratio-fill" style="width:' + myPct + '%;background:' + s.myColor + '"></div>' +
+        '<div class="tog-ratio-fill" style="width:' + pPct + '%;background:' + s.partnerColor + '"></div>' +
+      '</div>' +
+      '<div class="tog-ratio-labels">' +
+        '<span class="tog-ratio-pct" style="color:' + s.myColor + '">' + myPct + '%</span>' +
+        '<span class="tog-ratio-pct" style="color:' + s.partnerColor + '">' + pPct + '%</span>' +
+      '</div>' +
+    '</div>' +
+
+    // stacked chart
+    '<div class="tog-chart-card">' +
+      '<div class="tog-chart-title">הכנסה יומית' +
+        '<div class="tog-chart-legend">' +
+          '<span><div class="tog-legend-dot" style="background:' + s.myColor + '"></div>' + s.myName + '</span>' +
+          '<span><div class="tog-legend-dot" style="background:' + s.partnerColor + '"></div>' + s.partnerName + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="tog-ch-wrap"><canvas id="togOverviewCh"></canvas></div>' +
+    '</div>';
+
+  // draw chart
+  setTimeout(function() {
+    var dk = document.body.getAttribute('data-theme') === 'dark';
+    var cv = document.getElementById('togOverviewCh');
+    if (!cv) return;
+    _togDestroyChart('overview');
+    _togCharts['overview'] = new Chart(cv, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: s.myName,
+            data: myVals,
+            backgroundColor: s.myColor + 'DD',
+            borderRadius: 4,
+            borderSkipped: false
+          },
+          {
+            label: s.partnerName,
+            data: pVals,
+            backgroundColor: s.partnerColor + 'DD',
+            borderRadius: 4,
+            borderSkipped: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              afterBody: function(items) {
+                var total = items.reduce(function(s, i) { return s + i.parsed.y; }, 0);
+                return ['— סה"כ: ₪' + Math.round(total).toLocaleString('he-IL')];
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            stacked: true,
+            grid: { color: 'transparent', borderColor: 'transparent' },
+            ticks: { color: dk ? '#475569' : '#94A3B8', font: { size: 9, family: 'Inter' }, maxRotation: 0 }
+          },
+          y: {
+            stacked: true,
+            grid: { color: dk ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)', lineWidth: 0.5 },
+            border: { dash: [3, 3], color: 'transparent' },
+            ticks: { color: dk ? '#475569' : '#94A3B8', font: { size: 9, family: 'Inter' } }
+          }
+        }
+      }
+    });
+  }, 20);
+}
+
+function _togOverviewChangePer(val) {
+  localStorage.setItem('togOverviewPer', val);
+  _togRenderTab('overview');
+}
+
+// ─────────────────────────────────────────────────────────
+// TAB 2 — ARCHIVE  (שנה → חודש → שבוע)
+// ─────────────────────────────────────────────────────────
+function _togRenderArchive(body, selYear, selMonth) {
+  var s   = D.gs();
+  var myD = D.g();
+  var pd  = D.gp();
+  var now = new Date();
+
+  // aggregate all data by month-key
+  var months = {};
+  function addToMonth(mk, myP, pP, myH, pH) {
+    if (!months[mk]) months[mk] = { myP: 0, pP: 0, myH: 0, pH: 0 };
+    months[mk].myP += myP; months[mk].pP += pP;
+    months[mk].myH += myH; months[mk].pH += pH;
+  }
+  [myD, pd].forEach(function(src, si) {
+    Object.keys(src).forEach(function(k) {
+      var mk = k.substring(0, 7);
+      var r  = src[k];
+      if (!r || !(r.hours > 0)) return;
+      var pr = si === 0 ? cpDay(r) : { total: cp(r.hours, r.rate || 50, r.bonuses).total, allHours: r.hours };
+      if (si === 0) addToMonth(mk, pr.total, 0, pr.allHours, 0);
+      else          addToMonth(mk, 0, pr.total, 0, pr.allHours);
+    });
+  });
+
+  var allYears  = [];
+  var dataYears = new Set(Object.keys(months).map(function(mk) { return mk.substring(0, 4); }));
+  for (var y = now.getFullYear(); y >= 2015; y--) allYears.push(String(y));
+
+  var curY = selYear || (Array.from(dataYears).sort().reverse()[0] || String(now.getFullYear()));
+
+  var yearOpts = allYears.map(function(y) {
+    return '<option value="' + y + '"' + (y === curY ? ' selected' : '') + '>' + y + (dataYears.has(y) ? ' ✓' : '') + '</option>';
+  }).join('');
+
+  var yearPicker =
+    '<div class="tog-period-row">' +
+      '<select class="tog-period-sel" onchange="_togArcYear=this.value;_togArcMonth=null;_togRenderArchive(document.getElementById(\'togBody\'),this.value,null)">' + yearOpts + '</select>' +
+    '</div>';
+
+  // ── WEEK DRILL-DOWN (level 3) ──────────────────────────
+  if (selMonth) {
+    var parts = selMonth.split('-');
+    var yr = parseInt(parts[0]), mo = parseInt(parts[1]) - 1;
+    var daysInMonth = new Date(yr, mo + 1, 0).getDate();
+    var weeks = [
+      { l: 'שבוע 1', myP: 0, pP: 0, myH: 0, pH: 0 },
+      { l: 'שבוע 2', myP: 0, pP: 0, myH: 0, pH: 0 },
+      { l: 'שבוע 3', myP: 0, pP: 0, myH: 0, pH: 0 },
+      { l: 'שבוע 4', myP: 0, pP: 0, myH: 0, pH: 0 },
+      { l: 'שבוע 5', myP: 0, pP: 0, myH: 0, pH: 0 }
+    ];
+    for (var day = 1; day <= daysInMonth; day++) {
+      var k = parts[0] + '-' + parts[1] + '-' + String(day).padStart(2, '0');
+      var wi = Math.min(Math.floor((day - 1) / 7), 4);
+      if (myD[k] && myD[k].hours > 0) {
+        var pr2 = cpDay(myD[k]);
+        weeks[wi].myP += pr2.total; weeks[wi].myH += pr2.allHours;
+      }
+      if (pd[k] && pd[k].hours > 0) {
+        var pv2 = cp(pd[k].hours, pd[k].rate || 50, pd[k].bonuses).total;
+        weeks[wi].pP += pv2; weeks[wi].pH += pd[k].hours;
+      }
+    }
+    var activeWeeks = weeks.filter(function(w, i) { return i < 4 || w.myP + w.pP > 0; });
+    var maxWP = Math.max.apply(null, activeWeeks.map(function(w) { return w.myP + w.pP; }).concat([1]));
+
+    var wRows = activeWeeks.map(function(w) {
+      var tot = w.myP + w.pP;
+      var pct = Math.round(tot / maxWP * 100);
+      var myPct2 = tot > 0 ? Math.round(w.myP / tot * 100) : 50;
+      return '<div class="tog-arc-row">' +
+        '<div class="tog-arc-label">' + w.l + '</div>' +
+        '<div style="flex:1;padding:0 8px">' +
+          '<div style="height:6px;background:var(--bd);border-radius:3px;overflow:hidden;display:flex">' +
+            '<div style="width:' + (myPct2 * pct / 100) + '%;height:100%;background:' + s.myColor + ';border-radius:3px 0 0 3px;transition:width .4s"></div>' +
+            '<div style="width:' + ((100 - myPct2) * pct / 100) + '%;height:100%;background:' + s.partnerColor + ';transition:width .4s"></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="tog-arc-val">₪' + Math.round(tot).toLocaleString('he-IL') + '</div>' +
+      '</div>';
+    }).join('');
+
+    var wChLabels = activeWeeks.map(function(w) { return w.l; });
+    var wMyVals   = activeWeeks.map(function(w) { return Math.round(w.myP); });
+    var wPVals    = activeWeeks.map(function(w) { return Math.round(w.pP); });
+
+    var backLabel = MN[mo] + ' ' + parts[0];
+    body.innerHTML =
+      yearPicker +
+      '<button class="tog-back" onclick="_togArcMonth=null;_togRenderArchive(document.getElementById(\'togBody\'),\'' + curY + '\',null)">' +
+        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg>' +
+        ' חזרה — ' + backLabel +
+      '</button>' +
+      '<div class="tog-arc-list">' + wRows + '</div>' +
+      '<div class="tog-chart-card" style="margin-top:12px">' +
+        '<div class="tog-chart-title">שבועות — ' + backLabel +
+          '<div class="tog-chart-legend">' +
+            '<span><div class="tog-legend-dot" style="background:' + s.myColor + '"></div>' + s.myName + '</span>' +
+            '<span><div class="tog-legend-dot" style="background:' + s.partnerColor + '"></div>' + s.partnerName + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="tog-ch-wrap" style="height:160px"><canvas id="togArcWeekCh"></canvas></div>' +
+      '</div>';
+
+    setTimeout(function() {
+      var dk = document.body.getAttribute('data-theme') === 'dark';
+      var cv = document.getElementById('togArcWeekCh');
+      if (!cv) return;
+      _togDestroyChart('arcWeek');
+      _togCharts['arcWeek'] = new Chart(cv, {
+        type: 'bar',
+        data: {
+          labels: wChLabels,
+          datasets: [
+            { label: s.myName, data: wMyVals, backgroundColor: s.myColor + 'DD', borderRadius: 4, borderSkipped: false },
+            { label: s.partnerName, data: wPVals, backgroundColor: s.partnerColor + 'DD', borderRadius: 4, borderSkipped: false }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { stacked: true, grid: { color: 'transparent' }, ticks: { color: dk ? '#475569' : '#94A3B8', font: { size: 9, family: 'Inter' } } },
+            y: { stacked: true, grid: { color: dk ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.04)' }, ticks: { color: dk ? '#475569' : '#94A3B8', font: { size: 9, family: 'Inter' } } }
+          }
+        }
+      });
+    }, 20);
+    return;
+  }
+
+  // ── MONTH LIST (level 2) ───────────────────────────────
+  var sorted = Object.keys(months)
+    .filter(function(mk) { return mk.startsWith(curY); })
+    .sort().reverse();
+
+  if (!sorted.length) {
+    body.innerHTML = yearPicker +
+      '<div class="card"><div class="empty"><div class="empty-ttl">אין נתונים ל-' + curY + '</div></div></div>';
+    return;
+  }
+
+  var maxP = Math.max.apply(null, sorted.map(function(mk) { return months[mk].myP + months[mk].pP; }).concat([1]));
+  var bestMK = sorted.reduce(function(best, mk) {
+    return (months[mk].myP + months[mk].pP) > (months[best].myP + months[best].pP) ? mk : best;
+  }, sorted[0]);
+
+  // year summary KPIs
+  var yrMyP = 0, yrPP = 0, yrMyH = 0, yrPH = 0;
+  sorted.forEach(function(mk) { yrMyP += months[mk].myP; yrPP += months[mk].pP; yrMyH += months[mk].myH; yrPH += months[mk].pH; });
+  var yrTot = yrMyP + yrPP;
+
+  var kpiRow = '<div class="tog-kpi-row" style="margin-bottom:12px">' +
+    _togKpi('₪', '₪' + Math.round(yrTot).toLocaleString('he-IL'), 'סה"כ ' + curY, 'var(--g)') +
+    _togKpi('⏱', (yrMyH + yrPH).toFixed(0) + " ש'", 'שעות יחד', 'var(--b6)') +
+    _togKpi('🏆', MN[parseInt(bestMK.split('-')[1]) - 1], 'חודש שיא', 'var(--am)') +
+    _togKpi('📊', sorted.length + ' חודשים', 'פעילים', 'var(--t3)') +
+  '</div>';
+
+  var monthRows = sorted.map(function(mk) {
+    var mParts = mk.split('-');
+    var mName  = MN[parseInt(mParts[1]) - 1];
+    var tot    = months[mk].myP + months[mk].pP;
+    var pct    = Math.round(tot / maxP * 100);
+    var myPct3 = tot > 0 ? Math.round(months[mk].myP / tot * 100) : 50;
+    var isBest = mk === bestMK;
+    return '<div class="tog-arc-row' + (isBest ? ' best' : '') + '" onclick="_togArcMonth=\'' + mk + '\';_togRenderArchive(document.getElementById(\'togBody\'),\'' + curY + '\',\'' + mk + '\')">' +
+      '<div class="tog-arc-label">' + mName + ' ' + mParts[0] + (isBest ? ' <span>★ שיא</span>' : '') + '</div>' +
+      '<div style="flex:1;padding:0 8px">' +
+        '<div style="height:6px;background:var(--bd);border-radius:3px;overflow:hidden;display:flex">' +
+          '<div style="width:' + (myPct3 * pct / 100) + '%;height:100%;background:' + s.myColor + ';border-radius:3px 0 0 3px;transition:width .4s"></div>' +
+          '<div style="width:' + ((100 - myPct3) * pct / 100) + '%;height:100%;background:' + s.partnerColor + ';transition:width .4s"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="tog-arc-val">₪' + Math.round(tot).toLocaleString('he-IL') + '</div>' +
+      '<div class="tog-arc-chevron">›</div>' +
+    '</div>';
+  }).join('');
+
+  body.innerHTML = yearPicker + kpiRow + '<div class="tog-arc-list">' + monthRows + '</div>';
+}
+
+// ─────────────────────────────────────────────────────────
+// TAB 3 — COMPARE  (חודשים לאורך זמן, שניהם על אותו גרף)
+// ─────────────────────────────────────────────────────────
+function _togRenderCompare(body, selYear) {
+  var s   = D.gs();
+  var myD = D.g();
+  var pd  = D.gp();
+  var now = new Date();
+
+  var allYears = [];
+  var dataYears = new Set(
+    Object.keys(myD).concat(Object.keys(pd)).map(function(k) { return k.substring(0, 4); })
+  );
+  for (var y = now.getFullYear(); y >= 2015; y--) allYears.push(String(y));
+  var curY = selYear || _togCmpYear || (Array.from(dataYears).sort().reverse()[0] || String(now.getFullYear()));
+  _togCmpYear = curY;
+
+  var yearOpts = allYears.map(function(y) {
+    return '<option value="' + y + '"' + (y === curY ? ' selected' : '') + '>' + y + (dataYears.has(y) ? ' ✓' : '') + '</option>';
+  }).join('');
+
+  // build 12 monthly buckets
+  var buckets = Array.from({ length: 12 }, function() { return { myP: 0, pP: 0, myH: 0, pH: 0 }; });
+  Object.keys(myD).forEach(function(k) {
+    if (!k.startsWith(curY)) return;
+    var mi = parseInt(k.split('-')[1]) - 1;
+    if (mi < 0 || mi > 11) return;
+    var pr = cpDay(myD[k]);
+    buckets[mi].myP += pr.total; buckets[mi].myH += pr.allHours;
+  });
+  Object.keys(pd).forEach(function(k) {
+    if (!k.startsWith(curY)) return;
+    var mi = parseInt(k.split('-')[1]) - 1;
+    if (mi < 0 || mi > 11) return;
+    var pv = cp(pd[k].hours, pd[k].rate || 50, pd[k].bonuses).total;
+    buckets[mi].pP += pv; buckets[mi].pH += pd[k].hours;
+  });
+
+  var labels    = MN.map(function(n) { return n.substring(0, 3); });
+  var myVals    = buckets.map(function(b) { return Math.round(b.myP); });
+  var pVals     = buckets.map(function(b) { return Math.round(b.pP); });
+  var totVals   = buckets.map(function(b, i) { return myVals[i] + pVals[i]; });
+
+  var maxTot    = Math.max.apply(null, totVals.concat([1]));
+  var bestMonth = totVals.indexOf(Math.max.apply(null, totVals));
+
+  // monthly comparison list
+  var rows = buckets.map(function(b, i) {
+    var tot = b.myP + b.pP;
+    if (tot === 0) return '';
+    var isBest = i === bestMonth;
+    var myPct  = tot > 0 ? Math.round(b.myP / tot * 100) : 50;
+    return '<div class="tog-cmp-row">' +
+      '<div class="tog-cmp-name">' + MN[i].substring(0, 3) + (isBest ? ' 🏆' : '') + '</div>' +
+      '<div class="tog-cmp-bars">' +
+        '<div class="tog-cmp-bar-row">' +
+          '<div style="width:8px;height:8px;border-radius:50%;background:' + s.myColor + ';flex-shrink:0"></div>' +
+          '<div class="tog-cmp-bar-bg"><div class="tog-cmp-bar-fill" style="width:' + (maxTot > 0 ? b.myP / maxTot * 100 : 0) + '%;background:' + s.myColor + '"></div></div>' +
+          '<div class="tog-cmp-bar-val">₪' + Math.round(b.myP).toLocaleString('he-IL') + '</div>' +
+        '</div>' +
+        '<div class="tog-cmp-bar-row">' +
+          '<div style="width:8px;height:8px;border-radius:50%;background:' + s.partnerColor + ';flex-shrink:0"></div>' +
+          '<div class="tog-cmp-bar-bg"><div class="tog-cmp-bar-fill" style="width:' + (maxTot > 0 ? b.pP / maxTot * 100 : 0) + '%;background:' + s.partnerColor + '"></div></div>' +
+          '<div class="tog-cmp-bar-val">₪' + Math.round(b.pP).toLocaleString('he-IL') + '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  body.innerHTML =
+    '<div class="tog-period-row">' +
+      '<select class="tog-period-sel" onchange="_togCmpYear=this.value;_togRenderCompare(document.getElementById(\'togBody\'),this.value)">' + yearOpts + '</select>' +
+    '</div>' +
+
+    // stacked yearly chart
+    '<div class="tog-chart-card">' +
+      '<div class="tog-chart-title">הכנסה חודשית — ' + curY +
+        '<div class="tog-chart-legend">' +
+          '<span><div class="tog-legend-dot" style="background:' + s.myColor + '"></div>' + s.myName + '</span>' +
+          '<span><div class="tog-legend-dot" style="background:' + s.partnerColor + '"></div>' + s.partnerName + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="tog-ch-wrap" style="height:180px"><canvas id="togCmpCh"></canvas></div>' +
+    '</div>' +
+
+    // monthly breakdown
+    '<div class="card" style="padding:10px 0">' + rows + '</div>';
+
+  setTimeout(function() {
+    var dk = document.body.getAttribute('data-theme') === 'dark';
+    var cv = document.getElementById('togCmpCh');
+    if (!cv) return;
+    _togDestroyChart('compare');
+    _togCharts['compare'] = new Chart(cv, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: s.myName, data: myVals, backgroundColor: s.myColor + 'DD', borderRadius: 4, borderSkipped: false },
+          { label: s.partnerName, data: pVals, backgroundColor: s.partnerColor + 'DD', borderRadius: 4, borderSkipped: false }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              afterBody: function(items) {
+                var t = items.reduce(function(s, i) { return s + i.parsed.y; }, 0);
+                return ['— יחד: ₪' + Math.round(t).toLocaleString('he-IL')];
+              }
+            }
+          }
+        },
+        scales: {
+          x: { stacked: true, grid: { color: 'transparent' }, ticks: { color: dk ? '#475569' : '#94A3B8', font: { size: 9, family: 'Inter' }, maxRotation: 0 } },
+          y: { stacked: true, grid: { color: dk ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.04)' }, ticks: { color: dk ? '#475569' : '#94A3B8', font: { size: 9, family: 'Inter' } } }
+        }
+      }
+    });
+  }, 20);
+}
+
+// ─────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────
+function _togKpi(icon, val, lbl, color) {
+  return '<div class="tog-kpi" style="--kpi-color:' + color + '">' +
+    '<span class="tog-kpi-icon">' + icon + '</span>' +
+    '<div class="tog-kpi-val">' + val + '</div>' +
+    '<div class="tog-kpi-lbl">' + lbl + '</div>' +
+  '</div>';
+}
+
+function _togPeriodOpts(sel) {
+  var opts = [
+    { v: 'week',      l: 'השבוע' },
+    { v: 'month',     l: 'החודש' },
+    { v: 'lastMonth', l: 'חודש קודם' },
+    { v: '30',        l: '30 יום אחרון' }
+  ];
+  return opts.map(function(o) {
+    return '<option value="' + o.v + '"' + (o.v === sel ? ' selected' : '') + '>' + o.l + '</option>';
+  }).join('');
+}
+
+function _togGetDates(per, now) {
+  if (per === 'week') {
+    var arr = [];
+    var d0 = new Date(now); d0.setDate(now.getDate() - now.getDay());
+    for (var i = 0; i < 7; i++) { var dd = new Date(d0); dd.setDate(d0.getDate() + i); arr.push(dd); }
+    return arr;
+  }
+  if (per === '30') {
+    return Array.from({ length: 30 }, function(_, i) {
+      var d2 = new Date(now); d2.setDate(now.getDate() - 29 + i); return d2;
+    });
+  }
+  if (per === 'lastMonth') {
+    var st = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    var en = new Date(now.getFullYear(), now.getMonth(), 0);
+    var arr2 = [];
+    for (var d3 = new Date(st); d3 <= en; d3.setDate(d3.getDate() + 1)) arr2.push(new Date(d3));
+    return arr2;
+  }
+  // default: month
+  var st2 = new Date(now.getFullYear(), now.getMonth(), 1);
+  var en2 = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  var arr3 = [];
+  for (var d4 = new Date(st2); d4 <= en2; d4.setDate(d4.getDate() + 1)) arr3.push(new Date(d4));
+  return arr3;
+}
+
+// ── Keep old getCplPeriodData / renderCoupleChart / renderCoupleStats
+//    alive so nothing elsewhere breaks — they're just no-ops now
+function getCplPeriodData(){ return {}; }
+function renderCoupleStats(){}
+function renderCoupleChart(){}
 
 function getCplPeriodData(){
   const s=D.gs();
