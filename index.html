@@ -96,8 +96,8 @@ async function syncPairToFirebase(){
     myCode:s.myCode,
     googleId:s.googleId||null,
     partnerCode:s.partnerCode,
-    calcOvertime:!!s.calcOvertime,
     timestamp:Date.now(),
+    // pairInfo — לשחזור חיבור מאחר
     pairInfo:{
       pairCode:s.pairCode,
       partnerCode:s.partnerCode,
@@ -116,20 +116,20 @@ async function loadPartnerFromFirebase(){
   const data=await fbRead(`pairs/${s.pairCode}/${partnerKey}`);
   if(data&&data.workData){
     D.sp(data.workData);
-    const ss=D.gs();
     if(data.myName){
+      const ss=D.gs();
       if(!ss.partnerName||ss.partnerName==='פרטנר')ss.partnerName=data.myName;
+      if(data.myColor)ss.partnerColor=data.myColor;
+      D.ss(ss);
     }
-    if(data.myColor)ss.partnerColor=data.myColor;
-    // שמור את הגדרת ה-overtime של הפרטנר
-    if(data.calcOvertime!==undefined)ss.partnerCalcOvertime=!!data.calcOvertime;
-    D.ss(ss);
+
+    // הנה השורה שהוספנו! מעדכנת את התצוגה אחרי שהנתונים ירדו מהשרת
     updatePartnerDaySummary();
+
     return true;
   }
   return false;
 }
-
 function calcPairCode(a,b){
   const arr=[a.toUpperCase(),b.toUpperCase()].sort();
   return arr[0]+'_'+arr[1];
@@ -806,19 +806,6 @@ input[type=time].fi{text-align:center}
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg>
   </button>
 </div>
-<div class="set-sec-ttl">מדריך למשתמש</div>
-<div class="card" style="padding:0;overflow:hidden">
-  <button onclick="openUserGuide()" style="width:100%;padding:16px;background:linear-gradient(135deg,var(--b0),var(--s2));border:none;cursor:pointer;display:flex;align-items:center;gap:14px;text-align:right">
-    <div style="width:38px;height:38px;background:var(--b8);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    </div>
-    <div style="flex:1">
-      <div style="font-size:13px;font-weight:500;color:var(--t);margin-bottom:2px">מדריך למשתמש</div>
-      <div style="font-size:11px;color:var(--t3)">הסבר על כל הפיצ׳רים באפליקציה</div>
-    </div>
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg>
-  </button>
-</div>
   <div class="set-sec-ttl">עדכונים</div>
   <div class="card" style="padding:14px">
     <div style="display:flex;align-items:center;justify-content:space-between">
@@ -900,11 +887,9 @@ input[type=time].fi{text-align:center}
       <button class="btn btn-p" onclick="saveDay()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg> שמור</button>
       <button class="btn btn-o" onclick="closeM('mDay')">ביטול</button>
     </div>
-<div style="height:8px"></div>
-    <div id="partnerDaySummary" class="partner-day-summary" style="display:none">
-    </div><!-- סגירת msh -->
-</div><!-- סגירת mDay -->
+    <div style="height:8px"></div>
 
+<div id="partnerDaySummary" class="partner-day-summary" style="display:none">
       <div class="pds-header">
         <div class="pds-title">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1865,15 +1850,19 @@ function renderCouple(){
     }
     return;
   }
+  // יש pairCode — בדוק אם פרטנר כבר חיבר
   const myD=D.g(),pd=D.gp();
   const partnerHasData=Object.keys(pd).length>0;
   if(!partnerHasData){
+    // בדוק ב-Firebase
     checkPartnerConnected().then(function(connected){
       if(connected){
+        // פרטנר חיבר — טען נתונים
         loadPartnerFromFirebase().then(function(got){
           if(got){renderCouple();showToast('הפרטנר התחבר! נטענו הנתונים ✅');}
         });
       } else {
+        // פרטנר עוד לא חיבר — הצג הודעת המתנה
         const cont2=document.getElementById('coupleContent');
         if(cont2&&cont2.querySelector('.waiting-partner'))return;
         const waitDiv=document.createElement('div');
@@ -1887,11 +1876,6 @@ function renderCouple(){
     });
   }
   const dk=document.body.getAttribute('data-theme')==='dark';
-  const now=new Date();
-  const monthOpts=MN.map((m,i)=>'<option value="'+i+'">'+m+'</option>').join('');
-  const yearOpts=Array.from({length:now.getFullYear()-2014},(_,i)=>now.getFullYear()-i).map(y=>'<option value="'+y+'">'+y+'</option>').join('');
-  const weekOpts='<option value="all" selected>כל החודש</option><option value="1">שבוע 1</option><option value="2">שבוע 2</option><option value="3">שבוע 3</option><option value="4">שבוע 4</option>';
-
   cont.innerHTML=`
   <div id="cplStats">
     <div class="couple-total"><div class="ct-lbl" id="cplPeriodLbl">הכנסה משותפת החודש</div><div class="ct-val" id="cplTotVal">₪0</div><div class="ct-sub" id="cplHoursLbl">0 + 0 שעות ביחד</div></div>
@@ -1911,21 +1895,18 @@ function renderCouple(){
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div style="font-size:11px;color:var(--t2)">השוואה</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-        <select id="cplViewSel" onchange="onCplViewChange()" style="padding:4px 8px;border-radius:6px;border:1px solid var(--bd);background:var(--s2);color:var(--t);font-family:'Inter',sans-serif;font-size:11px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <select id="cplViewSel" onchange="renderCoupleChart()" style="padding:4px 8px;border-radius:6px;border:1px solid var(--bd);background:var(--s2);color:var(--t);font-family:'Inter',sans-serif;font-size:11px">
           <option value="month">חודש נוכחי</option>
           <option value="custom_month">בחר חודש</option>
           <option value="year">שנה נוכחית</option>
           <option value="custom_year">בחר שנה</option>
         </select>
         <select id="cplMonthSel" onchange="renderCoupleChart()" style="display:none;padding:4px 8px;border-radius:6px;border:1px solid var(--bd);background:var(--s2);color:var(--t);font-family:'Inter',sans-serif;font-size:11px">
-          ${monthOpts}
+          ${MN.map((m,i)=>'<option value="'+i+'">'+m+'</option>').join('')}
         </select>
         <select id="cplYearSel" onchange="renderCoupleChart()" style="display:none;padding:4px 8px;border-radius:6px;border:1px solid var(--bd);background:var(--s2);color:var(--t);font-family:'Inter',sans-serif;font-size:11px">
-          ${yearOpts}
-        </select>
-        <select id="cplWeekSel" onchange="renderCoupleChart()" style="padding:4px 8px;border-radius:6px;border:1px solid var(--bd);background:var(--s2);color:var(--t);font-family:'Inter',sans-serif;font-size:11px">
-          ${weekOpts}
+          ${Array.from({length:new Date().getFullYear()-2014},(_,i)=>new Date().getFullYear()-i).map(y=>'<option value="'+y+'">'+y+'</option>').join('')}
         </select>
       </div>
     </div>
@@ -1933,107 +1914,60 @@ function renderCouple(){
   </div>
   <div class="card">
     <div style="font-size:10px;color:var(--t3);margin-bottom:8px">קוד זוג: <strong style="letter-spacing:2px;color:var(--b8)">${s.pairCode}</strong></div>
-    <button class="btn btn-g" onclick="refreshCoupleData()" style="margin-bottom:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> רענן נתונים</button>
+    <button class="btn btn-g" onclick="manualSync()" style="margin-bottom:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> סנכרן פרטנר</button>
     <button class="btn btn-o" onclick="openPair()" style="font-size:12px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> הגדרות זוג</button>
   </div>`;
   renderCoupleChart();
   renderCoupleStats();
 }
+
 function getCplPeriodData(){
   const s=D.gs();
   const sel=document.getElementById('cplViewSel');
   const view=sel?sel.value:'month';
   const mSel=document.getElementById('cplMonthSel');
   const ySel=document.getElementById('cplYearSel');
-  const wSel=document.getElementById('cplWeekSel');
-  const selectedWeek=wSel?wSel.value:'all'; // 'all','1','2','3','4'
   const myD=D.g(),pd=D.gp(),now=new Date();
   let myH=0,myP=0,pH=0,pP=0;
   let labels=[],myVals=[],pVals=[],periodLabel='';
-
-  function cpPartner(h,r,b){
-    h=parseFloat(h)||0; r=parseFloat(r)||0;
-    let base;
-    if(s.partnerCalcOvertime&&h>8){
-      const reg=8,ot1=Math.min(h-8,2),ot2=Math.max(h-10,0);
-      base=(reg*r)+(ot1*r*1.25)+(ot2*r*1.5);
-    } else {
-      base=h*r;
-    }
-    const bon=(b||[]).reduce((a,x)=>a+(parseFloat(x.amount)||0),0);
-    return base+bon;
-  }
-
-  // פונקציה שבודקת אם יום מסוים שייך לשבוע הנבחר
-  function inSelectedWeek(day){ // day = 1..31
-    if(selectedWeek==='all')return true;
-    const w=parseInt(selectedWeek);
-    const start=(w-1)*7+1;
-    const end=w*7;
-    return day>=start&&day<=end;
-  }
-
   if(view==='month'||view==='custom_month'){
     const m=view==='custom_month'&&mSel?parseInt(mSel.value):now.getMonth();
     const y=now.getFullYear();
-    const weekLabel=selectedWeek==='all'?'כל החודש':'שבוע '+selectedWeek;
-    periodLabel='הכנסה משותפת — '+MN[m]+' '+y+(selectedWeek!=='all'?' ('+weekLabel+')':'');
+    periodLabel='הכנסה משותפת — '+MN[m]+' '+y;
     const days=new Date(y,m+1,0).getDate();
-
-    if(selectedWeek==='all'){
-      // תצוגה לפי שבועות בתוך החודש
-      const weeks=[{l:'ש1',my:0,p:0},{l:'ש2',my:0,p:0},{l:'ש3',my:0,p:0},{l:'ש4',my:0,p:0}];
-      for(let d=1;d<=days;d++){
-        const k=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-        const wi=Math.min(Math.floor((d-1)/7),3);
-        if(myD[k]){const v=cpDay(myD[k]).total;weeks[wi].my+=v;myP+=v;myH+=myD[k].hours||0;}
-        if(pd[k]){const v=cpPartner(pd[k].hours,pd[k].rate||50,pd[k].bonuses);weeks[wi].p+=v;pP+=v;pH+=pd[k].hours||0;}
-      }
-      labels=weeks.map(w=>w.l);myVals=weeks.map(w=>Math.round(w.my));pVals=weeks.map(w=>Math.round(w.p));
-    } else {
-      // תצוגה לפי ימים בתוך השבוע הנבחר
-      const weekNum=parseInt(selectedWeek);
-      const startDay=(weekNum-1)*7+1;
-      const endDay=Math.min(weekNum*7,days);
-      for(let d=startDay;d<=endDay;d++){
-        const k=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-        labels.push(String(d)+'/'+String(m+1));
-        const myV=myD[k]?cpDay(myD[k]).total:0;
-        const pV=pd[k]?cpPartner(pd[k].hours,pd[k].rate||50,pd[k].bonuses):0;
-        myVals.push(Math.round(myV));pVals.push(Math.round(pV));
-        myP+=myV;pP+=pV;
-        if(myD[k])myH+=myD[k].hours||0;
-        if(pd[k])pH+=pd[k].hours||0;
-      }
+    const weeks=[{l:'ש1',my:0,p:0,mH:0,pH2:0},{l:'ש2',my:0,p:0,mH:0,pH2:0},
+                 {l:'ש3',my:0,p:0,mH:0,pH2:0},{l:'ש4',my:0,p:0,mH:0,pH2:0}];
+    for(let d=1;d<=days;d++){
+      const k=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+      const wi=Math.min(Math.floor((d-1)/7),3);
+      if(myD[k]){const v=cp(myD[k].hours,myD[k].rate,myD[k].bonuses).total;weeks[wi].my+=v;myP+=v;myH+=myD[k].hours||0;weeks[wi].mH+=myD[k].hours||0;}
+      if(pd[k]){const v=cp(pd[k].hours,pd[k].rate||50,pd[k].bonuses).total;weeks[wi].p+=v;pP+=v;pH+=pd[k].hours||0;weeks[wi].pH2+=pd[k].hours||0;}
     }
+    labels=weeks.map(w=>w.l);myVals=weeks.map(w=>Math.round(w.my));pVals=weeks.map(w=>Math.round(w.p));
   } else {
-    // תצוגת שנה
     const y=view==='year'?now.getFullYear():(ySel?parseInt(ySel.value):now.getFullYear());
-    periodLabel='הכנסה משותפת — '+y+(selectedWeek!=='all'?' (שבוע '+selectedWeek+' בכל חודש)':'');
+    periodLabel='הכנסה משותפת — '+y;
     labels=MN.map(n=>n.substring(0,3));
     myVals=Array(12).fill(0);pVals=Array(12).fill(0);
     Object.keys(myD).forEach(k=>{
       if(!k.startsWith(String(y)))return;
-      const day=parseInt(k.split('-')[2]);
-      if(!inSelectedWeek(day))return;
-      const mi=parseInt(k.split('-')[1])-1;
+      const d=myD[k],mi=parseInt(k.split('-')[1])-1;
       if(mi<0||mi>11)return;
-      const v=cpDay(myD[k]).total;
-      myVals[mi]+=v;myP+=v;myH+=myD[k].hours||0;
+      const v=cp(d.hours,d.rate,d.bonuses).total;
+      myVals[mi]+=v;myP+=v;myH+=d.hours||0;
     });
     Object.keys(pd).forEach(k=>{
       if(!k.startsWith(String(y)))return;
-      const day=parseInt(k.split('-')[2]);
-      if(!inSelectedWeek(day))return;
       const d=pd[k],mi=parseInt(k.split('-')[1])-1;
       if(mi<0||mi>11)return;
-      const v=cpPartner(d.hours,d.rate||50,d.bonuses);
+      const v=cp(d.hours,d.rate||50,d.bonuses).total;
       pVals[mi]+=v;pP+=v;pH+=d.hours||0;
     });
     myVals=myVals.map(v=>Math.round(v));pVals=pVals.map(v=>Math.round(v));
   }
   return {myH,myP,pH,pP,labels,myVals,pVals,periodLabel};
 }
+
 function renderCoupleStats(){
   const s=D.gs();
   const {myH,myP,pH,pP,periodLabel}=getCplPeriodData();
@@ -2073,27 +2007,7 @@ function renderCoupleChart(){
     {label:s.partnerName,data:pVals,backgroundColor:s.partnerColor+'CC',borderRadius:6,borderSkipped:false}
   ]},options:{...cOpts(dk),plugins:{legend:{display:true,labels:{font:{size:10,family:'Inter'},boxWidth:10,padding:10}}}}});
 }
-async function refreshCoupleData(){
-  const btn=document.querySelector('[onclick="refreshCoupleData()"]');
-  if(btn){btn.disabled=true;btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> טוען...';}
-  try{
-    const s=D.gs();
-    if(s.pairCode&&s.myCode) await syncPairToFirebase();
-    if(s.pairCode&&s.partnerCode){
-      const got=await loadPartnerFromFirebase();
-      if(got){
-        renderCoupleChart();
-        renderCoupleStats();
-        showToast('נתונים עודכנו ✅');
-      } else {
-        showToast('אין עדכון חדש מהפרטנר');
-      }
-    }
-  }catch(e){showToast('שגיאה בטעינה');}
-  finally{
-    if(btn){btn.disabled=false;btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> רענן נתונים';}
-  }
-}
+
 // ---- PAIR MODAL ----
 function openPair(){
   const s=D.gs(),cont=document.getElementById('pairCont');
@@ -2133,6 +2047,8 @@ function openPair(){
     <div class="fg"><label class="fl">שם הפרטנר</label><input type="text" class="fi" id="pNmN" placeholder="שם הפרטנר" value="${s.partnerName}"></div>
     <button class="btn btn-p" onclick="connPair()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> התחבר עכשיו</button>`;
   }
+}
+  openM('mPair');
 }
 function genCode(){
   var chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -2341,8 +2257,8 @@ function toggleFbonPicker(){
 }
 
 // ---- AUTO UPDATE ----
-const APP_VERSION='2.1.307';
-const APP_BUILD=307; // CI מחליף בכל build
+const APP_VERSION='2.1.303';
+const APP_BUILD=303; // CI מחליף בכל build
 const LIVE_URL='https://tzur669-lab.github.io/moneytime-app/';
 const VER_FB_URL='https://moneytime-app-f5a15-default-rtdb.firebaseio.com/appVersion.json';const GITHUB_APK_BASE='https://github.com/tzur669-lab/moneytime-app/releases/download';
 const GITHUB_RELEASES='https://github.com/tzur669-lab/moneytime-app/releases/latest';
