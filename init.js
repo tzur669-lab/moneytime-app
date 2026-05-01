@@ -4,6 +4,23 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && document.getElementById('mDay').classList.contains('active')) saveDay();
 });
 
+// ---- PWA ----
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  dProm = e;
+  document.getElementById('instBanner').classList.add('show');
+});
+document.getElementById('instBtn').addEventListener('click', async () => {
+  if (dProm) {
+    dProm.prompt();
+    const { outcome } = await dProm.userChoice;
+    if (outcome === 'accepted') document.getElementById('instBanner').classList.remove('show');
+    dProm = null;
+  }
+});
+window.addEventListener('appinstalled', () => document.getElementById('instBanner').classList.remove('show'));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => { }));
+
 // ---- HELPERS גלובלי ----
 function vib() { try { navigator.vibrate?.(10); } catch (e) { } }
 function flash() {
@@ -13,6 +30,11 @@ function flash() {
 }
 function openM(id) { document.getElementById(id).classList.add('active'); if (id === 'mXLSX') setTimeout(_updXo2State, 30); }
 function closeM(id) { document.getElementById(id).classList.remove('active'); }
+
+// ---- MODALS ----
+document.querySelectorAll('.modal').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) closeM(m.id); });
+});
 
 // ---- THEME ----
 function toggleTheme(silent = false) {
@@ -38,11 +60,6 @@ function swPage(p, btn) {
   if (p === 'couple') renderCouple();
   if (p === 'set') renderSettings();
 }
-
-// ---- MODALS ----
-document.querySelectorAll('.modal').forEach(m => {
-  m.addEventListener('click', e => { if (e.target === m) closeM(m.id); });
-});
 
 // ---- CALENDAR VIEW ----
 var _calView = localStorage.getItem('calView') || 'month';
@@ -111,23 +128,6 @@ function execMulti() {
   vib();
 }
 
-// ---- PWA ----
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  dProm = e;
-  document.getElementById('instBanner').classList.add('show');
-});
-document.getElementById('instBtn').addEventListener('click', async () => {
-  if (dProm) {
-    dProm.prompt();
-    const { outcome } = await dProm.userChoice;
-    if (outcome === 'accepted') document.getElementById('instBanner').classList.remove('show');
-    dProm = null;
-  }
-});
-window.addEventListener('appinstalled', () => document.getElementById('instBanner').classList.remove('show'));
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => { }));
-
 // ---- INIT ----
 document.addEventListener('DOMContentLoaded', () => {
   const s = D.gs();
@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initGD();
   checkPairLink();
 
-  // נקה tokens ישנים מ-Firebase (אחת לכמה שעות)
+  // נקה tokens ישנים מ-Firebase
   _cleanupOldTokens();
 
   // בדוק אם מישהו חיבר אותנו — 4 שניות אחרי טעינה
@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (lnk) lnk.href = 'mailto:' + u + '@' + d;
   })();
 
-  // בדיקת עדכון — בדפדפן: 3 שניות. APK: 6 שניות + backup ב-15 שניות
+  // בדיקת עדכון
   setTimeout(checkAppUpdate, window.Capacitor ? 6000 : 3000);
   if (window.Capacitor) setTimeout(function () { if (!_updShown && _updRetryCount === 0) checkAppUpdate(); }, 15000);
 
