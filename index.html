@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
 <title>מעקב שעות Pro</title>
-<link href="                                                       ;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- שמירת pair param מוקדמת — לפני כל דבר, כדי שלא יאבד ב-Safari PWA -->
 <script>
@@ -23,9 +23,8 @@
   }catch(e){}
 })();
 </script>
-<!-- Capacitor plugins — זמינים רק ב-APK, מוסתרים בדפדפן -->
+<!-- Capacitor plugin wrappers — עובדים ב-APK, fallback בדפדפן -->
 <script>
-// Capacitor plugin wrappers — עובדים ב-APK, fallback בדפדפן
 window.CapFS = null;
 window.CapShare = null;
 window.CapBrowser = null;
@@ -39,11 +38,9 @@ function _initCapPlugins(){
   try{ window.CapApp = Capacitor.Plugins.App; }catch(e){}
 }
 document.addEventListener('deviceready', _initCapPlugins, false);
-// fallback — נסה ב-500ms וב-2000ms (פלאפונים איטיים)
 setTimeout(_initCapPlugins, 500);
 setTimeout(_initCapPlugins, 2000);
 
-// המתן לCapBrowser — מחזיר Promise שמתפתר ברגע שזמין (עד timeout)
 function _waitForCapBrowser(ms){
   ms=ms||4000;
   return new Promise(function(resolve){
@@ -56,14 +53,9 @@ function _waitForCapBrowser(ms){
     },100);
   });
 }
-
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script>
-
-</script>
-<!-- Google auth handled via custom OAuth redirect — works in APK WebView -->
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -102,7 +94,6 @@ function _waitForCapBrowser(ms){
     <button class="btn-clk" id="clkBtn" onclick="handleClock()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5,3 19,12 5,21"/></svg> התחל</button>
   </div>
   <div id="missBanner"></div>
-  <!-- באנר חיבור פרטנר — מוצג רק כשלא מחוברים ורק בדפדפן (לא APK) -->
   <div id="pairBanner" style="display:none;background:linear-gradient(135deg,var(--b8),var(--b6));border-radius:var(--r1);padding:14px 16px;margin-bottom:12px;color:#fff;align-items:center;gap:12px">
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     <div style="flex:1">
@@ -264,19 +255,19 @@ function _waitForCapBrowser(ms){
       </div>
     </div>
   </div>
-<div class="set-sec-ttl">מדריך למשתמש</div>
-<div class="card" style="padding:0;overflow:hidden">
-  <button onclick="openUserGuide()" style="width:100%;padding:16px;background:linear-gradient(135deg,var(--b0),var(--s2));border:none;cursor:pointer;display:flex;align-items:center;gap:14px;text-align:right">
-    <div style="width:38px;height:38px;background:var(--b8);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    </div>
-    <div style="flex:1">
-      <div style="font-size:13px;font-weight:500;color:var(--t);margin-bottom:2px">מדריך למשתמש</div>
-      <div style="font-size:11px;color:var(--t3)">הסבר על כל הפיצ׳רים באפליקציה</div>
-    </div>
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg>
-  </button>
-</div>
+  <div class="set-sec-ttl">מדריך למשתמש</div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <button onclick="openUserGuide()" style="width:100%;padding:16px;background:linear-gradient(135deg,var(--b0),var(--s2));border:none;cursor:pointer;display:flex;align-items:center;gap:14px;text-align:right">
+      <div style="width:38px;height:38px;background:var(--b8);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500;color:var(--t);margin-bottom:2px">מדריך למשתמש</div>
+        <div style="font-size:11px;color:var(--t3)">הסבר על כל הפיצ׳רים באפליקציה</div>
+      </div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg>
+    </button>
+  </div>
   <div class="set-sec-ttl">עדכונים</div>
   <div class="card" style="padding:14px">
     <div style="display:flex;align-items:center;justify-content:space-between">
@@ -307,7 +298,6 @@ function _waitForCapBrowser(ms){
 <div class="sf" id="sf">✓</div>
 
 <!-- MODAL: DAILY -->
-
 <div class="modal" id="mDay">
   <div class="msh">
     <div class="mhdl"></div>
@@ -353,22 +343,13 @@ function _waitForCapBrowser(ms){
       <div id="dBonList"></div>
     </div>
     <div class="fg"><label class="fl">הערה</label><input type="text" class="fi" id="dNote" placeholder="הערה אופציונלית..."></div>
-
     <div class="btn-row">
       <button class="btn btn-p" onclick="saveDay()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg> שמור</button>
       <button class="btn btn-o" onclick="closeM('mDay')">ביטול</button>
     </div>
- <div style="height:8px"></div>
+    <div style="height:8px"></div>
 
-<div id="partnerDaySummary" class="partner-day-summary" style="display:none">
-      <div class="pds-header">
-        ...
-      </div>
-      ...
-    </div>
-
-  </div>
-</div>
+    <div id="partnerDaySummary" class="partner-day-summary" style="display:none">
       <div class="pds-header">
         <div class="pds-title">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -379,7 +360,6 @@ function _waitForCapBrowser(ms){
         </div>
         <div class="pds-total" id="pdsTotal">₪0</div>
       </div>
-
       <div class="pds-breakdown">
         <div class="pds-row" id="pdsWorkRow">
           <span class="pds-label">
@@ -389,11 +369,8 @@ function _waitForCapBrowser(ms){
             </svg>
             עבודה
           </span>
-          <span class="pds-value">
-            <strong id="pdsBase">₪0</strong>
-          </span>
+          <span class="pds-value"><strong id="pdsBase">₪0</strong></span>
         </div>
-
         <div class="pds-row" id="pdsBonusRow" style="display:none">
           <span class="pds-label">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -404,8 +381,7 @@ function _waitForCapBrowser(ms){
           <span class="pds-value pds-bonus" id="pdsBonus">₪0</span>
         </div>
       </div>
-
-<div class="pds-note" id="pdsNote" style="display:none"></div>
+      <div class="pds-note" id="pdsNote" style="display:none"></div>
     </div>
 
   </div>
@@ -556,6 +532,7 @@ function _waitForCapBrowser(ms){
   </div>
 </div>
 
+<!-- סדר טעינת הסקריפטים: constants קודם, init אחרון, clock לפני init -->
 <script src="constants.js"></script>
 <script src="firebase.js"></script>
 <script src="google-drive.js"></script>
@@ -566,253 +543,8 @@ function _waitForCapBrowser(ms){
 <script src="ui-pair.js"></script>
 <script src="export.js"></script>
 <script src="update.js"></script>
+<script src="clock.js"></script>
 <script src="init.js"></script>
-<script>
 
-// ---- THEME ----
-function toggleTheme(silent=false){
-  const dk=document.body.getAttribute('data-theme')==='dark';
-  const th=dk?'light':'dark';
-  document.body.setAttribute('data-theme',th);
-  document.getElementById('themeBtn').innerHTML=th==='dark'?`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
-  document.getElementById('metaTC').content=th==='dark'?'#080E1E':'#1E3A8A';
-  if(!silent){const s=D.gs();s.theme=th;D.ss(s);}
-  vib();
-}
-
-// ---- PAGES ----
-function swPage(p,btn){
-  vib();
-  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('.ni').forEach(x=>x.classList.remove('active'));
-  document.getElementById('pg-'+p).classList.add('active');
-  btn.classList.add('active');
-  if(p==='rep')updRep();
-  if(p==='couple')renderCouple();
-  if(p==='set')renderSettings();
-}
-
-// ---- CALENDAR ----
-var _calView=localStorage.getItem('calView')||'month';
-
-function switchCalView(v){
-  _calView=v;
-  localStorage.setItem('calView',v);
-  ['month','week','day'].forEach(function(k){
-    var el=document.getElementById('cvp-'+k);
-    if(el)el.classList.toggle('active',k===v);
-  });
-  renderCal();
-}
-
-
-
-// ---- DAY MODAL ----
-
-// ---- MULTI MODAL ----
-function openMulti(type){
-  mType=type;const s=D.gs();const body=document.getElementById('mMBody');
-  const jobOpts=(s.jobs||[]).map((j,i)=>`<option value="${i}">${j.name}</option>`).join('');
-  const jobSel=`<div class="fg" style="margin-bottom:10px"><label class="fl">מקום עבודה</label><select class="fi" id="mJob">${jobOpts}</select></div>`;
-  if(type==='hours'){
-    document.getElementById('mMTtl').textContent='⏱️ שעות בתקופה';
-    body.innerHTML=jobSel+`<div class="fg"><label class="fl">מספר שעות</label><input type="number" class="fi" id="mV" step="0.25" placeholder="8"></div>`;
-  } else if(type==='profit'){
-    document.getElementById('mMTtl').textContent='💰 רווח בתקופה';
-    body.innerHTML=`<div class="fg"><label class="fl">סכום (₪)</label><input type="number" class="fi" id="mV"></div><div class="fg"><label class="fl">תיאור</label><input type="text" class="fi" id="mVD" placeholder="בונוס, נסיעות..."></div>`;
-  } else if(type==='rate'){
-    document.getElementById('mMTtl').textContent='📋 תעריף לשינוי';
-    body.innerHTML=jobSel+`<div class="fg"><label class="fl">תעריף שעתי חדש (₪)</label><input type="number" class="fi" id="mV" placeholder="0"></div>`;
-  }
-  openM('mMulti');
-}
-function execMulti(){
-  const val=document.getElementById('mV')?.value;if(val===''||val===null||val===undefined)return;
-  const dates=getDts(document.getElementById('mRng').value,'mCS','mCE');if(!dates.length)return;
-  const data=D.g(),s=D.gs();
-  const selJob=parseInt(document.getElementById('mJob')?.value||'0');
-  const jobRate=s.jobs?.[selJob]?.rate||50;
-  dates.forEach(d=>{const k=fk(d);
-    if(mType==='hours'){
-      if(!data[k])data[k]={hours:0,rate:jobRate,bonuses:[],note:'',jobIdx:selJob};
-      data[k].hours=parseFloat(val)||0;
-      data[k].jobIdx=selJob;
-      data[k].rate=jobRate;
-    } else if(mType==='rate'){
-      if(!data[k])data[k]={hours:0,rate:parseFloat(val)||0,bonuses:[],note:'',jobIdx:selJob};
-      data[k].rate=parseFloat(val)||0;
-      data[k].jobIdx=selJob;
-    } else if(mType==='profit'){
-      if(!data[k])data[k]={hours:0,rate:jobRate,bonuses:[],note:'',jobIdx:0};
-      if(!data[k].bonuses)data[k].bonuses=[];
-      data[k].bonuses.push({desc:document.getElementById('mVD')?.value||'תוספת',amount:parseFloat(val)||0});
-    }
-  });
-  D.s(data);closeM('mMulti');renderCal();updRep();saveDr();flash();vib();
-}
-
-
-// ---- MODALS ----
-function openM(id){document.getElementById(id).classList.add('active');if(id==='mXLSX')setTimeout(_updXo2State,30);}
-function closeM(id){document.getElementById(id).classList.remove('active');}
-document.querySelectorAll('.modal').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)closeM(m.id);});});
-
-// ---- HELPERS ----
-function vib(){try{navigator.vibrate?.(10);}catch(e){}}
-function flash(){const el=document.getElementById('sf');el.className='sf show';setTimeout(()=>{el.className='sf bye';setTimeout(()=>el.className='sf',300);},900);}
-
-// ניקוי tokens ישנים מ-Firebase (אבטחה)
-function _cleanupOldTokens(){
-  try{
-    fetch(FB_URL + '/oauthTokens.json')
-      .then(function(r){ return r.json(); })
-      .then(function(tokens){
-        if(!tokens || typeof tokens !== 'object') return;
-        var now = Date.now();
-        var deleted = 0;
-        Object.keys(tokens).forEach(function(state){
-          var entry = tokens[state];
-          // מחק tokens שעברו 10 דקות
-          if(entry && entry.expires && entry.expires < now){
-            fetch(FB_URL + '/oauthTokens/' + state + '.json', {method: 'DELETE'}).catch(function(){});
-            deleted++;
-          }
-        });
-        if(deleted > 0) console.log('נוקו ' + deleted + ' tokens ישנים מ-Firebase');
-      })
-      .catch(function(){});
-  }catch(e){}
-}
-const USER_GUIDE={
-  categories:[
-    {
-      icon:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
-      title:'יומן ושעות',
-      items:[
-        {icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>`,q:'איך מוסיפים יום עבודה?',a:'לחץ על כל יום ביומן — יפתח חלון עריכה. הזן שעות, תעריף ובונוסים. לחץ שמור.'},
-        {icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>`,q:'מה זה שעון נוכחות?',a:'לחץ "התחל" בראש הדף לפתיחת שעון. בסיום לחץ "סיום" — השעות יועברו אוטומטית ליום הנוכחי.'},
-        {icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,q:'איך קופצים לתאריך ספציפי?',a:'השתמש בשדה "תאריך" ובלחצן "קפוץ" מתחת לכפתורי הניווט.'},
-        {icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,q:'מה אומר הסימון הצהוב ביומן?',a:'ימים צהובים הם ימי חול שעברו ללא רישום שעות. ניתן לכבות זאת בהגדרות.'},
-        {icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg>`,q:'מה זה "מאתמול"?',a:'בחלון העריכה, לחיצה על "מאתמול" מעתיקה את מספר השעות מהיום הקודם.'}
-      ]
-    },
-    {
-      icon:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`,
-      title:'חישובי שכר',
-      items:[
-        {icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>`,q:'איך מחשבים שעות נוספות?',a:'הפעל "שעות נוספות" בהגדרות. מעל 8 שעות = 125%, מעל 10 שעות = 150% — אוטומטית.'},
-        {icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`,q:'איך מוסיפים בונוס?',a:'בחלון עריכת יום, לחץ "+ בונוס". הזן תיאור וסכום. ניתן להוסיף כמה בונוסים ביום.'},
-        {icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>`,q:'מה זה בונוסים קבועים?',a:'בהגדרות ניתן להגדיר בונוסים שחוזרים (כמו נסיעות). בחלון עריכת יום יופיע כפתור לבחירתם במהירות.'},
-        {icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4"/><path d="M16 2v4"/></svg>`,q:'איך מגדירים סכום קבוע חודשי?',a:'בהגדרות, בכל מקום עבודה, יש שדה "סכום קבוע חודשי". מתווסף אוטומטית לחישוב החודש הנוכחי.'},
-        {icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,q:'איך מעדכנים תעריף לתקופה?',a:'בדף הראשי לחץ "תעריף לשינוי" — ניתן לשנות תעריף לכל הימים בטווח תאריכים בבת אחת.'}
-      ]
-    },
-    {
-      icon:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
-      title:'דוחות וסטטיסטיקות',
-      items:[
-        {icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,q:'איך מסתכלים על דוח חודשי?',a:'לך לדף "דוחות", בחר "החודש" בסרגל הפילטרים. תוצג גרף שעות והכנסות.'},
-        {icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>`,q:'מה זה טאב "השוואה"?',a:'השוואה בין חודשים, שבועות בתוך חודש, או חודשים שתבחר — לראות בקלות מתי הרווחת יותר.'},
-        {icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>`,q:'מה זה ארכיון?',a:'בטאב "ארכיון" ניתן לדפדף בכל ההיסטוריה לפי שנה וחודש, כולל פירוט שבועי.'},
-        {icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,q:'איך מייצאים דוח?',a:'בהגדרות: ייצוא PDF, Excel, או CSV. ניתן לשתף ישירות מהאפליקציה.'},
-        {icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`,q:'איפה נשמרים הדוחות?',a:'בהגדרות > "דוחות שמורים" — כל דוח PDF ו-Excel נשמר אוטומטית לצפייה מאוחרת.'}
-      ]
-    },
-    {
-      icon:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
-      title:'מצב זוגי (ביחד)',
-      items:[
-        {icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,q:'איך מחברים פרטנר?',a:'לך לדף "ביחד" ולחץ "חבר פרטנר". שלח לפרטנר את הקוד שלך, והוא יזין אותו מהצד שלו.'},
-        {icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,q:'למה אני רואה 0 בנתוני הפרטנר?',a:'לחץ "רענן נתונים" בדף "ביחד". הפרטנר צריך להיות מחובר ולסנכרן מהמכשיר שלו.'},
-        {icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,q:'האם הפרטנר רואה את הנתונים שלי?',a:'כן — לאחר סנכרון, שניכם רואים את ההכנסות המשולבות. הנתונים עוברים דרך Firebase מוצפן.'},
-        {icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,q:'מה זה "הגדרות זוג"?',a:'שינוי שמות, צבעים, וניתוק מהזוג. נגיש מדף "ביחד" או מדף יומן.'},
-        {icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,q:'איך בוחרים תקופה ספציפית בגרף הזוגי?',a:'ב"ביחד" בחר מהתפריט: חודש נוכחי, בחר חודש, שנה. לצד כל בחירה יש אפשרות לבחור שבוע ספציפי.'}
-      ]
-    },
-    {
-      icon:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>`,
-      title:'גיבוי וסנכרון',
-      items:[
-        {icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>`,q:'איך מגבים את הנתונים?',a:'חבר Google Drive בהגדרות. הגיבוי יתבצע אוטומטית בכל שמירה.'},
-        {icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,q:'איך משחזרים נתונים ממכשיר חדש?',a:'חבר את אותו Google Drive — הנתונים יוטענו אוטומטית. לחלופין, שחזר קובץ JSON/CSV.'},
-        {icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,q:'מה ה-JSON export?',a:'קובץ גיבוי מלא של כל הנתונים וההגדרות. מומלץ לשמור אחת לחודש.'},
-        {icon:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,q:'האם הנתונים פרטיים?',a:'כן. הנתונים נשמרים רק במכשיר ובחשבון Google Drive הפרטי שלך. אין גישה חיצונית.'}
-      ]
-    }
-  ]
-};
-
-function openUserGuide(catIdx){
-  const existing=document.getElementById('userGuideOverlay');
-  if(existing)existing.remove();
-
-  const ov=document.createElement('div');
-  ov.id='userGuideOverlay';
-  ov.style.cssText='position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;overflow:hidden';
-
-  const tb=document.createElement('div');
-  tb.style.cssText='background:var(--b8);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0';
-
-  const backBtn=document.createElement('button');
-  backBtn.style.cssText='background:rgba(255,255,255,.15);border:none;color:#fff;font-size:13px;font-weight:400;cursor:pointer;padding:7px 12px;border-radius:8px;line-height:1;flex-shrink:0;display:flex;align-items:center;gap:5px';
-  backBtn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg> חזרה';
-
-  const titleEl=document.createElement('span');
-  titleEl.style.cssText='font-size:15px;font-weight:500;flex:1;text-align:right';
-  titleEl.textContent='מדריך למשתמש';
-
-  const closeBtn=document.createElement('button');
-  closeBtn.style.cssText='background:rgba(239,68,68,.8);border:none;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;flex-shrink:0';
-  closeBtn.textContent='✕';
-  closeBtn.onclick=()=>ov.remove();
-
-  tb.appendChild(backBtn);
-  tb.appendChild(titleEl);
-  tb.appendChild(closeBtn);
-
-  const body=document.createElement('div');
-  body.style.cssText='flex:1;overflow-y:auto;padding:16px';
-
-  function showCategories(){
-    titleEl.textContent='מדריך למשתמש';
-    backBtn.style.visibility='hidden';
-    backBtn.onclick=null;
-    body.innerHTML='<div style="font-size:12px;color:var(--t3);margin-bottom:14px">בחר קטגוריה לפרטים</div>'+
-      USER_GUIDE.categories.map((cat,i)=>`
-        <div onclick="window._showGuideCategory(${i})" style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--s);border:1px solid var(--bd);border-radius:12px;margin-bottom:10px;cursor:pointer">
-          <div style="width:42px;height:42px;background:var(--b0);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--b8)">${cat.icon}</div>
-          <div style="flex:1">
-            <div style="font-size:14px;font-weight:500;color:var(--t)">${cat.title}</div>
-            <div style="font-size:11px;color:var(--t3);margin-top:2px">${cat.items.length} נושאים</div>
-          </div>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg>
-        </div>`).join('');
-  }
-
-  window._showGuideCategory=function(i){
-    const cat=USER_GUIDE.categories[i];
-    titleEl.textContent=cat.title;
-    backBtn.style.visibility='visible';
-    backBtn.onclick=showCategories;
-    body.innerHTML=cat.items.map(item=>`
-      <div style="background:var(--s);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:10px">
-        <div style="font-size:13px;font-weight:500;color:var(--b8);margin-bottom:7px;display:flex;align-items:flex-start;gap:8px">
-          <span style="color:var(--b6);flex-shrink:0;margin-top:1px">${item.icon}</span>
-          <span>${item.q}</span>
-        </div>
-        <div style="font-size:12px;color:var(--t2);line-height:1.65;padding-right:22px">${item.a}</div>
-      </div>`).join('');
-    body.scrollTop=0;
-  };
-
-  showCategories();
-  ov.appendChild(tb);
-  ov.appendChild(body);
-  document.body.appendChild(ov);
-
-  if(catIdx!=null) window._showGuideCategory(catIdx);
-}
-
-</script>
 </body>
 </html>
