@@ -78,9 +78,11 @@ function _waitForCapBrowser(ms){
 <div class="page active" id="pg-cal">
   <div class="clk-card">
     <div class="clk-ring-wrap">
-      <svg class="clk-ring-svg" viewBox="0 0 72 72">
-        <circle class="clk-ring-bg" cx="36" cy="36" r="32"/>
-        <circle class="clk-ring-fill" id="clkRing" cx="36" cy="36" r="32"
+      <!-- FIX: fill="none" + stroke attributes explicit for Android WebView -->
+      <svg class="clk-ring-svg" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" style="background:transparent">
+        <circle class="clk-ring-bg" cx="36" cy="36" r="32" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="3"/>
+        <circle class="clk-ring-fill" id="clkRing" cx="36" cy="36" r="32" fill="none"
+          stroke="rgba(255,255,255,0.85)" stroke-width="3" stroke-linecap="round"
           stroke-dasharray="201" stroke-dashoffset="201"/>
       </svg>
       <div class="clk-ring-inner">
