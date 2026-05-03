@@ -35,23 +35,34 @@ jobs:
       - name: Prepare web assets
         run: |
           mkdir -p www
-          # עדכן APP_VERSION אוטומטית: major.minor.build
-          BASE_VER=$(grep -oP "APP_VERSION='\K[0-9]+\.[0-9]+" index.html || echo "2.1")
+
+          # עדכן APP_VERSION ו-APP_BUILD ב-update.js (הקובץ שמכיל אותם אחרי הפיצול)
+          BASE_VER=$(grep -oP "APP_VERSION = '\K[0-9]+\.[0-9]+" update.js || echo "2.1")
           NEW_VER="${BASE_VER}.${{ github.run_number }}"
-          sed -i "s/APP_VERSION='[0-9]*\.[0-9]*\.[0-9]*'/APP_VERSION='${NEW_VER}'/" index.html
-          echo "גרסה חדשה: ${NEW_VER}"
-          
-          # עדכן APP_BUILD למספר ה-build האמיתי — זה מה שמשמש להשוואה ב-APK
-          sed -i "s/const APP_BUILD=[0-9]*/const APP_BUILD=${{ github.run_number }}/" index.html
-          echo "APP_BUILD: ${{ github.run_number }}"
-          
+          sed -i "s/APP_VERSION = '[0-9]*\.[0-9]*\.[0-9]*'/APP_VERSION = '${NEW_VER}'/" update.js
+          sed -i "s/const APP_BUILD = [0-9]*/const APP_BUILD = ${{ github.run_number }}/" update.js
+          echo "גרסה חדשה: ${NEW_VER} | build: ${{ github.run_number }}"
+
           # עדכן שם ה-cache ב-sw.js
           sed -i "s/moneytime-v[0-9]*\.[0-9]*\.[0-9]*/moneytime-v${NEW_VER}/" sw.js
-          
+
+          # העתק את כל קבצי הפרויקט ל-www
           cp index.html www/index.html
-          cp sw.js www/sw.js || true
-          cp manifest.json www/manifest.json || true
+          cp styles.css www/styles.css
+          cp sw.js www/sw.js
+          cp manifest.json www/manifest.json
           cp callback.html www/callback.html || true
+
+          # קבצי JS — העתק את כולם
+          for f in constants.js firebase.js google-drive.js \
+                    ui-calendar.js ui-day-modal.js ui-reports.js \
+                    ui-settings.js ui-pair.js export.js \
+                    update.js clock.js init.js; do
+            [ -f "$f" ] && cp "$f" "www/$f" || echo "⚠ לא נמצא: $f"
+          done
+
+          echo "קבצים ב-www:"
+          ls www/
 
       - name: Add Android platform
         run: |
@@ -211,7 +222,7 @@ jobs:
 
       - name: Push version to Firebase
         run: |
-          APP_VER=$(grep -oP "APP_VERSION='\K[0-9]+\.[0-9]+\.[0-9]+" www/index.html || echo "2.1.${{ github.run_number }}")
+          APP_VER=$(grep -oP "APP_VERSION = '\K[0-9]+\.[0-9]+\.[0-9]+" www/update.js || echo "2.1.${{ github.run_number }}")
           NOTES="עדכון v${APP_VER}"
           echo "כותב ל-Firebase: version=${APP_VER} build=${{ github.run_number }}"
           RESULT=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X PUT \
@@ -220,13 +231,15 @@ jobs:
             -d "{\"version\":\"${APP_VER}\",\"build\":${{ github.run_number }},\"notes\":\"${NOTES}\",\"ts\":$(date +%s000)}")
           echo "תשובת Firebase: ${RESULT}"
 
-      - name: Update root index.html for GitHub Pages
+      - name: Commit updated version files to repo
         run: |
-          cp www/index.html index.html
-          cp www/sw.js sw.js || true
+          # שמור את הקבצים עם הגרסה המעודכנת בחזרה ל-repo
+          # כך שה-GitHub Pages יקבל את הגרסאות הנכונות
+          cp www/update.js update.js
+          cp www/sw.js sw.js
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add index.html sw.js
+          git add update.js sw.js
           git diff --staged --quiet || git commit -m "chore: update version to ${{ github.run_number }} [skip ci]"
           git push
         env:
