@@ -231,7 +231,6 @@ input[type=time].fi{text-align:center}
 .mnav-c{text-align:center}
 .mnav-ttl{font-size:14px;font-weight:400;color:var(--b8)}
 [data-theme=dark] .mnav-ttl{color:var(--b4)}
-.mnav-sub{font-size:10px;color:var(--t3)}
 .brow{display:flex;gap:6px;align-items:center;margin-top:8px}
 .brow .fi{margin:0}
 .bdesc{flex:2}
@@ -288,196 +287,452 @@ input[type=time].fi{text-align:center}
 .dv-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .dv-val{margin-right:auto;font-weight:400;color:var(--t)}
 .dv-empty{text-align:center;padding:24px 0;color:var(--t3);font-size:12px}
-  /* Partner Daily Summary */
-.partner-day-summary {
-  margin-top: 20px;
-  padding: 14px;
-  background: linear-gradient(135deg, var(--b0) 0%, var(--s2) 100%);
-  border-radius: 12px;
-  border: 1px solid var(--bd);
-  border-top: 2px solid var(--am);
-}
-.pds-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--bd);
-}
-.pds-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--t2);
-}
-.pds-title svg {
-  color: var(--am);
-}
-.pds-total {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--am);
-  font-variant-numeric: tabular-nums;
-}
-.pds-breakdown {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.pds-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 11px;
-  padding: 6px 8px;
-  background: var(--s);
-  border-radius: 8px;
-  border: 1px solid var(--bd);
-}
-.pds-label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--t3);
-  font-weight: 500;
-}
-.pds-label svg {
-  flex-shrink: 0;
-}
-.pds-value {
-  color: var(--t);
-  font-variant-numeric: tabular-nums;
-  text-align: left;
-}
-.pds-value strong {
-  font-weight: 600;
-  color: var(--am);
-}
-.pds-bonus {
-  color: var(--g);
-  font-weight: 600;
-}
-.pds-note {
-  margin-top: 10px;
-  padding: 8px 10px;
-  background: var(--s);
-  border-radius: 8px;
-  border-right: 3px solid var(--am);
-  font-size: 11px;
-  color: var(--t2);
-  line-height: 1.4;
-}
-[data-theme=dark] .pds-total {
-  color: var(--am);
-}
-[data-theme=dark] .pds-value strong {
-  color: var(--am);
-}
+/* Partner Daily Summary */
+.partner-day-summary{margin-top:20px;padding:14px;background:linear-gradient(135deg,var(--b0) 0%,var(--s2) 100%);border-radius:12px;border:1px solid var(--bd);border-top:2px solid var(--am)}
+.pds-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--bd)}
+.pds-title{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--t2)}
+.pds-title svg{color:var(--am)}
+.pds-total{font-size:18px;font-weight:600;color:var(--am);font-variant-numeric:tabular-nums}
+.pds-breakdown{display:flex;flex-direction:column;gap:8px}
+.pds-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:6px 8px;background:var(--s);border-radius:8px;border:1px solid var(--bd)}
+.pds-label{display:flex;align-items:center;gap:5px;color:var(--t3);font-weight:500}
+.pds-label svg{flex-shrink:0}
+.pds-value{color:var(--t);font-variant-numeric:tabular-nums;text-align:left}
+.pds-value strong{font-weight:600;color:var(--am)}
+.pds-bonus{color:var(--g);font-weight:600}
+.pds-note{margin-top:10px;padding:8px 10px;background:var(--s);border-radius:8px;border-right:3px solid var(--am);font-size:11px;color:var(--t2);line-height:1.4}
+[data-theme=dark] .pds-total{color:var(--am)}
+[data-theme=dark] .pds-value strong{color:var(--am)}
 
 /* ================================================
    ANDROID WEBVIEW FIXES - תיקוני תאימות אנדרואיד
    חובה לשמור בסוף הקובץ כדי לדרוס הכל
+   כל ערכת צבע מקבלת את ה-overrides שלה בנפרד
    ================================================ */
 
-/* 1. Clock card - כרטיס שעון נוכחות */
+/* ------------------------------------------
+   ברירת מחדל: BLUE (ללא data-color)
+   ------------------------------------------ */
+
+/* 1. Clock card */
 .clk-card {
   background: #1E3A8A !important;
   background: -webkit-linear-gradient(135deg, #1E3A8A, #2563EB) !important;
   background: linear-gradient(135deg, #1E3A8A, #2563EB) !important;
 }
-
-/* 2. SVG clock ring - עיגול שעון */
+/* 2. SVG clock ring */
 .clk-ring-wrap { background: transparent !important; }
 .clk-ring-svg  { background: transparent !important; display: block !important; }
 .clk-ring-bg   { fill: none !important; }
 .clk-ring-fill { fill: none !important; }
 .clk-ring-inner { background: transparent !important; }
-
 /* 3. Header */
 .hdr { background: #1E3A8A !important; }
-
 /* 4. Buttons */
 .btn-p { background: #1E3A8A !important; color: #ffffff !important; }
 .btn-today { background: #1E3A8A !important; color: #ffffff !important; }
 .btn-s { background: #10B981 !important; color: #ffffff !important; }
 .btn-d { background: #EF4444 !important; color: #ffffff !important; }
-
 /* 5. Navigation */
 .ni.active { color: #1E3A8A !important; }
 .ni.active::before { background: #1E3A8A !important; width: 28px !important; }
 .ni::before { background: #1E3A8A !important; }
-
 /* 6. Pills & tabs */
 .pill.active { background: #1E3A8A !important; border-color: #1E3A8A !important; color: #ffffff !important; }
 .cv-pill.active { background: #1E3A8A !important; color: #ffffff !important; box-shadow: 0 2px 8px rgba(30,58,138,.25) !important; }
 .rtab.active { color: #1E3A8A !important; background: #ffffff !important; }
-
 /* 7. Calendar */
 .cc.today { border-color: #2563EB !important; box-shadow: 0 0 0 2px #DBEAFE !important; }
 .cc.today .cc-num { color: #2563EB !important; }
 .cc.has-data { background: #EFF6FF !important; border-color: #DBEAFE !important; }
-
 /* 8. Checkboxes & toggles */
 .pdfchk.on { background: #1E3A8A !important; border-color: #1E3A8A !important; color: #ffffff !important; }
 .toggle input:checked + .tsl { background: #1E3A8A !important; }
-
-/* 9. Stats colors */
+/* 9. Stats */
 .sval.g { color: #10B981 !important; }
 .sval.b { color: #1D4ED8 !important; }
-
 /* 10. Week view */
 .wv-bar-fill { background: #2563EB !important; }
 .wv-row.wv-has { background: #EFF6FF !important; border-color: #DBEAFE !important; }
 .wv-row.wv-today { border-color: #2563EB !important; }
 .wv-hrs { color: #2563EB !important; }
 .wv-pay { color: #10B981 !important; }
-
 /* 11. Modal navigation */
 .mnav { background: #EFF6FF !important; }
 .mnav-btn { color: #1E3A8A !important; }
 .mnav-ttl { color: #1E3A8A !important; }
-
-/* 12. Cards with gradient backgrounds */
-.couple-total {
-  background: #1E3A8A !important;
-  background: linear-gradient(135deg, #1E3A8A, #2563EB) !important;
-  color: #ffffff !important;
-}
+/* 12. Gradient backgrounds */
+.couple-total { background: linear-gradient(135deg, #1E3A8A, #2563EB) !important; color: #ffffff !important; }
 .pair-box { background: #1E3A8A !important; color: #ffffff !important; }
-.ibanner {
-  background: #1E3A8A !important;
-  background: linear-gradient(135deg, #1E3A8A, #2563EB) !important;
-  color: #ffffff !important;
-}
-
+.ibanner { background: linear-gradient(135deg, #1E3A8A, #2563EB) !important; color: #ffffff !important; }
 /* 13. Miss banner */
 .miss-banner { background: #FEF9C3 !important; border-color: #FDE047 !important; }
-
 /* 14. Update banner */
-.upd-banner {
-  background: #0F172A !important;
-  background: linear-gradient(135deg, #0F172A, #1E3A5F) !important;
-}
+.upd-banner { background: linear-gradient(135deg, #0F172A, #1E3A5F) !important; }
 .upd-btn { background: #2563EB !important; color: #ffffff !important; }
-
 /* 15. Partner summary */
 .partner-day-summary { border-top-color: #0EA5E9 !important; }
 .pds-total { color: #0EA5E9 !important; }
 .pds-value strong { color: #0EA5E9 !important; }
 .pds-bonus { color: #10B981 !important; }
-
-/* 16. Day view metrics */
+/* 16. Day view */
 .dv-metric-val { color: #1E3A8A !important; }
-
 /* 17. csummary */
 .csummary { background: #EFF6FF !important; color: #1E3A8A !important; }
-
-/* 18. Focus states */
+/* 18. Focus */
 .fi:focus { border-color: #2563EB !important; box-shadow: 0 0 0 3px #DBEAFE !important; }
-
 /* 19. Sync dot */
 .sdot { background: #10B981 !important; border-color: #1E3A8A !important; }
 .sdot.off { background: #EF4444 !important; }
+
+/* ------------------------------------------
+   GREEN
+   ------------------------------------------ */
+[data-color=green] .clk-card {
+  background: #166534 !important;
+  background: linear-gradient(135deg, #166534, #16A34A) !important;
+}
+[data-color=green] .hdr { background: #166534 !important; }
+[data-color=green] .btn-p { background: #166534 !important; color: #ffffff !important; }
+[data-color=green] .btn-today { background: #166534 !important; color: #ffffff !important; }
+[data-color=green] .ni.active { color: #166534 !important; }
+[data-color=green] .ni.active::before { background: #166534 !important; }
+[data-color=green] .ni::before { background: #166534 !important; }
+[data-color=green] .pill.active { background: #166534 !important; border-color: #166534 !important; color: #ffffff !important; }
+[data-color=green] .cv-pill.active { background: #166534 !important; color: #ffffff !important; box-shadow: 0 2px 8px rgba(22,101,52,.25) !important; }
+[data-color=green] .rtab.active { color: #166534 !important; background: #ffffff !important; }
+[data-color=green] .cc.today { border-color: #16A34A !important; box-shadow: 0 0 0 2px #BBF7D0 !important; }
+[data-color=green] .cc.today .cc-num { color: #16A34A !important; }
+[data-color=green] .cc.has-data { background: #F0FDF4 !important; border-color: #BBF7D0 !important; }
+[data-color=green] .pdfchk.on { background: #166534 !important; border-color: #166534 !important; color: #ffffff !important; }
+[data-color=green] .toggle input:checked + .tsl { background: #166534 !important; }
+[data-color=green] .sval.b { color: #15803D !important; }
+[data-color=green] .wv-bar-fill { background: #16A34A !important; }
+[data-color=green] .wv-row.wv-has { background: #F0FDF4 !important; border-color: #BBF7D0 !important; }
+[data-color=green] .wv-row.wv-today { border-color: #16A34A !important; }
+[data-color=green] .wv-hrs { color: #16A34A !important; }
+[data-color=green] .mnav { background: #F0FDF4 !important; }
+[data-color=green] .mnav-btn { color: #166534 !important; }
+[data-color=green] .mnav-ttl { color: #166534 !important; }
+[data-color=green] .couple-total { background: linear-gradient(135deg, #166534, #16A34A) !important; color: #ffffff !important; }
+[data-color=green] .pair-box { background: #166534 !important; color: #ffffff !important; }
+[data-color=green] .ibanner { background: linear-gradient(135deg, #166534, #16A34A) !important; color: #ffffff !important; }
+[data-color=green] .dv-metric-val { color: #166534 !important; }
+[data-color=green] .csummary { background: #F0FDF4 !important; color: #166534 !important; }
+[data-color=green] .fi:focus { border-color: #16A34A !important; box-shadow: 0 0 0 3px #BBF7D0 !important; }
+[data-color=green] .sdot { border-color: #166534 !important; }
+
+/* ------------------------------------------
+   TEAL
+   ------------------------------------------ */
+[data-color=teal] .clk-card {
+  background: #134E4A !important;
+  background: linear-gradient(135deg, #134E4A, #0D9488) !important;
+}
+[data-color=teal] .hdr { background: #134E4A !important; }
+[data-color=teal] .btn-p { background: #134E4A !important; color: #ffffff !important; }
+[data-color=teal] .btn-today { background: #134E4A !important; color: #ffffff !important; }
+[data-color=teal] .ni.active { color: #134E4A !important; }
+[data-color=teal] .ni.active::before { background: #134E4A !important; }
+[data-color=teal] .ni::before { background: #134E4A !important; }
+[data-color=teal] .pill.active { background: #134E4A !important; border-color: #134E4A !important; color: #ffffff !important; }
+[data-color=teal] .cv-pill.active { background: #134E4A !important; color: #ffffff !important; box-shadow: 0 2px 8px rgba(19,78,74,.25) !important; }
+[data-color=teal] .rtab.active { color: #134E4A !important; background: #ffffff !important; }
+[data-color=teal] .cc.today { border-color: #0D9488 !important; box-shadow: 0 0 0 2px #CCFBF1 !important; }
+[data-color=teal] .cc.today .cc-num { color: #0D9488 !important; }
+[data-color=teal] .cc.has-data { background: #F0FDFA !important; border-color: #CCFBF1 !important; }
+[data-color=teal] .pdfchk.on { background: #134E4A !important; border-color: #134E4A !important; color: #ffffff !important; }
+[data-color=teal] .toggle input:checked + .tsl { background: #134E4A !important; }
+[data-color=teal] .sval.b { color: #0F766E !important; }
+[data-color=teal] .wv-bar-fill { background: #0D9488 !important; }
+[data-color=teal] .wv-row.wv-has { background: #F0FDFA !important; border-color: #CCFBF1 !important; }
+[data-color=teal] .wv-row.wv-today { border-color: #0D9488 !important; }
+[data-color=teal] .wv-hrs { color: #0D9488 !important; }
+[data-color=teal] .mnav { background: #F0FDFA !important; }
+[data-color=teal] .mnav-btn { color: #134E4A !important; }
+[data-color=teal] .mnav-ttl { color: #134E4A !important; }
+[data-color=teal] .couple-total { background: linear-gradient(135deg, #134E4A, #0D9488) !important; color: #ffffff !important; }
+[data-color=teal] .pair-box { background: #134E4A !important; color: #ffffff !important; }
+[data-color=teal] .ibanner { background: linear-gradient(135deg, #134E4A, #0D9488) !important; color: #ffffff !important; }
+[data-color=teal] .dv-metric-val { color: #134E4A !important; }
+[data-color=teal] .csummary { background: #F0FDFA !important; color: #134E4A !important; }
+[data-color=teal] .fi:focus { border-color: #0D9488 !important; box-shadow: 0 0 0 3px #CCFBF1 !important; }
+[data-color=teal] .sdot { border-color: #134E4A !important; }
+
+/* ------------------------------------------
+   PURPLE
+   ------------------------------------------ */
+[data-color=purple] .clk-card {
+  background: #4C1D95 !important;
+  background: linear-gradient(135deg, #4C1D95, #7C3AED) !important;
+}
+[data-color=purple] .hdr { background: #4C1D95 !important; }
+[data-color=purple] .btn-p { background: #4C1D95 !important; color: #ffffff !important; }
+[data-color=purple] .btn-today { background: #4C1D95 !important; color: #ffffff !important; }
+[data-color=purple] .ni.active { color: #4C1D95 !important; }
+[data-color=purple] .ni.active::before { background: #4C1D95 !important; }
+[data-color=purple] .ni::before { background: #4C1D95 !important; }
+[data-color=purple] .pill.active { background: #4C1D95 !important; border-color: #4C1D95 !important; color: #ffffff !important; }
+[data-color=purple] .cv-pill.active { background: #4C1D95 !important; color: #ffffff !important; box-shadow: 0 2px 8px rgba(76,29,149,.25) !important; }
+[data-color=purple] .rtab.active { color: #4C1D95 !important; background: #ffffff !important; }
+[data-color=purple] .cc.today { border-color: #7C3AED !important; box-shadow: 0 0 0 2px #EDE9FE !important; }
+[data-color=purple] .cc.today .cc-num { color: #7C3AED !important; }
+[data-color=purple] .cc.has-data { background: #F5F3FF !important; border-color: #EDE9FE !important; }
+[data-color=purple] .pdfchk.on { background: #4C1D95 !important; border-color: #4C1D95 !important; color: #ffffff !important; }
+[data-color=purple] .toggle input:checked + .tsl { background: #4C1D95 !important; }
+[data-color=purple] .sval.b { color: #6D28D9 !important; }
+[data-color=purple] .wv-bar-fill { background: #7C3AED !important; }
+[data-color=purple] .wv-row.wv-has { background: #F5F3FF !important; border-color: #EDE9FE !important; }
+[data-color=purple] .wv-row.wv-today { border-color: #7C3AED !important; }
+[data-color=purple] .wv-hrs { color: #7C3AED !important; }
+[data-color=purple] .mnav { background: #F5F3FF !important; }
+[data-color=purple] .mnav-btn { color: #4C1D95 !important; }
+[data-color=purple] .mnav-ttl { color: #4C1D95 !important; }
+[data-color=purple] .couple-total { background: linear-gradient(135deg, #4C1D95, #7C3AED) !important; color: #ffffff !important; }
+[data-color=purple] .pair-box { background: #4C1D95 !important; color: #ffffff !important; }
+[data-color=purple] .ibanner { background: linear-gradient(135deg, #4C1D95, #7C3AED) !important; color: #ffffff !important; }
+[data-color=purple] .dv-metric-val { color: #4C1D95 !important; }
+[data-color=purple] .csummary { background: #F5F3FF !important; color: #4C1D95 !important; }
+[data-color=purple] .fi:focus { border-color: #7C3AED !important; box-shadow: 0 0 0 3px #EDE9FE !important; }
+[data-color=purple] .sdot { border-color: #4C1D95 !important; }
+
+/* ------------------------------------------
+   BLACK
+   ------------------------------------------ */
+[data-color=black] .clk-card {
+  background: #0F172A !important;
+  background: linear-gradient(135deg, #0F172A, #334155) !important;
+}
+[data-color=black] .hdr { background: #0F172A !important; }
+[data-color=black] .btn-p { background: #1E293B !important; color: #ffffff !important; }
+[data-color=black] .btn-today { background: #1E293B !important; color: #ffffff !important; }
+[data-color=black] .ni.active { color: #38BDF8 !important; }
+[data-color=black] .ni.active::before { background: #38BDF8 !important; }
+[data-color=black] .ni::before { background: #38BDF8 !important; }
+[data-color=black] .pill.active { background: #1E293B !important; border-color: #334155 !important; color: #ffffff !important; }
+[data-color=black] .cv-pill.active { background: #1E293B !important; color: #ffffff !important; box-shadow: 0 2px 8px rgba(0,0,0,.4) !important; }
+[data-color=black] .rtab.active { color: #38BDF8 !important; background: #1E293B !important; }
+[data-color=black] .cc.today { border-color: #38BDF8 !important; box-shadow: 0 0 0 2px #1E293B !important; }
+[data-color=black] .cc.today .cc-num { color: #38BDF8 !important; }
+[data-color=black] .cc.has-data { background: #0F172A !important; border-color: #1E293B !important; }
+[data-color=black] .pdfchk.on { background: #334155 !important; border-color: #334155 !important; color: #ffffff !important; }
+[data-color=black] .toggle input:checked + .tsl { background: #38BDF8 !important; }
+[data-color=black] .sval.b { color: #38BDF8 !important; }
+[data-color=black] .wv-bar-fill { background: #38BDF8 !important; }
+[data-color=black] .wv-row.wv-has { background: #0F172A !important; border-color: #1E293B !important; }
+[data-color=black] .wv-row.wv-today { border-color: #38BDF8 !important; }
+[data-color=black] .wv-hrs { color: #38BDF8 !important; }
+[data-color=black] .mnav { background: #0F172A !important; }
+[data-color=black] .mnav-btn { color: #38BDF8 !important; }
+[data-color=black] .mnav-ttl { color: #38BDF8 !important; }
+[data-color=black] .couple-total { background: linear-gradient(135deg, #0F172A, #334155) !important; color: #ffffff !important; }
+[data-color=black] .pair-box { background: #0F172A !important; color: #ffffff !important; }
+[data-color=black] .ibanner { background: linear-gradient(135deg, #0F172A, #334155) !important; color: #ffffff !important; }
+[data-color=black] .dv-metric-val { color: #38BDF8 !important; }
+[data-color=black] .csummary { background: #0F172A !important; color: #38BDF8 !important; }
+[data-color=black] .fi:focus { border-color: #334155 !important; box-shadow: 0 0 0 3px #1E293B !important; }
+[data-color=black] .sdot { border-color: #0F172A !important; }
+
+/* ------------------------------------------
+   ORANGE
+   ------------------------------------------ */
+[data-color=orange] .clk-card {
+  background: #C2410C !important;
+  background: linear-gradient(135deg, #C2410C, #F97316) !important;
+}
+[data-color=orange] .hdr { background: #C2410C !important; }
+[data-color=orange] .btn-p { background: #C2410C !important; color: #ffffff !important; }
+[data-color=orange] .btn-today { background: #C2410C !important; color: #ffffff !important; }
+[data-color=orange] .ni.active { color: #C2410C !important; }
+[data-color=orange] .ni.active::before { background: #C2410C !important; }
+[data-color=orange] .ni::before { background: #C2410C !important; }
+[data-color=orange] .pill.active { background: #C2410C !important; border-color: #C2410C !important; color: #ffffff !important; }
+[data-color=orange] .cv-pill.active { background: #C2410C !important; color: #ffffff !important; box-shadow: 0 2px 8px rgba(194,65,12,.25) !important; }
+[data-color=orange] .rtab.active { color: #C2410C !important; background: #ffffff !important; }
+[data-color=orange] .cc.today { border-color: #F97316 !important; box-shadow: 0 0 0 2px #FED7AA !important; }
+[data-color=orange] .cc.today .cc-num { color: #F97316 !important; }
+[data-color=orange] .cc.has-data { background: #FFF7ED !important; border-color: #FED7AA !important; }
+[data-color=orange] .pdfchk.on { background: #C2410C !important; border-color: #C2410C !important; color: #ffffff !important; }
+[data-color=orange] .toggle input:checked + .tsl { background: #C2410C !important; }
+[data-color=orange] .sval.b { color: #EA580C !important; }
+[data-color=orange] .wv-bar-fill { background: #F97316 !important; }
+[data-color=orange] .wv-row.wv-has { background: #FFF7ED !important; border-color: #FED7AA !important; }
+[data-color=orange] .wv-row.wv-today { border-color: #F97316 !important; }
+[data-color=orange] .wv-hrs { color: #F97316 !important; }
+[data-color=orange] .mnav { background: #FFF7ED !important; }
+[data-color=orange] .mnav-btn { color: #C2410C !important; }
+[data-color=orange] .mnav-ttl { color: #C2410C !important; }
+[data-color=orange] .couple-total { background: linear-gradient(135deg, #C2410C, #F97316) !important; color: #ffffff !important; }
+[data-color=orange] .pair-box { background: #C2410C !important; color: #ffffff !important; }
+[data-color=orange] .ibanner { background: linear-gradient(135deg, #C2410C, #F97316) !important; color: #ffffff !important; }
+[data-color=orange] .dv-metric-val { color: #C2410C !important; }
+[data-color=orange] .csummary { background: #FFF7ED !important; color: #C2410C !important; }
+[data-color=orange] .fi:focus { border-color: #F97316 !important; box-shadow: 0 0 0 3px #FED7AA !important; }
+[data-color=orange] .sdot { border-color: #C2410C !important; }
+
+/* ------------------------------------------
+   PINK
+   ------------------------------------------ */
+[data-color=pink] .clk-card {
+  background: #9F1239 !important;
+  background: linear-gradient(135deg, #9F1239, #E11D48) !important;
+}
+[data-color=pink] .hdr { background: #9F1239 !important; }
+[data-color=pink] .btn-p { background: #9F1239 !important; color: #ffffff !important; }
+[data-color=pink] .btn-today { background: #9F1239 !important; color: #ffffff !important; }
+[data-color=pink] .ni.active { color: #9F1239 !important; }
+[data-color=pink] .ni.active::before { background: #9F1239 !important; }
+[data-color=pink] .ni::before { background: #9F1239 !important; }
+[data-color=pink] .pill.active { background: #9F1239 !important; border-color: #9F1239 !important; color: #ffffff !important; }
+[data-color=pink] .cv-pill.active { background: #9F1239 !important; color: #ffffff !important; box-shadow: 0 2px 8px rgba(159,18,57,.25) !important; }
+[data-color=pink] .rtab.active { color: #9F1239 !important; background: #ffffff !important; }
+[data-color=pink] .cc.today { border-color: #E11D48 !important; box-shadow: 0 0 0 2px #FFE4E6 !important; }
+[data-color=pink] .cc.today .cc-num { color: #E11D48 !important; }
+[data-color=pink] .cc.has-data { background: #FFF1F2 !important; border-color: #FFE4E6 !important; }
+[data-color=pink] .pdfchk.on { background: #9F1239 !important; border-color: #9F1239 !important; color: #ffffff !important; }
+[data-color=pink] .toggle input:checked + .tsl { background: #9F1239 !important; }
+[data-color=pink] .sval.b { color: #BE123C !important; }
+[data-color=pink] .wv-bar-fill { background: #E11D48 !important; }
+[data-color=pink] .wv-row.wv-has { background: #FFF1F2 !important; border-color: #FFE4E6 !important; }
+[data-color=pink] .wv-row.wv-today { border-color: #E11D48 !important; }
+[data-color=pink] .wv-hrs { color: #E11D48 !important; }
+[data-color=pink] .mnav { background: #FFF1F2 !important; }
+[data-color=pink] .mnav-btn { color: #9F1239 !important; }
+[data-color=pink] .mnav-ttl { color: #9F1239 !important; }
+[data-color=pink] .couple-total { background: linear-gradient(135deg, #9F1239, #E11D48) !important; color: #ffffff !important; }
+[data-color=pink] .pair-box { background: #9F1239 !important; color: #ffffff !important; }
+[data-color=pink] .ibanner { background: linear-gradient(135deg, #9F1239, #E11D48) !important; color: #ffffff !important; }
+[data-color=pink] .dv-metric-val { color: #9F1239 !important; }
+[data-color=pink] .csummary { background: #FFF1F2 !important; color: #9F1239 !important; }
+[data-color=pink] .fi:focus { border-color: #E11D48 !important; box-shadow: 0 0 0 3px #FFE4E6 !important; }
+[data-color=pink] .sdot { border-color: #9F1239 !important; }
+
+/* ------------------------------------------
+   שורות ה-sdot.off ו-sval.g ו-btn-s/btn-d
+   זהות לכל הערכות — אין לדרוס אותן
+   ------------------------------------------ */
+[data-color=green] .sdot.off,
+[data-color=teal] .sdot.off,
+[data-color=purple] .sdot.off,
+[data-color=black] .sdot.off,
+[data-color=orange] .sdot.off,
+[data-color=pink] .sdot.off { background: #EF4444 !important; }
+
+[data-color=green] .sval.g,
+[data-color=teal] .sval.g,
+[data-color=purple] .sval.g,
+[data-color=black] .sval.g,
+[data-color=orange] .sval.g,
+[data-color=pink] .sval.g { color: #10B981 !important; }
+
+[data-color=green] .btn-s,
+[data-color=teal] .btn-s,
+[data-color=purple] .btn-s,
+[data-color=black] .btn-s,
+[data-color=orange] .btn-s,
+[data-color=pink] .btn-s { background: #10B981 !important; color: #ffffff !important; }
+
+[data-color=green] .btn-d,
+[data-color=teal] .btn-d,
+[data-color=purple] .btn-d,
+[data-color=black] .btn-d,
+[data-color=orange] .btn-d,
+[data-color=pink] .btn-d { background: #EF4444 !important; color: #ffffff !important; }
+
+[data-color=green] .wv-pay,
+[data-color=teal] .wv-pay,
+[data-color=purple] .wv-pay,
+[data-color=black] .wv-pay,
+[data-color=orange] .wv-pay,
+[data-color=pink] .wv-pay { color: #10B981 !important; }
+
+[data-color=green] .sdot,
+[data-color=teal] .sdot,
+[data-color=purple] .sdot,
+[data-color=black] .sdot,
+[data-color=orange] .sdot,
+[data-color=pink] .sdot { background: #10B981 !important; }
+
+[data-color=green] .upd-banner,
+[data-color=teal] .upd-banner,
+[data-color=purple] .upd-banner,
+[data-color=black] .upd-banner,
+[data-color=orange] .upd-banner,
+[data-color=pink] .upd-banner { background: linear-gradient(135deg, #0F172A, #1E3A5F) !important; }
+
+[data-color=green] .upd-btn,
+[data-color=teal] .upd-btn,
+[data-color=purple] .upd-btn,
+[data-color=black] .upd-btn,
+[data-color=orange] .upd-btn,
+[data-color=pink] .upd-btn { background: #2563EB !important; color: #ffffff !important; }
+
+[data-color=green] .miss-banner,
+[data-color=teal] .miss-banner,
+[data-color=purple] .miss-banner,
+[data-color=orange] .miss-banner,
+[data-color=pink] .miss-banner { background: #FEF9C3 !important; border-color: #FDE047 !important; }
+
+[data-color=green] .partner-day-summary,
+[data-color=teal] .partner-day-summary,
+[data-color=purple] .partner-day-summary,
+[data-color=black] .partner-day-summary,
+[data-color=orange] .partner-day-summary,
+[data-color=pink] .partner-day-summary { border-top-color: #0EA5E9 !important; }
+
+[data-color=green] .pds-total,
+[data-color=teal] .pds-total,
+[data-color=purple] .pds-total,
+[data-color=black] .pds-total,
+[data-color=orange] .pds-total,
+[data-color=pink] .pds-total { color: #0EA5E9 !important; }
+
+[data-color=green] .pds-value strong,
+[data-color=teal] .pds-value strong,
+[data-color=purple] .pds-value strong,
+[data-color=black] .pds-value strong,
+[data-color=orange] .pds-value strong,
+[data-color=pink] .pds-value strong { color: #0EA5E9 !important; }
+
+[data-color=green] .pds-bonus,
+[data-color=teal] .pds-bonus,
+[data-color=purple] .pds-bonus,
+[data-color=black] .pds-bonus,
+[data-color=orange] .pds-bonus,
+[data-color=pink] .pds-bonus { color: #10B981 !important; }
+
+/* SVG ring fixes — זהים לכל הערכות */
+[data-color=green] .clk-ring-wrap,
+[data-color=teal] .clk-ring-wrap,
+[data-color=purple] .clk-ring-wrap,
+[data-color=black] .clk-ring-wrap,
+[data-color=orange] .clk-ring-wrap,
+[data-color=pink] .clk-ring-wrap { background: transparent !important; }
+
+[data-color=green] .clk-ring-svg,
+[data-color=teal] .clk-ring-svg,
+[data-color=purple] .clk-ring-svg,
+[data-color=black] .clk-ring-svg,
+[data-color=orange] .clk-ring-svg,
+[data-color=pink] .clk-ring-svg { background: transparent !important; display: block !important; }
+
+[data-color=green] .clk-ring-bg,
+[data-color=teal] .clk-ring-bg,
+[data-color=purple] .clk-ring-bg,
+[data-color=black] .clk-ring-bg,
+[data-color=orange] .clk-ring-bg,
+[data-color=pink] .clk-ring-bg { fill: none !important; }
+
+[data-color=green] .clk-ring-fill,
+[data-color=teal] .clk-ring-fill,
+[data-color=purple] .clk-ring-fill,
+[data-color=black] .clk-ring-fill,
+[data-color=orange] .clk-ring-fill,
+[data-color=pink] .clk-ring-fill { fill: none !important; }
+
+[data-color=green] .clk-ring-inner,
+[data-color=teal] .clk-ring-inner,
+[data-color=purple] .clk-ring-inner,
+[data-color=black] .clk-ring-inner,
+[data-color=orange] .clk-ring-inner,
+[data-color=pink] .clk-ring-inner { background: transparent !important; }
