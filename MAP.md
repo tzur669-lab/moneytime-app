@@ -1,5 +1,5 @@
 # מפת קבצי מעקב שעות Pro
-
+ 
 ## HTML / מבנה
 - `index.html` — רק HTML (head + body מבנה + מודאלים + nav)
 - `callback.html` — דף OAuth redirect
