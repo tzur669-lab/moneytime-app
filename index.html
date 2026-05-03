@@ -1,0 +1,552 @@
+<!DOCTYPE html>    
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="מעקב שעות Pro">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1E3A8A" id="metaTC">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
+<title>מעקב שעות Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- שמירת pair param מוקדמת — לפני כל דבר, כדי שלא יאבד ב-Safari PWA -->
+<script>
+(function(){
+  try{
+    var p=new URLSearchParams(window.location.search).get('pair');
+    if(p) sessionStorage.setItem('pendingPair', p.toUpperCase());
+  }catch(e){}
+})();
+</script>
+<!-- Capacitor plugin wrappers — עובדים ב-APK, fallback בדפדפן -->
+<script>
+window.CapFS = null;
+window.CapShare = null;
+window.CapBrowser = null;
+window.CapApp = null;
+
+function _initCapPlugins(){
+  if(!window.Capacitor||!window.Capacitor.Plugins)return;
+  try{ window.CapFS = Capacitor.Plugins.Filesystem; }catch(e){}
+  try{ window.CapShare = Capacitor.Plugins.Share; }catch(e){}
+  try{ window.CapBrowser = Capacitor.Plugins.Browser; }catch(e){}
+  try{ window.CapApp = Capacitor.Plugins.App; }catch(e){}
+}
+document.addEventListener('deviceready', _initCapPlugins, false);
+setTimeout(_initCapPlugins, 500);
+setTimeout(_initCapPlugins, 2000);
+
+function _waitForCapBrowser(ms){
+  ms=ms||4000;
+  return new Promise(function(resolve){
+    if(window.CapBrowser){resolve(window.CapBrowser);return;}
+    var elapsed=0;
+    var iv=setInterval(function(){
+      elapsed+=100;
+      if(window.CapBrowser){clearInterval(iv);resolve(window.CapBrowser);return;}
+      if(elapsed>=ms){clearInterval(iv);resolve(null);}
+    },100);
+  });
+}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-l">
+    <div class="hdr-logo">₪</div>
+    <div>
+      <div class="hdr-title">מעקב שעות Pro</div>
+      <div class="hdr-sub" id="hdrSub">טוען...</div>
+    </div>
+  </div>
+  <div class="hdr-r">
+    <button class="ibtn" onclick="manualSync()" title="סנכרן"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg><div class="sdot off" id="sdot"></div></button>
+    <button class="ibtn" id="themeBtn" onclick="toggleTheme()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+  </div>
+</header>
+
+<!-- PAGE: CALENDAR -->
+<div class="page active" id="pg-cal">
+  <div class="clk-card">
+    <div class="clk-ring-wrap">
+      <!-- FIX: fill="none" + stroke attributes explicit for Android WebView -->
+      <svg class="clk-ring-svg" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" style="background:transparent">
+        <circle class="clk-ring-bg" cx="36" cy="36" r="32" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="3"/>
+        <circle class="clk-ring-fill" id="clkRing" cx="36" cy="36" r="32" fill="none"
+          stroke="rgba(255,255,255,0.85)" stroke-width="3" stroke-linecap="round"
+          stroke-dasharray="201" stroke-dashoffset="201"/>
+      </svg>
+      <div class="clk-ring-inner">
+        <span class="clk-ring-icon" id="clkIcon">⏱</span>
+      </div>
+    </div>
+    <div class="clk-left" style="flex:1">
+      <div class="clk-label">שעון נוכחות</div>
+      <div class="clk-time" id="clkTime">00:00:00</div>
+    </div>
+    <button class="btn-clk" id="clkBtn" onclick="handleClock()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5,3 19,12 5,21"/></svg> התחל</button>
+  </div>
+  <div id="missBanner"></div>
+  <div id="pairBanner" style="display:none;background:linear-gradient(135deg,var(--b8),var(--b6));border-radius:var(--r1);padding:14px 16px;margin-bottom:12px;color:#fff;align-items:center;gap:12px">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:400;margin-bottom:2px">חבר פרטנר</div>
+      <div style="font-size:11px;opacity:.75">ראה הכנסות משולבות ועבוד ביחד</div>
+    </div>
+    <button onclick="openPair();document.getElementById('pairBanner').style.display='none'" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:8px 14px;border-radius:8px;font-family:'Inter',sans-serif;font-size:11px;font-weight:300;cursor:pointer;white-space:nowrap">חבר עכשיו</button>
+    <button onclick="document.getElementById('pairBanner').style.display='none';localStorage.setItem('pairBannerDismissed','1')" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:18px;cursor:pointer;padding:0 0 0 4px;line-height:1">×</button>
+  </div>
+  <div class="qa" style="grid-template-columns:1fr 1fr;grid-template-rows:auto auto">
+    <button class="qab qab-main" onclick="openMulti('hours')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg><span>שעות בתקופה</span></button>
+    <button class="qab qab-main" onclick="openMulti('rate')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg><span>תעריף לשינוי</span></button>
+    <button class="qab qab-sub" onclick="openMulti('profit')" style="grid-column:1/-1"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>רווח בתקופה</span></button>
+  </div>
+  <div class="card">
+    <div class="cal-nav">
+      <button class="btn-nav" onclick="navCal(-1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,18 15,12 9,6"/></svg></button>
+      <div style="text-align:center">
+        <div class="cal-title" id="calTitle"></div>
+        <div id="calYear" style="font-size:11px;color:var(--t3);line-height:1;margin-top:1px"></div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="btn-today" onclick="goToday()">היום</button>
+        <button class="btn-nav" onclick="navCal(1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg></button>
+      </div>
+    </div>
+    <div class="cal-seg-row">
+      <div class="cv-pills">
+        <button class="cv-pill active" id="cvp-month" onclick="switchCalView('month')">חודש</button>
+        <button class="cv-pill" id="cvp-week" onclick="switchCalView('week')">שבוע</button>
+        <button class="cv-pill" id="cvp-day" onclick="switchCalView('day')">יום</button>
+      </div>
+      <input type="date" class="cal-date-inp" id="jDate" style="padding:7px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--s2);font-size:11px;font-family:'Inter',sans-serif">
+      <button class="cal-jump-btn" onclick="jumpDate()" style="padding:7px 12px;border-radius:8px;background:var(--b0);color:var(--b6);border:1px solid var(--bd);font-size:11px;font-family:'Inter',sans-serif;cursor:pointer;white-space:nowrap">קפוץ</button>
+    </div>
+    <div id="calViewBody">
+      <div class="cal-grid" id="calGrid"></div>
+      <div id="calLegend" style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+        <span style="font-size:10px;color:var(--t3);display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;background:var(--b0);border:1.5px solid var(--b6);border-radius:3px;display:inline-block"></span>היום</span>
+        <span style="font-size:10px;color:var(--t3);display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;background:var(--b0);border-radius:3px;display:inline-block"></span>יש נתונים</span>
+        <span style="font-size:10px;color:var(--t3);display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border:2px solid #FDE047;border-radius:3px;display:inline-block"></span>חסר</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: REPORTS -->
+<div class="page" id="pg-rep">
+  <div class="rtabs">
+    <button class="rtab active" onclick="switchRTab('gen',this)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> כללי</button>
+    <button class="rtab" onclick="switchRTab('jobs',this)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg> עבודה</button>
+    <button class="rtab" onclick="switchRTab('cmp',this)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg> השוואה</button>
+    <button class="rtab" onclick="switchRTab('arc',this)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ארכיון</button>
+    <button class="rtab" onclick="switchRTab('year',this)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg> שנתי</button>
+  </div>
+  <div class="pills">
+    <button class="pill active" data-p="7" onclick="selPer(this)">7 ימים</button>
+    <button class="pill" data-p="14" onclick="selPer(this)">14 ימים</button>
+    <button class="pill" data-p="month" onclick="selPer(this)">החודש</button>
+    <button class="pill" data-p="lastMonth" onclick="selPer(this)">חודש קודם</button>
+    <button class="pill" data-p="custom" onclick="selPer(this)">מותאם</button>
+  </div>
+  <div id="custPRow" style="display:none" class="card">
+    <div style="display:flex;gap:10px;align-items:flex-end">
+      <div style="flex:1"><label class="fl">מתאריך</label><input type="date" class="fi" id="rS"></div>
+      <div style="flex:1"><label class="fl">עד תאריך</label><input type="date" class="fi" id="rE"></div>
+      <button class="btn btn-p btn-sm" onclick="updRep()">רענן</button>
+    </div>
+  </div>
+  <div id="repContent"></div>
+</div>
+
+<!-- PAGE: COUPLE -->
+<div class="page" id="pg-couple">
+  <div id="coupleContent"></div>
+</div>
+
+<!-- PAGE: SETTINGS -->
+<div class="page" id="pg-set">
+  <div id="instBanner" class="ibanner">
+    <div style="font-size:14px;font-weight:400;margin-bottom:4px">התקן את האפליקציה</div>
+    <div style="font-size:12px;opacity:.8;margin-bottom:12px">גישה מהירה ללא דפדפן</div>
+    <button class="btn btn-o" id="instBtn" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">⬇️ התקן עכשיו</button>
+  </div>
+  <div class="set-sec-ttl" style="margin-top:4px">מקומות עבודה</div>
+  <div id="jobsCont"></div>
+  <button class="btn btn-g btn-sm" onclick="addJob()" id="addJobBtn" style="margin-bottom:16px">+ הוסף מקום עבודה</button>
+
+  <div class="set-sec-ttl">בונוסים קבועים</div>
+  <div class="card" style="padding:14px;margin-bottom:4px">
+    <div style="font-size:11px;color:var(--t3);margin-bottom:10px;line-height:1.6">הגדר בונוסים חוזרים — ניתן לבחור מהם ישירות בעת רישום יום</div>
+    <div id="fbonCont"></div>
+    <button class="btn btn-g btn-sm" onclick="addFixedBonus()" style="margin-top:10px;width:100%">+ הוסף בונוס קבוע</button>
+  </div>
+
+  <div class="set-sec-ttl">הגדרות חישוב</div>
+  <div class="card">
+    <div class="trow"><div><div class="trow-lbl">שעות נוספות</div><div class="trow-sub">מעל 8 ש' = 125%, מעל 10 = 150%</div></div><label class="toggle"><input type="checkbox" id="togOT" onchange="setSetting('calcOvertime',this.checked)"><span class="tsl"></span></label></div>
+    <div class="trow"><div><div class="trow-lbl">סימון ימים חסרים</div><div class="trow-sub">ימי חול ללא רישום</div></div><label class="toggle"><input type="checkbox" id="togMiss" onchange="setSetting('showMissing',this.checked)"><span class="tsl"></span></label></div>
+  </div>
+  <div class="set-sec-ttl">ערכת צבעים</div>
+  <div class="card" style="padding:16px">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:flex-start">
+      <div id="tc-blue" class="tpick sel" style="background:#1E3A8A" onclick="setColor('blue')" title="כחול נייבי"></div>
+      <div id="tc-green" class="tpick" style="background:#166534" onclick="setColor('green')" title="ירוק יער"></div>
+      <div id="tc-teal" class="tpick" style="background:#0D9488" onclick="setColor('teal')" title="טורקיז"></div>
+      <div id="tc-purple" class="tpick" style="background:linear-gradient(135deg,#4C1D95,#7C3AED)" onclick="setColor('purple')" title="סגול"></div>
+      <div id="tc-black" class="tpick" style="background:linear-gradient(135deg,#0F172A,#334155);border:1px solid #475569" onclick="setColor('black')" title="שחור"></div>
+      <div id="tc-orange" class="tpick" style="background:#C2410C" onclick="setColor('orange')" title="כתום"></div>
+      <div id="tc-pink" class="tpick" style="background:#E11D48" onclick="setColor('pink')" title="ורוד"></div>
+    </div>
+  </div>
+
+  <div class="set-sec-ttl">גיבוי Google Drive</div>
+  <div class="card">
+    <div id="drOff"><button class="btn btn-o" id="authBtn">חבר Google Drive</button></div>
+    <div id="drOn" style="display:none">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><span style="color:var(--g);display:flex"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg></span><div><div style="font-size:13px;font-weight:400;color:var(--g)">מחובר ומסונכרן</div><div id="drEmail" style="font-size:11px;color:var(--t2)"></div></div></div>
+      <button class="btn btn-g" onclick="manualSync()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> סנכרן עכשיו</button>
+      <button class="btn btn-o" onclick="disconnDrive()" style="margin-top:8px;color:var(--r);border-color:var(--r)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> נתק חשבון</button>
+      <button class="btn btn-o" onclick="deleteDriveBackup()" style="margin-top:8px;color:var(--r);border-color:var(--r);opacity:.75"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6"/><path d="M10,11v6"/><path d="M14,11v6"/><path d="M9,6V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/></svg> מחק גיבוי מ-Drive</button>
+    </div>
+  </div>
+  <div class="set-sec-ttl">גיבוי וייצוא</div>
+  <div class="card">
+    <button class="btn btn-o" onclick="openM('mCSV')">ייצוא CSV</button>
+    <button class="btn btn-o" onclick="openM('mXLSX')" style="margin-top:8px">ייצוא Excel</button>
+    <button class="btn btn-o" onclick="expJSON()" style="margin-top:8px">ייצוא JSON</button>
+    <button class="btn btn-g" onclick="openM('mPDF')" style="margin-top:8px">ייצוא PDF</button>
+  </div>
+  <div class="set-sec-ttl">שחזור נתונים</div>
+  <div class="card">
+    <button class="btn btn-o" onclick="triggerRestore('json')">שחזור JSON</button>
+    <button class="btn btn-o" onclick="triggerRestore('csv')" style="margin-top:8px">שחזור CSV</button>
+    <button class="btn btn-o" onclick="restoreFromDrive()" style="margin-top:8px">שחזור Google Drive</button>
+    <div id="restore-status" style="margin-top:10px;font-size:13px;color:var(--t2);display:none"></div>
+    <input type="file" id="restoreFileInput" accept=".json,.csv" style="display:none" onchange="restoreData(event)">
+    <button class="btn btn-d" onclick="openM('mDel')" style="margin-top:12px">מחיקת נתונים</button>
+  </div>
+
+  <div class="set-sec-ttl">דוחות שמורים</div>
+  <div class="card" style="padding:14px">
+    <div style="font-size:13px;color:var(--t2);margin-bottom:10px">דוחות PDF ו-Excel שיצרת נשמרים כאן אוטומטית</div>
+    <button class="btn btn-o" onclick="openReportHistoryOverlay()" style="width:100%">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      צפה בדוחות שמורים
+    </button>
+  </div>
+
+  <div class="set-sec-ttl">פרטיות ואבטחה</div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="background:linear-gradient(135deg,var(--b8),var(--b6));padding:18px;display:flex;align-items:center;gap:14px">
+      <div style="width:38px;height:38px;background:rgba(255,255,255,.18);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div>
+        <div style="color:#fff;font-size:14px;font-weight:600;margin-bottom:3px">כלל הנתונים מאובטחים</div>
+        <div style="color:rgba(255,255,255,.75);font-size:12px;line-height:1.55">נשמרים במכשירך ובחשבון Google Drive האישי שלך בלבד — ללא גישה חיצונית</div>
+      </div>
+    </div>
+  </div>
+  <div class="set-sec-ttl">מדריך למשתמש</div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <button onclick="openUserGuide()" style="width:100%;padding:16px;background:linear-gradient(135deg,var(--b0),var(--s2));border:none;cursor:pointer;display:flex;align-items:center;gap:14px;text-align:right">
+      <div style="width:38px;height:38px;background:var(--b8);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500;color:var(--t);margin-bottom:2px">מדריך למשתמש</div>
+        <div style="font-size:11px;color:var(--t3)">הסבר על כל הפיצ׳רים באפליקציה</div>
+      </div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg>
+    </button>
+  </div>
+  <div class="set-sec-ttl">עדכונים</div>
+  <div class="card" style="padding:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:13px;font-weight:400;color:var(--t1)" id="updSetStatus">גרסה נוכחית: <span id="updSetVer"></span></div>
+        <div style="font-size:11px;color:var(--t3);margin-top:2px" id="updSetSub">בדוק אם יש עדכון זמין</div>
+      </div>
+      <button class="btn btn-o" id="updSetBtn" onclick="_checkUpdateFromSettings(this)" style="font-size:11px;padding:6px 12px">בדוק עדכון</button>
+    </div>
+  </div>
+
+  <div class="set-sec-ttl">יצירת קשר</div>
+  <div class="card" style="padding:14px;text-align:center">
+    <a id="contactMailLink" href="#" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--b6);text-decoration:none;font-weight:500">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+      <span id="contactMailTxt"></span>
+    </a>
+    <div style="font-size:11px;color:var(--t3);margin-top:6px">לתמיכה, שאלות ומשוב</div>
+  </div>
+</div>
+
+<nav class="bnav">
+  <button class="ni active" onclick="swPage('cal',this)"><span class="nic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="nil">יומן</span></button>
+  <button class="ni" onclick="swPage('rep',this)"><span class="nic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span><span class="nil">דוחות</span></button>
+  <button class="ni" onclick="swPage('couple',this)"><span class="nic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg></span><span class="nil">ביחד</span></button>
+  <button class="ni" onclick="swPage('set',this)"><span class="nic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span><span class="nil">הגדרות</span></button>
+</nav>
+<div class="sf" id="sf">✓</div>
+
+<!-- MODAL: DAILY -->
+<div class="modal" id="mDay">
+  <div class="msh">
+    <div class="mhdl"></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><div class="mttl" id="mDayTtl"></div><div class="msub" id="mDaySub"></div></div>
+      <button class="mclose" onclick="closeM('mDay')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="mnav">
+      <button class="mnav-btn" onclick="navDay(-1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg></button>
+      <div class="mnav-c"><div class="mnav-ttl" id="mNavTtl"></div><div class="mnav-sub" id="mNavSub"></div></div>
+      <button class="mnav-btn" onclick="navDay(1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,18 15,12 9,6"/></svg></button>
+    </div>
+    <div class="fg"><label class="fl">מקום עבודה</label><select class="fi" id="dJob" onchange="onJobCh()"></select></div>
+    <div class="t2row">
+      <div class="fg"><label class="fl">כניסה</label><input type="time" class="fi" id="dS" onchange="calcT()"></div>
+      <div class="fg"><label class="fl">יציאה</label><input type="time" class="fi" id="dE" onchange="calcT()"></div>
+    </div>
+    <div class="fg">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <label class="fl" style="margin:0">סה"כ שעות</label>
+        <button class="btn btn-g btn-sm" onclick="copyYest()" style="padding:5px 10px;font-size:11px">מאתמול</button>
+      </div>
+      <input type="number" class="fi" id="dH" step="0.25" placeholder="0.00">
+    </div>
+    <div class="fg"><label class="fl">תעריף שעתי (₪)</label><input type="number" class="fi" id="dR" placeholder="0"></div>
+    <div id="dExtraJobCont" style="margin-bottom:13px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span class="fl" style="margin:0">עבודה נוספת ביום זה</span>
+        <button class="btn btn-g btn-sm" onclick="addExtraJob()" style="padding:5px 10px;font-size:11px">+ הוסף עבודה</button>
+      </div>
+      <div id="dExtraJobList"></div>
+    </div>
+    <div id="dBonCont" style="margin-bottom:13px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span class="fl" style="margin:0">תוספות ובונוסים</span>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-g btn-sm" id="fbonPickerBtn" onclick="toggleFbonPicker()" style="padding:5px 10px;font-size:11px">+ בונוס קבוע</button>
+          <button class="btn btn-g btn-sm" onclick="addB()" style="padding:5px 10px;font-size:11px">+ בונוס</button>
+        </div>
+      </div>
+      <div id="dFbonPicker" style="display:none;background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:10px;margin-bottom:8px"></div>
+      <div id="dFbonChips" class="fbon-chips"></div>
+      <div id="dBonList"></div>
+    </div>
+    <div class="fg"><label class="fl">הערה</label><input type="text" class="fi" id="dNote" placeholder="הערה אופציונלית..."></div>
+    <div class="btn-row">
+      <button class="btn btn-p" onclick="saveDay()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg> שמור</button>
+      <button class="btn btn-o" onclick="closeM('mDay')">ביטול</button>
+    </div>
+    <div style="height:8px"></div>
+
+    <div id="partnerDaySummary" class="partner-day-summary" style="display:none">
+      <div class="pds-header">
+        <div class="pds-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span id="pdsPartnerName">פרטנר</span>
+        </div>
+        <div class="pds-total" id="pdsTotal">₪0</div>
+      </div>
+      <div class="pds-breakdown">
+        <div class="pds-row" id="pdsWorkRow">
+          <span class="pds-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            עבודה
+          </span>
+          <span class="pds-value"><strong id="pdsBase">₪0</strong></span>
+        </div>
+        <div class="pds-row" id="pdsBonusRow" style="display:none">
+          <span class="pds-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+            </svg>
+            בונוסים
+          </span>
+          <span class="pds-value pds-bonus" id="pdsBonus">₪0</span>
+        </div>
+      </div>
+      <div class="pds-note" id="pdsNote" style="display:none"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: MULTI -->
+<div class="modal" id="mMulti">
+  <div class="msh">
+    <div class="mhdl"></div>
+    <div class="mttl" id="mMTtl"></div>
+    <div id="mMBody"></div>
+    <div class="fg"><label class="fl">על אילו תאריכים?</label>
+      <select class="fi" id="mRng" onchange="document.getElementById('mCR').style.display=this.value==='custom'?'block':'none'">
+        <option value="today">רק היום</option><option value="week">השבוע</option>
+        <option value="month">החודש</option><option value="lastMonth">חודש קודם</option>
+        <option value="custom">טווח מותאם...</option>
+      </select>
+    </div>
+    <div id="mCR" style="display:none"><div style="display:flex;gap:10px">
+      <div style="flex:1"><label class="fl">מ</label><input type="date" class="fi" id="mCS"></div>
+      <div style="flex:1"><label class="fl">עד</label><input type="date" class="fi" id="mCE"></div>
+    </div></div>
+    <div class="btn-row">
+      <button class="btn btn-p" onclick="execMulti()">בצע</button>
+      <button class="btn btn-o" onclick="closeM('mMulti')">ביטול</button>
+    </div>
+    <div style="height:8px"></div>
+  </div>
+</div>
+
+<!-- MODAL: PDF -->
+<div class="modal" id="mPDF">
+  <div class="msh">
+    <div class="mhdl"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center"><div class="mttl">ייצוא PDF</div><button class="mclose" onclick="closeM('mPDF')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="fg"><label class="fl">תקופה</label>
+      <select class="fi" id="pdfPer" onchange="document.getElementById('pdfCR').style.display=this.value==='custom'?'block':'none'">
+        <option value="all">כל הנתונים</option>
+        <option value="week">השבוע</option><option value="month" selected>החודש</option>
+        <option value="lastMonth">חודש קודם</option><option value="custom">טווח מותאם...</option>
+      </select>
+    </div>
+    <div id="pdfCR" style="display:none;margin-bottom:12px"><div style="display:flex;gap:10px">
+      <div style="flex:1"><label class="fl">מ</label><input type="date" class="fi" id="pdfS"></div>
+      <div style="flex:1"><label class="fl">עד</label><input type="date" class="fi" id="pdfE"></div>
+    </div></div>
+    <div class="fg"><label class="fl">שם לדוח (אופציונלי)</label><input type="text" class="fi" id="pdfNm" placeholder="שמי"></div>
+    <div class="card" style="padding:14px;margin-bottom:12px">
+      <div class="fl" style="margin-bottom:8px">מה לכלול?</div>
+      <div class="pdfopt" onclick="tpdf('po1')"><div class="pdfchk on" id="po1">✓</div><span class="pdfopt-lbl">שעות עבודה</span></div>
+      <div class="pdfopt" onclick="tpdf('po2')"><div class="pdfchk on" id="po2">✓</div><span class="pdfopt-lbl">תעריף שעתי</span></div>
+      <div class="pdfopt" onclick="tpdf('po3')"><div class="pdfchk on" id="po3">✓</div><span class="pdfopt-lbl">בונוסים ותוספות</span></div>
+      <div class="pdfopt" onclick="tpdf('po4')"><div class="pdfchk" id="po4"></div><span class="pdfopt-lbl">הערות</span></div>
+      <div class="pdfopt" onclick="tpdf('po5')"><div class="pdfchk" id="po5"></div><span class="pdfopt-lbl">נתוני פרטנר (אם מחובר)</span></div>
+    </div>
+    <button class="btn btn-p" onclick="genPDF()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg> צור PDF</button>
+    <div style="height:8px"></div>
+  </div>
+</div>
+
+<!-- MODAL: CSV -->
+<div class="modal" id="mCSV">
+  <div class="msh">
+    <div class="mhdl"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center"><div class="mttl">ייצוא CSV</div><button class="mclose" onclick="closeM('mCSV')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="fg"><label class="fl">תקופה</label>
+      <select class="fi" id="csvPer" onchange="document.getElementById('csvCR').style.display=this.value==='custom'?'block':'none'">
+        <option value="all">כל הנתונים</option>
+        <option value="week">השבוע</option>
+        <option value="month" selected>החודש</option>
+        <option value="lastMonth">חודש קודם</option>
+        <option value="custom">טווח מותאם...</option>
+      </select>
+    </div>
+    <div id="csvCR" style="display:none;margin-bottom:12px"><div style="display:flex;gap:10px">
+      <div style="flex:1"><label class="fl">מ</label><input type="date" class="fi" id="csvS"></div>
+      <div style="flex:1"><label class="fl">עד</label><input type="date" class="fi" id="csvE"></div>
+    </div></div>
+    <button class="btn btn-o" onclick="expCSV()">צור CSV</button>
+    <div style="height:8px"></div>
+  </div>
+</div>
+
+<!-- MODAL: XLSX -->
+<div class="modal" id="mXLSX">
+  <div class="msh">
+    <div class="mhdl"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center"><div class="mttl">ייצוא Excel</div><button class="mclose" onclick="closeM('mXLSX')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="fg"><label class="fl">תקופה</label>
+      <select class="fi" id="xlsxPer" onchange="document.getElementById('xlsxCR').style.display=this.value==='custom'?'block':'none'">
+        <option value="all">כל הנתונים</option>
+        <option value="week">השבוע</option>
+        <option value="month" selected>החודש</option>
+        <option value="lastMonth">חודש קודם</option>
+        <option value="custom">טווח מותאם...</option>
+      </select>
+    </div>
+    <div id="xlsxCR" style="display:none;margin-bottom:12px"><div style="display:flex;gap:10px">
+      <div style="flex:1"><label class="fl">מ</label><input type="date" class="fi" id="xlsxS"></div>
+      <div style="flex:1"><label class="fl">עד</label><input type="date" class="fi" id="xlsxE"></div>
+    </div></div>
+    <div class="card" style="padding:14px;margin-bottom:12px">
+      <div class="fl" style="margin-bottom:8px">מה לכלול?</div>
+      <div class="pdfopt" onclick="txlsx('xo1')"><div class="pdfchk on" id="xo1">✓</div><span class="pdfopt-lbl">תעריף שעתי</span></div>
+      <div class="pdfopt" onclick="txlsx('xo2')"><div class="pdfchk on" id="xo2">✓</div><span class="pdfopt-lbl">שעות נוספות (125% / 150%)</span></div>
+      <div class="pdfopt" onclick="txlsx('xo3')"><div class="pdfchk on" id="xo3">✓</div><span class="pdfopt-lbl">בונוסים ותוספות</span></div>
+      <div class="pdfopt" onclick="txlsx('xo4')"><div class="pdfchk" id="xo4"></div><span class="pdfopt-lbl">הערות</span></div>
+      <div class="pdfopt" onclick="txlsx('xo5')"><div class="pdfchk" id="xo5"></div><span class="pdfopt-lbl">עמודת עבודה</span></div>
+      <div class="pdfopt" onclick="txlsx('xo6')"><div class="pdfchk" id="xo6"></div><span class="pdfopt-lbl">נתוני פרטנר (אם מחובר)</span></div>
+    </div>
+    <button class="btn btn-g" onclick="expXLSX()">צור Excel</button>
+    <div style="height:8px"></div>
+  </div>
+</div>
+
+<!-- MODAL: PAIR -->
+<div class="modal" id="mPair">
+  <div class="msh">
+    <div class="mhdl"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="mttl" style="margin:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> חיבור זוג</div>
+      <button class="mclose" onclick="closeM('mPair')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div id="pairCont"></div>
+    <div style="height:8px"></div>
+  </div>
+</div>
+
+<!-- MODAL: DELETE -->
+<div class="modal" id="mDel">
+  <div class="msh">
+    <div class="mhdl"></div>
+    <div class="mttl">מחיקת נתונים</div>
+    <div class="fg"><label class="fl">מה למחוק?</label>
+      <select class="fi" id="delR" onchange="document.getElementById('delCR').style.display=this.value==='custom'?'block':'none'">
+        <option value="week">השבוע</option><option value="month">החודש</option>
+        <option value="lastMonth">חודש קודם</option><option value="custom">טווח מותאם...</option>
+        <option value="all">כל הנתונים!</option>
+      </select>
+    </div>
+    <div id="delCR" style="display:none;margin-bottom:12px"><div style="display:flex;gap:10px">
+      <div style="flex:1"><label class="fl">מ</label><input type="date" class="fi" id="delS"></div>
+      <div style="flex:1"><label class="fl">עד</label><input type="date" class="fi" id="delE"></div>
+    </div></div>
+    <button class="btn btn-d" onclick="execDel()">מחק לצמיתות</button>
+    <button class="btn btn-o" onclick="closeM('mDel')" style="margin-top:8px">ביטול</button>
+    <div style="height:8px"></div>
+  </div>
+</div>
+
+<!-- סדר טעינת הסקריפטים: constants קודם, init אחרון, clock לפני init -->
+<script src="constants.js"></script>
+<script src="firebase.js"></script>
+<script src="google-drive.js"></script>
+<script src="ui-calendar.js"></script>
+<script src="ui-day-modal.js"></script>
+<script src="ui-reports.js"></script>
+<script src="ui-settings.js"></script>
+<script src="ui-pair.js"></script>
+<script src="export.js"></script>
+<script src="update.js"></script>
+<script src="clock.js"></script>
+<script src="init.js"></script>
+
+</body>
+</html>
