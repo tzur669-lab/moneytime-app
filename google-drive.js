@@ -23,17 +23,17 @@ function initGD(){
           localStorage.removeItem('gtoken');localStorage.removeItem('syen');
           aToken=null;setSyncDot(false);renderSettings();
         } else {
-          fetchEmail().then(()=>{
+          fetchEmail().then(ok=>{
             renderSettings();
-            setSyncDot(true);
-            loadDr();
+            setSyncDot(ok);
+            if(ok) loadDr();
             _countUniqueUser();
             // סנכרן זוג מחדש ל-Firebase בכל פתיחה
             const _s=D.gs();
             if(_s.pairCode&&_s.myCode) syncPairToFirebase().catch(()=>{});
           });
         }
-      }).catch(()=>{fetchEmail().then(()=>{renderSettings();setSyncDot(true);});});
+      }).catch(()=>{fetchEmail().then(ok=>{renderSettings();setSyncDot(ok);});});
   }
   document.getElementById('authBtn').onclick=()=>{vib();startGoogleAuth();};
 }
@@ -220,22 +220,27 @@ function showToast(msg){
 async function fetchEmail(){
   try{
     const r=await fetch('https://www.googleapis.com/drive/v3/about?fields=user',{headers:{Authorization:`Bearer ${aToken}`}});
+    if(!r.ok)return false;
     const i=await r.json();
-    if(i.email)document.getElementById('drEmail').textContent=`מחובר: ${i.email}`;
-    if(i.sub){
+    if(i.error)return false;
+    const email=i.user?.emailAddress||i.email;
+    if(email)document.getElementById('drEmail').textContent=`מחובר: ${email}`;
+    const uid=i.user?.permissionId||i.sub;
+    if(uid){
       // שמור Google ID קבוע
       const s=D.gs();
-      s.googleId=i.sub;
+      s.googleId=uid;
       D.ss(s);
       // נסה לשחזר חיבור זוג ממכשיר אחר
       if(!s.pairCode){
-        _restorePairByGoogleId(i.sub);
+        _restorePairByGoogleId(uid);
       } else {
         // עדכן את ה-Firebase עם ה-Google ID כדי שמכשירים אחרים יוכלו לשחזר
-        _savePairByGoogleId(i.sub);
+        _savePairByGoogleId(uid);
       }
     }
-  }catch(e){}
+    return true;
+  }catch(e){return false;}
 }
 
 // ---- DRIVE HELPERS ----
