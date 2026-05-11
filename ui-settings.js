@@ -1,8 +1,7 @@
 // ---- SETTINGS ----
 function setStyle(st) {
   const s = D.gs(); s.styleTheme = st; D.ss(s);
-  applyStyleTheme(st);
-  vib();
+  window.location.reload();
 }
 
 function applyStyleTheme(st) {

@@ -27,7 +27,17 @@ function updRep(){
   else if(rTab==='jobs')renderJobs(dates,cont);
 }
 
-const cOpts=dk=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'transparent',borderColor:'transparent'},ticks:{color:dk?'#475569':'#94A3B8',font:{size:9,family:'Inter'},maxRotation:0}},y:{grid:{color:dk?'rgba(255,255,255,0.04)':'rgba(0,0,0,0.04)',lineWidth:0.5},border:{dash:[3,3],color:'transparent'},ticks:{color:dk?'#475569':'#94A3B8',font:{size:9,family:'Inter'}}}}});
+function getStyleTheme(){return D.gs().styleTheme||'default';}
+function makeBarGradient(ctx,chartArea,c1,c2){const g=ctx.createLinearGradient(0,chartArea.bottom,0,chartArea.top);g.addColorStop(0,c1);g.addColorStop(1,c2);return g;}
+function barColor(fallback){const st=getStyleTheme();if(st==='glass')return'rgba(0,229,255,0.55)';if(st==='minimal')return'#A78BFA';if(st==='gradient')return function(ctx){const{chart}=ctx;const{ctx:c,chartArea:a}=chart;if(!a)return'#7C3AED';return makeBarGradient(c,a,'#C026D3','#7C3AED');};return fallback||'#2563EB';}
+function barColorArray(vals,maxI,normFb,highFb){const st=getStyleTheme();if(st==='glass')return vals.map((_,i)=>i===maxI?'rgba(0,229,255,0.95)':'rgba(0,229,255,0.5)');if(st==='minimal')return vals.map((_,i)=>i===maxI?'#7C3AED':'#A78BFA');if(st==='gradient')return vals.map((_,i)=>i===maxI?'#C026D3':'#8B5CF6');return vals.map((_,i)=>i===maxI?(highFb||'#10B981'):(normFb||'#2563EB'));}
+function jobBarColors(jobs){const st=getStyleTheme();if(st==='glass')return jobs.map(()=>'rgba(0,229,255,0.55)');if(st==='minimal')return jobs.map(()=>'#A78BFA');if(st==='gradient')return function(ctx){const{chart}=ctx;const{ctx:c,chartArea:a}=chart;if(!a)return'#7C3AED';return makeBarGradient(c,a,'#C026D3','#7C3AED');};return jobs.map(j=>j.color);}
+function lineColor(){const st=getStyleTheme();if(st==='glass')return'#00E5FF';if(st==='minimal')return'#7C3AED';if(st==='gradient')return'#A855F7';return'#10B981';}
+function lineFill(){const st=getStyleTheme();if(st==='glass')return'rgba(0,229,255,0.12)';if(st==='minimal')return'rgba(124,58,237,0.10)';if(st==='gradient')return'rgba(168,85,247,0.12)';return'rgba(16,185,129,.1)';}
+function barRadius(){return getStyleTheme()==='minimal'?12:6;}
+function pbarStyle(color){const st=getStyleTheme();if(st==='glass')return'background:linear-gradient(90deg,#00B8D4,#00E5FF)';if(st==='minimal')return'background:linear-gradient(90deg,#7C3AED,#A78BFA)';if(st==='gradient')return'background:linear-gradient(90deg,#7C3AED,#C026D3)';return'background:'+color;}
+
+const cOpts=dk=>{const st=getStyleTheme();if(st==='glass')return{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(8,14,30,0.85)',titleColor:'#00E5FF',bodyColor:'#94A3B8',borderColor:'rgba(0,229,255,0.35)',borderWidth:1,padding:10,cornerRadius:10}},scales:{x:{grid:{color:'rgba(0,229,255,0.07)',borderColor:'transparent'},ticks:{color:'#475569',font:{size:9,family:'Inter'},maxRotation:0}},y:{grid:{color:'rgba(0,229,255,0.07)',lineWidth:0.5},border:{dash:[3,3],color:'transparent'},ticks:{color:'#475569',font:{size:9,family:'Inter'}}}}};if(st==='minimal')return{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',titleColor:'#1E1B4B',bodyColor:'#6B7280',borderColor:'rgba(167,139,250,0.3)',borderWidth:1,padding:10,cornerRadius:12}},scales:{x:{grid:{display:false},border:{display:false},ticks:{color:'#9CA3AF',font:{size:9,family:'Inter'},maxRotation:0}},y:{grid:{display:false},border:{display:false},ticks:{color:'#9CA3AF',font:{size:9,family:'Inter'}}}}};if(st==='gradient')return{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#4F1F9B',titleColor:'#fff',bodyColor:'rgba(255,255,255,0.8)',borderColor:'rgba(192,38,211,0.4)',borderWidth:1,padding:10,cornerRadius:10}},scales:{x:{grid:{color:'rgba(79,31,155,0.07)',borderColor:'transparent'},ticks:{color:'#64748B',font:{size:9,family:'Inter'},maxRotation:0}},y:{grid:{color:'rgba(79,31,155,0.07)',lineWidth:0.5},border:{dash:[3,3],color:'transparent'},ticks:{color:'#64748B',font:{size:9,family:'Inter'}}}}};return{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'transparent',borderColor:'transparent'},ticks:{color:dk?'#475569':'#94A3B8',font:{size:9,family:'Inter'},maxRotation:0}},y:{grid:{color:dk?'rgba(255,255,255,0.04)':'rgba(0,0,0,0.04)',lineWidth:0.5},border:{dash:[3,3],color:'transparent'},ticks:{color:dk?'#475569':'#94A3B8',font:{size:9,family:'Inter'}}}}};};
 
 function renderGen(dates,cont){
   const data=D.g();let th=0,tp=0;const lb=[],hd=[],pd2=[];
@@ -47,8 +57,8 @@ function renderGen(dates,cont){
     <div class="csummary"><span>סה"כ: <strong>₪${Math.round(tp).toLocaleString('he-IL')}</strong></span><span>ממוצע: <strong>₪${Math.round(aP).toLocaleString('he-IL')}/יום</strong></span></div>
     <div class="cwrap"><canvas id="pCh"></canvas></div>
   </div>`;
-  if(hCh)hCh.destroy();hCh=new Chart(document.getElementById('hCh'),{type:'bar',data:{labels:lb,datasets:[{data:hd,backgroundColor:'#2563EB',borderRadius:6,borderSkipped:false}]},options:cOpts(dk)});
-  if(pCh)pCh.destroy();pCh=new Chart(document.getElementById('pCh'),{type:'line',data:{labels:lb,datasets:[{data:pd2,borderColor:'#10B981',backgroundColor:'rgba(16,185,129,.1)',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#10B981'}]},options:cOpts(dk)});
+  if(hCh)hCh.destroy();hCh=new Chart(document.getElementById('hCh'),{type:'bar',data:{labels:lb,datasets:[{data:hd,backgroundColor:barColor('#2563EB'),borderRadius:barRadius(),borderSkipped:false}]},options:cOpts(dk)});
+  if(pCh)pCh.destroy();pCh=new Chart(document.getElementById('pCh'),{type:'line',data:{labels:lb,datasets:[{data:pd2,borderColor:lineColor(),backgroundColor:lineFill(),fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:lineColor()}]},options:cOpts(dk)});
 }
 
 function renderJobs(dates,cont){
@@ -67,12 +77,12 @@ function renderJobs(dates,cont){
       <div><div class="slbl">הכנסה</div><div style="font-size:20px;font-weight:300;color:var(--g)">₪${Math.round(st[i].p).toLocaleString('he-IL')}</div></div>
       <div><div class="slbl">% מסה"כ</div><div style="font-size:18px;font-weight:200;color:var(--t2)">${pct}%</div></div>
     </div>
-    <div class="pbar-wrap"><div class="pbar-fill" style="width:${pct}%;background:${j.color}"></div></div></div>`;
+    <div class="pbar-wrap"><div class="pbar-fill" style="width:${pct}%;${pbarStyle(j.color)}"></div></div></div>`;
   });
   html+=`<div class="card"><div class="csummary"><span>השוואה בין מקומות העבודה</span></div><div class="cwrap"><canvas id="jCh"></canvas></div></div>`;
   cont.innerHTML=html;
   if(jCh)jCh.destroy();
-  jCh=new Chart(document.getElementById('jCh'),{type:'bar',data:{labels:jobs.map(j=>j.name),datasets:[{data:st.map(x=>Math.round(x.p)),backgroundColor:jobs.map(j=>j.color),borderRadius:8,borderSkipped:false}]},options:cOpts(dk)});
+  jCh=new Chart(document.getElementById('jCh'),{type:'bar',data:{labels:jobs.map(j=>j.name),datasets:[{data:st.map(x=>Math.round(x.p)),backgroundColor:jobBarColors(jobs),borderRadius:barRadius(),borderSkipped:false}]},options:cOpts(dk)});
 }
 
 function renderCmp(cont,mode,p1,p2,p3){
@@ -134,7 +144,7 @@ function renderCmp(cont,mode,p1,p2,p3){
   const titleTxt=mode==='weeks'?`שבועות — ${MN[selMonth]} ${selYear}`:mode==='custom'?`השוואה — ${selYear}`:'השוואת חודשים';
   cont.innerHTML=picker+`<div class="card"><div class="csummary"><span>${titleTxt}</span><span style="color:var(--g)">גבוה: <strong>${lb[maxI]||'-'} — ₪${maxV.toLocaleString('he-IL')}</strong></span></div><div class="cwrap"><canvas id="cmpCh"></canvas></div></div>`;
   if(cmpCh)cmpCh.destroy();
-  cmpCh=new Chart(document.getElementById('cmpCh'),{type:'bar',data:{labels:lb,datasets:[{data:vals,backgroundColor:vals.map((_,i)=>i===maxI?'#10B981':'#2563EB'),borderRadius:6,borderSkipped:false}]},options:cOpts(dk)});
+  cmpCh=new Chart(document.getElementById('cmpCh'),{type:'bar',data:{labels:lb,datasets:[{data:vals,backgroundColor:barColorArray(vals,maxI,'#2563EB','#10B981'),borderRadius:barRadius(),borderSkipped:false}]},options:cOpts(dk)});
 }
 
 function renderArc(cont,selYear,selMonth){
@@ -183,14 +193,14 @@ function renderArc(cont,selYear,selMonth){
     weeks.forEach((w,i)=>{
       if(i>=4&&w.h===0)return;
       const pct=mkTotal.p>0?Math.round(w.p/mkTotal.p*100):0;
-      wHtml+=`<div class="arc-row"><div style="flex:1"><div class="arc-m">${w.l}</div><div class="pbar-wrap" style="margin-top:4px;height:4px"><div class="pbar-fill" style="width:${pct}%;background:var(--b6)"></div></div></div><div class="arc-h">${w.h.toFixed(1)} ש'</div><div class="arc-p">₪${Math.round(w.p).toLocaleString('he-IL')}</div></div>`;
+      wHtml+=`<div class="arc-row"><div style="flex:1"><div class="arc-m">${w.l}</div><div class="pbar-wrap" style="margin-top:4px;height:4px"><div class="pbar-fill" style="width:${pct}%;${pbarStyle('var(--b6)')}"></div></div></div><div class="arc-h">${w.h.toFixed(1)} ש'</div><div class="arc-p">₪${Math.round(w.p).toLocaleString('he-IL')}</div></div>`;
     });
     wHtml+=`</div><div class="card"><div class="cwrap" style="height:160px"><canvas id="arcWeekCh"></canvas></div></div>`;
     cont.innerHTML=yearPicker+backBtn+wHtml;
     const actW=weeks.filter((w,i)=>i<4||w.h>0);
     if(window._arcWeekCh){try{window._arcWeekCh.destroy();}catch(e){}}
     const cv=document.getElementById('arcWeekCh');
-    if(cv)window._arcWeekCh=new Chart(cv,{type:'bar',data:{labels:actW.map(w=>w.l),datasets:[{data:actW.map(w=>Math.round(w.p)),backgroundColor:'#2563EB',borderRadius:6,borderSkipped:false}]},options:{...cOpts(dk),plugins:{legend:{display:false}}}});
+    if(cv)window._arcWeekCh=new Chart(cv,{type:'bar',data:{labels:actW.map(w=>w.l),datasets:[{data:actW.map(w=>Math.round(w.p)),backgroundColor:barColor('#2563EB'),borderRadius:barRadius(),borderSkipped:false}]},options:{...cOpts(dk),plugins:{legend:{display:false}}}});
     return;
   }
   // תצוגה ראשית: כרטיסי שנה (רק ב-showAll) + רשימת חודשים
@@ -223,7 +233,7 @@ function renderArc(cont,selYear,selMonth){
     const[y,m]=mk.split('-');const pct=Math.round(months[mk].p/maxP*100);
     html+=`<div class="arc-row" style="cursor:pointer" onclick="renderArc(document.getElementById('repContent'),'${curY}','${mk}')">
       <div style="flex:1"><div class="arc-m" style="color:var(--b8)">${MN[parseInt(m)-1]} ${y} <span style="font-size:10px;color:var(--t3)">▸</span></div>
-        <div class="pbar-wrap" style="margin-top:4px;height:4px"><div class="pbar-fill" style="width:${pct}%;background:var(--b6)"></div></div>
+        <div class="pbar-wrap" style="margin-top:4px;height:4px"><div class="pbar-fill" style="width:${pct}%;${pbarStyle('var(--b6)')}"></div></div>
       </div>
       <div class="arc-h">${months[mk].h.toFixed(1)} ש'</div>
       <div class="arc-p">₪${Math.round(months[mk].p).toLocaleString('he-IL')}</div>
@@ -286,14 +296,14 @@ function renderYear(cont,selectedYear){
     <div style="font-size:13px;font-weight:400;margin-bottom:10px">פירוט חודשי ${curY}</div>
     ${months.map((m,i)=>m.days>0?'<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--bd)"><div style="font-size:13px;font-weight:'+(i===bestM?'800':'600')+';color:'+(i===bestM?'var(--g)':'var(--t)')+'">'+(MN[i])+(i===bestM?' ★':'')+' </div><div style="text-align:left"><div style="font-size:13px;font-weight:400;color:var(--g)">&#8362;'+Math.round(m.p).toLocaleString('he-IL')+'</div><div style="font-size:10px;color:var(--t3)">'+m.h.toFixed(1)+' '+String.fromCharCode(1513)+"'"+' · '+m.days+' ימים</div></div></div>':'').join('')}
   </div>`;
-  const bgColors=vals.map((_,i)=>i===bestM?'#10B981':'#2563EB');
+  const bgColors=barColorArray(vals,bestM,'#2563EB','#10B981');
   setTimeout(()=>{
     if(window.yrInCh){try{window.yrInCh.destroy();}catch(e){}}
     const c1=document.getElementById('yrIncomeCh');
-    if(c1)window.yrInCh=new Chart(c1,{type:'bar',data:{labels:lb,datasets:[{data:vals,backgroundColor:bgColors,borderRadius:6,borderSkipped:false}]},options:{...cOpts(dk),plugins:{legend:{display:false}}}});
+    if(c1)window.yrInCh=new Chart(c1,{type:'bar',data:{labels:lb,datasets:[{data:vals,backgroundColor:bgColors,borderRadius:barRadius(),borderSkipped:false}]},options:{...cOpts(dk),plugins:{legend:{display:false}}}});
     if(window.yrHrCh){try{window.yrHrCh.destroy();}catch(e){}}
     const c2=document.getElementById('yrHoursCh');
-    if(c2)window.yrHrCh=new Chart(c2,{type:'bar',data:{labels:lb,datasets:[{data:hvals,backgroundColor:'#3B82F6',borderRadius:4,borderSkipped:false}]},options:{...cOpts(dk),plugins:{legend:{display:false}}}});
+    if(c2)window.yrHrCh=new Chart(c2,{type:'bar',data:{labels:lb,datasets:[{data:hvals,backgroundColor:barColor('#3B82F6'),borderRadius:barRadius(),borderSkipped:false}]},options:{...cOpts(dk),plugins:{legend:{display:false}}}});
   },20);
 }
 
@@ -484,7 +494,7 @@ function renderCoupleChart(){
   if(cplCh)cplCh.destroy();
   const canvas=document.getElementById('cplCh');if(!canvas)return;
   cplCh=new Chart(canvas,{type:'bar',data:{labels,datasets:[
-    {label:s.myName,data:myVals,backgroundColor:s.myColor+'CC',borderRadius:6,borderSkipped:false},
-    {label:s.partnerName,data:pVals,backgroundColor:s.partnerColor+'CC',borderRadius:6,borderSkipped:false}
+    {label:s.myName,data:myVals,backgroundColor:s.myColor+'CC',borderRadius:barRadius(),borderSkipped:false},
+    {label:s.partnerName,data:pVals,backgroundColor:s.partnerColor+'CC',borderRadius:barRadius(),borderSkipped:false}
   ]},options:{...cOpts(dk),plugins:{legend:{display:true,labels:{font:{size:10,family:'Inter'},boxWidth:10,padding:10}}}}});
 }
