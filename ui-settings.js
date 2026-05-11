@@ -158,8 +158,8 @@ function renderFbonChips() {
   cont.style.marginBottom = '8px';
   cont.innerHTML = '<div style="font-size:10px;color:var(--t3);margin-bottom:5px">בונוסים קבועים:</div>'
     + fbs.map(function (fb) {
-      var n = fb.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-      return '<button class="fbon-chip" onclick="addB(\'' + n + '\',' + fb.amount + ');vib()" style="font-size:12px;padding:6px 13px">+ ' + fb.name + ' <strong>&#8362;' + fb.amount + '</strong></button>';
+      var safe = fb.name.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return '<button class="fbon-chip" data-name="' + safe + '" data-amount="' + fb.amount + '" onclick="addB(this.dataset.name,parseFloat(this.dataset.amount));vib()" style="font-size:12px;padding:6px 13px">+ ' + safe + ' <strong>&#8362;' + fb.amount + '</strong></button>';
     }).join('');
 }
 
@@ -175,8 +175,8 @@ function toggleFbonPicker() {
     } else {
       picker.innerHTML = '<div style="font-size:10px;color:var(--t3);margin-bottom:6px">בחר בונוס קבוע:</div>'
         + fbs.map(function (fb) {
-          var n = fb.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-          return '<button class="fbon-chip" onclick="addB(\'' + n + '\',' + fb.amount + ');toggleFbonPicker();vib()" style="font-size:12px;padding:6px 13px;display:block;width:100%;text-align:right;margin-bottom:4px">+ ' + fb.name + ' <strong style="float:left">&#8362;' + fb.amount + '</strong></button>';
+          var safe = fb.name.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+          return '<button class="fbon-chip" data-name="' + safe + '" data-amount="' + fb.amount + '" onclick="addB(this.dataset.name,parseFloat(this.dataset.amount));toggleFbonPicker();vib()" style="font-size:12px;padding:6px 13px;display:block;width:100%;text-align:right;margin-bottom:4px">+ ' + safe + ' <strong style="float:left">&#8362;' + fb.amount + '</strong></button>';
         }).join('');
     }
     picker.style.display = 'block';

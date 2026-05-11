@@ -122,7 +122,7 @@ function renderCmp(cont,mode,p1,p2,p3){
     lb=(actW.length?actW:weeks.slice(0,4)).map(w=>w.l);
     vals=(actW.length?actW:weeks.slice(0,4)).map(w=>Math.round(w.p));
   } else if(mode==='custom'){
-    if(!cmpM.length){cont.innerHTML=picker+`<div class="card"><div class="empty"><div class="empty-ttl">בחר חודשים להשוואה</div></div></div>`;return;}
+    if(!cmpM.length){if(cmpCh){cmpCh.destroy();cmpCh=null;}cont.innerHTML=picker+`<div class="card"><div class="empty"><div class="empty-ttl">בחר חודשים להשוואה</div></div></div>`;return;}
     const yr=parseInt(selYear);
     [...cmpM].sort((a,b)=>a-b).forEach(m=>{
       let tot=0;const days=new Date(yr,m+1,0).getDate();

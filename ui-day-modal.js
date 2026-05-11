@@ -32,7 +32,7 @@ function openDay(k){
 function onJobCh(){const s=D.gs(),ji=parseInt(document.getElementById('dJob').value);const j=s.jobs?.[ji];if(j)document.getElementById('dR').value=j.rate||'';}
 function calcT(){const sv=document.getElementById('dS').value,ev=document.getElementById('dE').value;if(sv&&ev){const[sh,sm]=sv.split(':').map(Number),[eh,em]=ev.split(':').map(Number);let df=(eh+em/60)-(sh+sm/60);if(df<0)df+=24;document.getElementById('dH').value=df.toFixed(2);}}
 function copyYest(){const y=new Date(selDt);y.setDate(y.getDate()-1);const d=D.g()[fk(y)];if(d)document.getElementById('dH').value=d.hours;}
-function addB(desc='',amt=''){const list=document.getElementById('dBonList');const row=document.createElement('div');row.className='brow';row.innerHTML=`<input type="text" class="fi bdesc" placeholder="סיבה" value="${desc}"><input type="number" class="fi bamt" placeholder="₪" value="${amt}"><button class="bdel" onclick="this.parentElement.remove()">×</button>`;list.appendChild(row);}
+function addB(desc='',amt=''){const list=document.getElementById('dBonList');const row=document.createElement('div');row.className='brow';const sd=String(desc).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');row.innerHTML=`<input type="text" class="fi bdesc" placeholder="סיבה" value="${sd}"><input type="number" class="fi bamt" placeholder="₪" value="${amt}"><button class="bdel" onclick="this.parentElement.remove()">×</button>`;list.appendChild(row);}
 function addExtraJob(ji=0,h='',r='',st='',en=''){
   const s=D.gs();const list=document.getElementById('dExtraJobList');
   const row=document.createElement('div');

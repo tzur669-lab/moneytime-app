@@ -71,7 +71,7 @@ function getDts(r,sId,eId){
   else if(r==='week'){st.setDate(t.getDate()-t.getDay());en.setDate(st.getDate()+6);}
   else if(r==='month'){st=new Date(t.getFullYear(),t.getMonth(),1);en=new Date(t.getFullYear(),t.getMonth()+1,0);}
   else if(r==='lastMonth'){st=new Date(t.getFullYear(),t.getMonth()-1,1);en=new Date(t.getFullYear(),t.getMonth(),0);}
-  else if(r==='custom'){const sv=document.getElementById(sId)?.value,ev=document.getElementById(eId)?.value;if(!sv||!ev)return[];const[sy,sm,sd]=sv.split('-').map(Number);const[ey,em,ed]=ev.split('-').map(Number);st=new Date(sy,sm-1,sd);en=new Date(ey,em-1,ed);}
+  else if(r==='custom'){const sv=document.getElementById(sId)?.value,ev=document.getElementById(eId)?.value;if(!sv||!ev)return[];const[sy,sm,sd]=sv.split('-').map(Number);const[ey,em,ed]=ev.split('-').map(Number);st=new Date(sy,sm-1,sd);en=new Date(ey,em-1,ed);if(isNaN(st.getTime())||isNaN(en.getTime())||st>en)return[];}
   const res=[];for(let d=new Date(st);d<=en;d.setDate(d.getDate()+1))res.push(new Date(d));return res;
 }
 function getPerDts(p){

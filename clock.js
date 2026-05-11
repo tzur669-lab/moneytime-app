@@ -1,6 +1,7 @@
 // ---- CLOCK ----
 function initClock() {
   if (localStorage.getItem('cit')) {
+    if (tInt) clearInterval(tInt);
     tInt = setInterval(tickC, 1000);
     tickC();
     const b = document.getElementById('clkBtn');
@@ -28,6 +29,7 @@ function handleClock() {
   vib();
   if (localStorage.getItem('cit')) {
     clearInterval(tInt);
+    tInt = null;
     const diff = (Date.now() - parseInt(localStorage.getItem('cit'))) / 3600000;
     localStorage.removeItem('cit');
     const b = document.getElementById('clkBtn');
@@ -39,10 +41,12 @@ function handleClock() {
     if (ring) ring.style.strokeDashoffset = '201';
     const icon = document.getElementById('clkIcon');
     if (icon) icon.textContent = '⏱';
-    openDay(fk(new Date()));
-    setTimeout(() => { document.getElementById('dH').value = diff.toFixed(2); }, 100);
+    const _todayKey = fk(new Date());
+    openDay(_todayKey);
+    setTimeout(() => { const _ex = D.g()[_todayKey]; if (!_ex || !(_ex.hours > 0)) document.getElementById('dH').value = diff.toFixed(2); }, 100);
   } else {
     localStorage.setItem('cit', Date.now());
+    if (tInt) clearInterval(tInt);
     tInt = setInterval(tickC, 1000);
     const b = document.getElementById('clkBtn');
     b.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> סיום`;
