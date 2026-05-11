@@ -142,6 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   const savedColor = D.gs().colorTheme || 'blue';
   applyColorTheme(savedColor);
+  applyStyleTheme(D.gs().styleTheme || 'default');
 
   // שחזר תצוגת יומן שמורה
   _calView = localStorage.getItem('calView') || 'month';

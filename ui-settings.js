@@ -1,4 +1,27 @@
 // ---- SETTINGS ----
+function setStyle(st) {
+  const s = D.gs(); s.styleTheme = st; D.ss(s);
+  applyStyleTheme(st);
+  vib();
+}
+
+function applyStyleTheme(st) {
+  const root = document.documentElement;
+  root.removeAttribute('data-style');
+  if (st && st !== 'default') root.setAttribute('data-style', st);
+  const body = document.body;
+  if (st === 'glass') {
+    body.setAttribute('data-theme', 'dark');
+    const s = D.gs(); s.theme = 'dark'; D.ss(s);
+  } else if (st === 'minimal' || st === 'gradient') {
+    body.removeAttribute('data-theme');
+    const s = D.gs(); s.theme = 'light'; D.ss(s);
+  }
+  document.querySelectorAll('.spick').forEach(el => el.classList.remove('sel'));
+  const el = document.getElementById('ts-' + (st || 'default'));
+  if (el) el.classList.add('sel');
+}
+
 function setColor(c) {
   const s = D.gs(); s.colorTheme = c; D.ss(s);
   applyColorTheme(c);
@@ -29,6 +52,7 @@ function renderSettings() {
   document.getElementById('togMiss').checked = s.showMissing !== false;
   document.getElementById('drOff').style.display = aToken ? 'none' : 'block';
   document.getElementById('drOn').style.display = aToken ? 'block' : 'none';
+  applyStyleTheme(s.styleTheme || 'default');
   renderJobsCont();
   renderFixedBonuses();
 }

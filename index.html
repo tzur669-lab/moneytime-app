@@ -196,6 +196,27 @@ function _waitForCapBrowser(ms){
     <div class="trow"><div><div class="trow-lbl">שעות נוספות</div><div class="trow-sub">מעל 8 ש' = 125%, מעל 10 = 150%</div></div><label class="toggle"><input type="checkbox" id="togOT" onchange="setSetting('calcOvertime',this.checked)"><span class="tsl"></span></label></div>
     <div class="trow"><div><div class="trow-lbl">סימון ימים חסרים</div><div class="trow-sub">ימי חול ללא רישום</div></div><label class="toggle"><input type="checkbox" id="togMiss" onchange="setSetting('showMissing',this.checked)"><span class="tsl"></span></label></div>
   </div>
+  <div class="set-sec-ttl">סגנון עיצוב</div>
+  <div class="card" style="padding:14px 12px">
+    <div style="display:flex;gap:8px;align-items:stretch">
+      <button id="ts-default" class="spick sel" onclick="setStyle('default')" title="קלאסי">
+        <div class="spick-preview default-prev"></div>
+        <span>קלאסי</span>
+      </button>
+      <button id="ts-glass" class="spick" onclick="setStyle('glass')" title="זכוכית">
+        <div class="spick-preview glass-prev"></div>
+        <span>זכוכית</span>
+      </button>
+      <button id="ts-minimal" class="spick" onclick="setStyle('minimal')" title="מינימל">
+        <div class="spick-preview minimal-prev"></div>
+        <span>מינימל</span>
+      </button>
+      <button id="ts-gradient" class="spick" onclick="setStyle('gradient')" title="גרדיאנט">
+        <div class="spick-preview gradient-prev"></div>
+        <span>גרדיאנט</span>
+      </button>
+    </div>
+  </div>
   <div class="set-sec-ttl">ערכת צבעים</div>
   <div class="card" style="padding:16px">
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:flex-start">
