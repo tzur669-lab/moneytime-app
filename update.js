@@ -1,6 +1,6 @@
 // ---- AUTO UPDATE ----
-const APP_VERSION = '2.1.381';
-const APP_BUILD = 381; // CI מחליף בכל build
+const APP_VERSION = '2.1.382';
+const APP_BUILD = 382; // CI מחליף בכל build
 const GITHUB_APK_BASE = 'https://github.com/tzur669-lab/moneytime-app/releases/download';
 const GITHUB_RELEASES = 'https://github.com/tzur669-lab/moneytime-app/releases/latest';
 const VER_FB_URL = 'https://moneytime-app-f5a15-default-rtdb.firebaseio.com/appVersion.json';
