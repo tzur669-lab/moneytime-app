@@ -9,7 +9,7 @@ function initClock() {
     b.className = 'btn-clk on';
     document.getElementById('clkTime').classList.add('on');
     const icon = document.getElementById('clkIcon');
-    if (icon) icon.textContent = '⏺';
+    if (icon) icon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="rgba(255,255,255,0.9)"/></svg>';
   }
 }
 
@@ -40,7 +40,7 @@ function handleClock() {
     const ring = document.getElementById('clkRing');
     if (ring) ring.style.strokeDashoffset = '201';
     const icon = document.getElementById('clkIcon');
-    if (icon) icon.textContent = '⏱';
+    if (icon) icon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>';
     const _todayKey = fk(new Date());
     openDay(_todayKey);
     setTimeout(() => { const _ex = D.g()[_todayKey]; if (!_ex || !(_ex.hours > 0)) document.getElementById('dH').value = diff.toFixed(2); }, 100);
@@ -53,7 +53,7 @@ function handleClock() {
     b.className = 'btn-clk on';
     document.getElementById('clkTime').classList.add('on');
     const icon = document.getElementById('clkIcon');
-    if (icon) icon.textContent = '⏺';
+    if (icon) icon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="rgba(255,255,255,0.9)"/></svg>';
     tickC();
   }
 }

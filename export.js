@@ -31,14 +31,18 @@ function openReportHistoryOverlay() {
     + '<button onclick="closeReportHistoryOverlay()" style="background:rgba(239,68,68,.8);border:none;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer">✕ סגור</button>';
   var body = document.createElement('div');
   body.style.cssText = 'flex:1;overflow-y:auto;padding:16px';
-  var icons = { pdf: '📄', xlsx: '📊', table: '📋' };
+  var icons = {
+    pdf: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>',
+    xlsx: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+    table: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>'
+  };
   var labels = { pdf: 'PDF', xlsx: 'Excel', table: 'טבלה' };
   if (!hist.length) {
     body.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--t3);font-size:14px">אין דוחות שמורים עדיין.<br>צור דוח PDF או Excel — יישמר כאן אוטומטית.</div>';
   } else {
     body.innerHTML = '<div class="card" style="padding:10px 14px">' + hist.map(function (r, i) {
       return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;' + (i > 0 ? 'border-top:0.5px solid var(--bd)' : '') + '">'
-        + '<div style="display:flex;align-items:center;gap:10px"><span style="font-size:20px">' + (icons[r.type] || '📄') + '</span>'
+        + '<div style="display:flex;align-items:center;gap:10px"><span style="display:flex;align-items:center">' + (icons[r.type] || icons.pdf) + '</span>'
         + '<div><div style="font-size:13px;font-weight:500;color:var(--t)">' + (labels[r.type] || r.type) + ' — ' + r.date + '</div>'
         + '<div style="font-size:11px;color:var(--t3)">' + r.time + '</div></div></div>'
         + '<div style="display:flex;gap:6px">'

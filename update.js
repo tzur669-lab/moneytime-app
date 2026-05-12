@@ -74,7 +74,7 @@ function _showUpdBanner(ver, notes) {
   el.id = 'updBanner';
   el.className = 'upd-banner';
   el.innerHTML = `
-    <div class="upd-ico" style="font-size:16px">🔄</div>
+    <div class="upd-ico" style="display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div>
     <div class="upd-txt" style="flex:1;min-width:0">
       <div class="upd-ttl" style="font-size:12px">גרסה ${ver} זמינה</div>
     </div>
@@ -143,7 +143,7 @@ function _askApkUpdate(btn) {
   dlg.id = 'updDlg';
   dlg.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
   dlg.innerHTML = '<div style="background:#1E293B;border-radius:18px;padding:28px 24px;max-width:320px;width:100%;border:1px solid #334155;text-align:center">'
-    + '<div style="font-size:36px;margin-bottom:12px">🔄</div>'
+    + '<div style="display:flex;align-items:center;justify-content:center;margin-bottom:12px"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div>'
     + '<div style="font-size:16px;font-weight:600;color:#F1F5F9;margin-bottom:8px">עדכון זמין</div>'
     + '<div style="font-size:13px;color:#94A3B8;margin-bottom:24px">האם לעדכן את האפליקציה עכשיו?<br>הנתונים שלך יישמרו.</div>'
     + '<div style="display:flex;gap:10px;justify-content:center">'

@@ -82,13 +82,13 @@ function openMulti(type) {
   const jobOpts = (s.jobs || []).map((j, i) => `<option value="${i}">${j.name}</option>`).join('');
   const jobSel = `<div class="fg" style="margin-bottom:10px"><label class="fl">מקום עבודה</label><select class="fi" id="mJob">${jobOpts}</select></div>`;
   if (type === 'hours') {
-    document.getElementById('mMTtl').textContent = '⏱️ שעות בתקופה';
+    document.getElementById('mMTtl').innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-left:6px"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg> שעות בתקופה';
     body.innerHTML = jobSel + `<div class="fg"><label class="fl">מספר שעות</label><input type="number" class="fi" id="mV" step="0.25" placeholder="8"></div>`;
   } else if (type === 'profit') {
-    document.getElementById('mMTtl').textContent = '💰 רווח בתקופה';
+    document.getElementById('mMTtl').innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-left:6px"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> רווח בתקופה';
     body.innerHTML = `<div class="fg"><label class="fl">סכום (₪)</label><input type="number" class="fi" id="mV"></div><div class="fg"><label class="fl">תיאור</label><input type="text" class="fi" id="mVD" placeholder="בונוס, נסיעות..."></div>`;
   } else if (type === 'rate') {
-    document.getElementById('mMTtl').textContent = '📋 תעריף לשינוי';
+    document.getElementById('mMTtl').innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-left:6px"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg> תעריף לשינוי';
     body.innerHTML = jobSel + `<div class="fg"><label class="fl">תעריף שעתי חדש (₪)</label><input type="number" class="fi" id="mV" placeholder="0"></div>`;
   }
   openM('mMulti');

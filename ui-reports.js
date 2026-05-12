@@ -38,16 +38,23 @@ function barRadius(){return getStyleTheme()==='minimal'?12:6;}
 function pbarStyle(color){const st=getStyleTheme();if(st==='glass')return'background:linear-gradient(90deg,#00B8D4,#00E5FF)';if(st==='minimal')return'background:linear-gradient(90deg,#7C3AED,#A78BFA)';if(st==='gradient')return'background:linear-gradient(90deg,#7C3AED,#C026D3)';return'background:'+color;}
 
 const cOpts=dk=>{const st=getStyleTheme();if(st==='glass')return{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(8,14,30,0.85)',titleColor:'#00E5FF',bodyColor:'#94A3B8',borderColor:'rgba(0,229,255,0.35)',borderWidth:1,padding:10,cornerRadius:10}},scales:{x:{grid:{color:'rgba(0,229,255,0.07)',borderColor:'transparent'},ticks:{color:'#475569',font:{size:9,family:'Inter'},maxRotation:0}},y:{grid:{color:'rgba(0,229,255,0.07)',lineWidth:0.5},border:{dash:[3,3],color:'transparent'},ticks:{color:'#475569',font:{size:9,family:'Inter'}}}}};if(st==='minimal')return{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',titleColor:'#1E1B4B',bodyColor:'#6B7280',borderColor:'rgba(167,139,250,0.3)',borderWidth:1,padding:10,cornerRadius:12}},scales:{x:{grid:{display:false},border:{display:false},ticks:{color:'#9CA3AF',font:{size:9,family:'Inter'},maxRotation:0}},y:{grid:{display:false},border:{display:false},ticks:{color:'#9CA3AF',font:{size:9,family:'Inter'}}}}};if(st==='gradient')return{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#4F1F9B',titleColor:'#fff',bodyColor:'rgba(255,255,255,0.8)',borderColor:'rgba(192,38,211,0.4)',borderWidth:1,padding:10,cornerRadius:10}},scales:{x:{grid:{color:'rgba(79,31,155,0.07)',borderColor:'transparent'},ticks:{color:'#64748B',font:{size:9,family:'Inter'},maxRotation:0}},y:{grid:{color:'rgba(79,31,155,0.07)',lineWidth:0.5},border:{dash:[3,3],color:'transparent'},ticks:{color:'#64748B',font:{size:9,family:'Inter'}}}}};return{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'transparent',borderColor:'transparent'},ticks:{color:dk?'#475569':'#94A3B8',font:{size:9,family:'Inter'},maxRotation:0}},y:{grid:{color:dk?'rgba(255,255,255,0.04)':'rgba(0,0,0,0.04)',lineWidth:0.5},border:{dash:[3,3],color:'transparent'},ticks:{color:dk?'#475569':'#94A3B8',font:{size:9,family:'Inter'}}}}};};
+function applyChartMods(opts){opts.animation={duration:800,easing:'easeInOutQuart'};if(!opts.plugins)opts.plugins={};if(!opts.plugins.tooltip)opts.plugins.tooltip={};opts.plugins.tooltip.callbacks={label:ctx=>{const v=ctx.parsed.y;if(v==null||isNaN(v))return ctx.formattedValue;return' ₪'+Math.round(v).toLocaleString('he-IL');}};return opts;}
 
 function renderGen(dates,cont){
   const data=D.g();let th=0,tp=0;const lb=[],hd=[],pd2=[];
   dates.forEach(d=>{const k=fk(d);lb.push(`${d.getDate()}/${d.getMonth()+1}`);if(data[k]){const pr=cpDay(data[k]);th+=pr.allHours;tp+=pr.total;hd.push(pr.allHours);pd2.push(pr.total);}else{hd.push(0);pd2.push(0);}});
   const aH=dates.length?th/dates.length:0,aP=dates.length?tp/dates.length:0;
+  const bestDayVal=Math.max(...pd2,0);const bestDayIdx=pd2.indexOf(bestDayVal);const bestDayLbl=bestDayIdx>=0&&bestDayVal>0?lb[bestDayIdx]:'-';const daysWorked=hd.filter(h=>h>0).length;const projMonthly=Math.round(aP*22);
   const dk=document.body.getAttribute('data-theme')==='dark';
   cont.innerHTML=`
   <div class="stats-row">
     <div class="scard"><div class="slbl">סה"כ שעות</div><div class="sval b">${th.toFixed(1)}</div></div>
     <div class="scard"><div class="slbl">סה"כ הכנסה</div><div class="sval g">₪${Math.round(tp).toLocaleString('he-IL')}</div></div>
+  </div>
+  <div class="insight-row">
+    <div class="insight-chip"><div class="insight-val">${bestDayLbl}</div><div class="insight-lbl">יום שיא</div></div>
+    <div class="insight-chip"><div class="insight-val">${daysWorked}</div><div class="insight-lbl">ימי עבודה</div></div>
+    <div class="insight-chip"><div class="insight-val">₪${projMonthly.toLocaleString('he-IL')}</div><div class="insight-lbl">חיזוי חודשי</div></div>
   </div>
   <div class="card">
     <div class="csummary"><span>סה"כ: <strong>${th.toFixed(1)} ש'</strong></span><span>ממוצע: <strong>${aH.toFixed(1)} ש'/יום</strong></span></div>
@@ -57,8 +64,9 @@ function renderGen(dates,cont){
     <div class="csummary"><span>סה"כ: <strong>₪${Math.round(tp).toLocaleString('he-IL')}</strong></span><span>ממוצע: <strong>₪${Math.round(aP).toLocaleString('he-IL')}/יום</strong></span></div>
     <div class="cwrap"><canvas id="pCh"></canvas></div>
   </div>`;
-  if(hCh)hCh.destroy();hCh=new Chart(document.getElementById('hCh'),{type:'bar',data:{labels:lb,datasets:[{data:hd,backgroundColor:barColor('#2563EB'),borderRadius:barRadius(),borderSkipped:false}]},options:cOpts(dk)});
-  if(pCh)pCh.destroy();pCh=new Chart(document.getElementById('pCh'),{type:'line',data:{labels:lb,datasets:[{data:pd2,borderColor:lineColor(),backgroundColor:lineFill(),fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:lineColor()}]},options:cOpts(dk)});
+  cont.querySelectorAll('.sval').forEach(el=>{const raw=el.textContent.replace(/[^\d.]/g,'');const target=parseFloat(raw);if(!target||isNaN(target))return;const prefix=el.textContent.includes('₪')?'₪':'';const suffix=el.textContent.includes("'")?` ש'`:'';let startTime=null;const dur=600;const step=ts=>{if(!el.isConnected)return;if(!startTime)startTime=ts;const p=Math.min((ts-startTime)/dur,1);el.textContent=prefix+Math.round(p*target).toLocaleString('he-IL')+suffix;if(p<1)requestAnimationFrame(step);};requestAnimationFrame(step);});
+  if(hCh)hCh.destroy();hCh=new Chart(document.getElementById('hCh'),{type:'bar',data:{labels:lb,datasets:[{data:hd,backgroundColor:barColor('#2563EB'),borderRadius:barRadius(),borderSkipped:false,borderWidth:0}]},options:applyChartMods(cOpts(dk))});
+  if(pCh)pCh.destroy();pCh=new Chart(document.getElementById('pCh'),{type:'line',data:{labels:lb,datasets:[{data:pd2,borderColor:lineColor(),backgroundColor:lineFill(),fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:lineColor(),pointHoverRadius:6,pointHoverBackgroundColor:lineColor()}]},options:applyChartMods(cOpts(dk))});
 }
 
 function renderJobs(dates,cont){
@@ -67,8 +75,12 @@ function renderJobs(dates,cont){
   dates.forEach(d=>{const k=fk(d);if((data[k]?.hours||0)>0){const ji=data[k].jobIdx??0;if(st[ji]){const pr=cpDay(data[k]);st[ji].h+=pr.allHours;st[ji].p+=pr.total;total+=pr.total;}(data[k].extraJobs||[]).forEach(ej=>{const eji=ej.jobIdx??0;if(st[eji]){const er=cpExtra(ej.hours||0,ej.rate||0);st[eji].h+=ej.hours||0;st[eji].p+=er.base;total+=er.base;}});}});
   jobs.forEach((j,i)=>{const f=parseFloat(j.fixed)||0;if(f>0){st[i].p+=f;total+=f;}});
   const maxI=st.reduce((mx,_,i)=>st[i].p>(st[mx]?.p||0)?i:mx,0);
+  const bestJobName=jobs.length>0&&total>0?jobs[maxI].name:'—';
+  const totalDaysWorked=dates.filter(d=>{const k=fk(d);return(data[k]?.hours||0)>0;}).length;
+  const avgDaily=totalDaysWorked>0?('₪'+Math.round(total/totalDaysWorked).toLocaleString('he-IL')):'—';
   const dk=document.body.getAttribute('data-theme')==='dark';
   let html=`<div class="stats-row"><div class="scard"><div class="slbl">סה"כ הכנסה</div><div class="sval g">₪${Math.round(total).toLocaleString('he-IL')}</div></div></div>`;
+  html+=`<div class="insight-row"><div class="insight-chip"><div class="insight-val">${bestJobName}</div><div class="insight-lbl">מוביל</div></div><div class="insight-chip"><div class="insight-val">${totalDaysWorked}</div><div class="insight-lbl">ימי עבודה</div></div><div class="insight-chip"><div class="insight-val">${avgDaily}</div><div class="insight-lbl">ממוצע יומי</div></div></div>`;
   jobs.forEach((j,i)=>{
     const pct=total>0?Math.round(st[i].p/total*100):0;
     html+=`<div class="card" style="border-right:4px solid ${j.color}"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="font-size:14px;font-weight:400">${j.name}</div>${i===maxI&&total>0?'<span style="background:var(--gl);color:var(--g);padding:3px 8px;border-radius:20px;font-size:11px;font-weight:300">★ מוביל</span>':''}</div>
@@ -80,9 +92,16 @@ function renderJobs(dates,cont){
     <div class="pbar-wrap"><div class="pbar-fill" style="width:${pct}%;${pbarStyle(j.color)}"></div></div></div>`;
   });
   html+=`<div class="card"><div class="csummary"><span>השוואה בין מקומות העבודה</span></div><div class="cwrap"><canvas id="jCh"></canvas></div></div>`;
+  html+=`<div class="card"><div class="csummary"><span>פילוח הכנסות</span></div><div class="cwrap" style="height:220px"><canvas id="jobPieCh"></canvas></div><div id="jobPieLegend" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;justify-content:center;padding:0 4px"></div></div>`;
   cont.innerHTML=html;
+  cont.querySelectorAll('.sval').forEach(el=>{const raw=el.textContent.replace(/[^\d.]/g,'');const target=parseFloat(raw);if(!target||isNaN(target))return;const prefix=el.textContent.includes('₪')?'₪':'';const suffix=el.textContent.includes("'")?` ש'`:'';let startTime=null;const dur=600;const step=ts=>{if(!el.isConnected)return;if(!startTime)startTime=ts;const p=Math.min((ts-startTime)/dur,1);el.textContent=prefix+Math.round(p*target).toLocaleString('he-IL')+suffix;if(p<1)requestAnimationFrame(step);};requestAnimationFrame(step);});
   if(jCh)jCh.destroy();
-  jCh=new Chart(document.getElementById('jCh'),{type:'bar',data:{labels:jobs.map(j=>j.name),datasets:[{data:st.map(x=>Math.round(x.p)),backgroundColor:jobBarColors(jobs),borderRadius:barRadius(),borderSkipped:false}]},options:cOpts(dk)});
+  jCh=new Chart(document.getElementById('jCh'),{type:'bar',data:{labels:jobs.map(j=>j.name),datasets:[{data:st.map(x=>Math.round(x.p)),backgroundColor:jobBarColors(jobs),borderRadius:barRadius(),borderSkipped:false,borderWidth:0}]},options:applyChartMods(cOpts(dk))});
+  if(window.jobPieCh)window.jobPieCh.destroy();
+  const pieCv=document.getElementById('jobPieCh');
+  if(pieCv)window.jobPieCh=new Chart(pieCv,{type:'doughnut',data:{labels:jobs.map(j=>j.name),datasets:[{data:st.map(x=>Math.round(x.p)),backgroundColor:jobs.map(j=>j.color),borderWidth:0,hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:800,easing:'easeInOutQuart'},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const v=ctx.parsed;const pct=total>0?Math.round(v/total*100):0;return` ₪${Math.round(v).toLocaleString('he-IL')} (${pct}%)`;}}}}}});
+  const legEl=document.getElementById('jobPieLegend');
+  if(legEl)legEl.innerHTML=jobs.map((j,i)=>`<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t2)"><div style="width:10px;height:10px;border-radius:50%;background:${j.color};flex-shrink:0"></div><span>${j.name}: ${total>0?Math.round(st[i].p/total*100):0}%</span></div>`).join('');
 }
 
 function renderCmp(cont,mode,p1,p2,p3){
@@ -144,7 +163,7 @@ function renderCmp(cont,mode,p1,p2,p3){
   const titleTxt=mode==='weeks'?`שבועות — ${MN[selMonth]} ${selYear}`:mode==='custom'?`השוואה — ${selYear}`:'השוואת חודשים';
   cont.innerHTML=picker+`<div class="card"><div class="csummary"><span>${titleTxt}</span><span style="color:var(--g)">גבוה: <strong>${lb[maxI]||'-'} — ₪${maxV.toLocaleString('he-IL')}</strong></span></div><div class="cwrap"><canvas id="cmpCh"></canvas></div></div>`;
   if(cmpCh)cmpCh.destroy();
-  cmpCh=new Chart(document.getElementById('cmpCh'),{type:'bar',data:{labels:lb,datasets:[{data:vals,backgroundColor:barColorArray(vals,maxI,'#2563EB','#10B981'),borderRadius:barRadius(),borderSkipped:false}]},options:cOpts(dk)});
+  cmpCh=new Chart(document.getElementById('cmpCh'),{type:'bar',data:{labels:lb,datasets:[{data:vals,backgroundColor:barColorArray(vals,maxI,'#2563EB','#10B981'),borderRadius:barRadius(),borderSkipped:false,borderWidth:0}]},options:applyChartMods(cOpts(dk))});
 }
 
 function renderArc(cont,selYear,selMonth){
@@ -200,7 +219,7 @@ function renderArc(cont,selYear,selMonth){
     const actW=weeks.filter((w,i)=>i<4||w.h>0);
     if(window._arcWeekCh){try{window._arcWeekCh.destroy();}catch(e){}}
     const cv=document.getElementById('arcWeekCh');
-    if(cv)window._arcWeekCh=new Chart(cv,{type:'bar',data:{labels:actW.map(w=>w.l),datasets:[{data:actW.map(w=>Math.round(w.p)),backgroundColor:barColor('#2563EB'),borderRadius:barRadius(),borderSkipped:false}]},options:{...cOpts(dk),plugins:{legend:{display:false}}}});
+    if(cv)window._arcWeekCh=new Chart(cv,{type:'bar',data:{labels:actW.map(w=>w.l),datasets:[{data:actW.map(w=>Math.round(w.p)),backgroundColor:barColor('#2563EB'),borderRadius:barRadius(),borderSkipped:false,borderWidth:0}]},options:{...cOpts(dk),animation:{duration:800,easing:'easeInOutQuart'},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const v=ctx.parsed.y;if(v==null||isNaN(v))return ctx.formattedValue;return' ₪'+Math.round(v).toLocaleString('he-IL');}}}}}});
     return;
   }
   // תצוגה ראשית: כרטיסי שנה (רק ב-showAll) + רשימת חודשים
@@ -289,7 +308,7 @@ function renderYear(cont,selectedYear){
     <div class="cwrap" style="height:180px"><canvas id="yrIncomeCh"></canvas></div>
   </div>
   <div class="card">
-    <div class="csummary"><span>⏱️ שעות לפי חודש</span></div>
+    <div class="csummary"><span style="display:flex;align-items:center;gap:5px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>שעות לפי חודש</span></div>
     <div class="cwrap" style="height:150px"><canvas id="yrHoursCh"></canvas></div>
   </div>
   <div class="card">
@@ -300,10 +319,10 @@ function renderYear(cont,selectedYear){
   setTimeout(()=>{
     if(window.yrInCh){try{window.yrInCh.destroy();}catch(e){}}
     const c1=document.getElementById('yrIncomeCh');
-    if(c1)window.yrInCh=new Chart(c1,{type:'bar',data:{labels:lb,datasets:[{data:vals,backgroundColor:bgColors,borderRadius:barRadius(),borderSkipped:false}]},options:{...cOpts(dk),plugins:{legend:{display:false}}}});
+    if(c1)window.yrInCh=new Chart(c1,{type:'bar',data:{labels:lb,datasets:[{data:vals,backgroundColor:bgColors,borderRadius:barRadius(),borderSkipped:false,borderWidth:0}]},options:{...cOpts(dk),animation:{duration:800,easing:'easeInOutQuart'},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const v=ctx.parsed.y;if(v==null||isNaN(v))return ctx.formattedValue;return' ₪'+Math.round(v).toLocaleString('he-IL');}}}}}});
     if(window.yrHrCh){try{window.yrHrCh.destroy();}catch(e){}}
     const c2=document.getElementById('yrHoursCh');
-    if(c2)window.yrHrCh=new Chart(c2,{type:'bar',data:{labels:lb,datasets:[{data:hvals,backgroundColor:barColor('#3B82F6'),borderRadius:barRadius(),borderSkipped:false}]},options:{...cOpts(dk),plugins:{legend:{display:false}}}});
+    if(c2)window.yrHrCh=new Chart(c2,{type:'bar',data:{labels:lb,datasets:[{data:hvals,backgroundColor:barColor('#3B82F6'),borderRadius:barRadius(),borderSkipped:false,borderWidth:0}]},options:{...cOpts(dk),animation:{duration:800,easing:'easeInOutQuart'},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const v=ctx.parsed.y;if(v==null||isNaN(v))return ctx.formattedValue;return' ₪'+Math.round(v).toLocaleString('he-IL');}}}}}});
   },20);
 }
 
@@ -496,5 +515,5 @@ function renderCoupleChart(){
   cplCh=new Chart(canvas,{type:'bar',data:{labels,datasets:[
     {label:s.myName,data:myVals,backgroundColor:s.myColor+'CC',borderRadius:barRadius(),borderSkipped:false},
     {label:s.partnerName,data:pVals,backgroundColor:s.partnerColor+'CC',borderRadius:barRadius(),borderSkipped:false}
-  ]},options:{...cOpts(dk),plugins:{legend:{display:true,labels:{font:{size:10,family:'Inter'},boxWidth:10,padding:10}}}}});
+  ]},options:{...cOpts(dk),animation:{duration:800,easing:'easeInOutQuart'},plugins:{legend:{display:true,labels:{font:{size:10,family:'Inter'},boxWidth:10,padding:10}},tooltip:{callbacks:{label:ctx=>{const v=ctx.parsed.y;if(v==null||isNaN(v))return ctx.formattedValue;return' ₪'+Math.round(v).toLocaleString('he-IL');}}}}}});
 }
