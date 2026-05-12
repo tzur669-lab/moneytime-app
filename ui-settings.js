@@ -52,8 +52,18 @@ function renderSettings() {
   document.getElementById('drOff').style.display = aToken ? 'none' : 'block';
   document.getElementById('drOn').style.display = aToken ? 'block' : 'none';
   applyStyleTheme(s.styleTheme || 'default');
+  const ct = s.chartType || 'bar';
+  document.querySelectorAll('[id^="ct-"]').forEach(el => el.classList.remove('sel'));
+  document.getElementById('ct-' + ct)?.classList.add('sel');
   renderJobsCont();
   renderFixedBonuses();
+}
+
+function setChartType(type) {
+  const s = D.gs(); s.chartType = type; D.ss(s);
+  document.querySelectorAll('[id^="ct-"]').forEach(el => el.classList.remove('sel'));
+  document.getElementById('ct-' + type)?.classList.add('sel');
+  vib();
 }
 
 function setSetting(k, v) {
