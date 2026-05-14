@@ -31,3 +31,8 @@
 ## Build
 - `build-apk.yml` — GitHub Actions: build APK, sign, release, Firebase version push
 - `package.json` — Capacitor dependencies
+
+## Docs
+- `HANDOFF.md` — single source of truth for new sessions (load first)
+- `ARCHITECTURE.md` — module breakdown, coupling map, build pipeline
+- `README.md` — docs index + quick start
