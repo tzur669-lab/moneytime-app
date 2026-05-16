@@ -95,6 +95,7 @@ function _waitForCapBrowser(ms){
     </div>
     <button class="btn-clk" id="clkBtn" onclick="handleClock()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5,3 19,12 5,21"/></svg> התחל</button>
   </div>
+  <div id="streakBanner"></div>
   <div id="missBanner"></div>
   <div id="pairBanner" style="display:none;background:linear-gradient(135deg,var(--b8),var(--b6));border-radius:var(--r1);padding:14px 16px;margin-bottom:12px;color:#fff;align-items:center;gap:12px">
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -345,6 +346,24 @@ function _waitForCapBrowser(ms){
   </div>
 </div>
 
+<!-- FAB - כניסה מהירה -->
+<div class="fab-menu" id="fabMenu">
+  <button class="fab-item" onclick="closeFab();openDay(fk(new Date()))">
+    <div class="fab-item-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+    רשום היום
+  </button>
+  <button class="fab-item" onclick="closeFab();openMulti('hours')">
+    <div class="fab-item-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg></div>
+    שעות לתקופה
+  </button>
+  <button class="fab-item" onclick="closeFab();openMulti('profit')">
+    <div class="fab-item-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+    הוסף בונוס
+  </button>
+</div>
+<button class="fab" id="fabBtn" onclick="toggleFab()" title="פעולה מהירה">
+  <svg id="fabIcon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</button>
 <nav class="bnav">
   <button class="ni active" onclick="swPage('cal',this)"><span class="nic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="nil">יומן</span></button>
   <button class="ni" onclick="swPage('rep',this)"><span class="nic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span><span class="nil">דוחות</span></button>
@@ -365,6 +384,17 @@ function _waitForCapBrowser(ms){
       <button class="mnav-btn" onclick="navDay(-1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg></button>
       <div class="mnav-c"><div class="mnav-ttl" id="mNavTtl"></div><div class="mnav-sub" id="mNavSub"></div></div>
       <button class="mnav-btn" onclick="navDay(1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,18 15,12 9,6"/></svg></button>
+    </div>
+    <!-- רווח יומי - live banner -->
+    <div id="dayProfitBanner" style="display:none;background:linear-gradient(135deg,var(--b0),var(--s2));border:1px solid var(--b1);border-radius:12px;padding:12px 14px;margin-bottom:14px;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:9px;font-weight:500;color:var(--b6);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">רווח יומי</div>
+        <div style="font-size:10px;color:var(--t3)" id="dpDate"></div>
+      </div>
+      <div style="text-align:left">
+        <div style="font-size:24px;font-weight:200;color:var(--b7);letter-spacing:-0.5px;font-variant-numeric:tabular-nums" id="dpAmount">₪0</div>
+        <div style="font-size:9px;color:var(--t3);text-align:left" id="dpBreakdown"></div>
+      </div>
     </div>
     <div class="fg"><label class="fl">מקום עבודה</label><select class="fi" id="dJob" onchange="onJobCh()"></select></div>
     <div class="t2row">

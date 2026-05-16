@@ -454,19 +454,38 @@ function renderCouple(){
     });
   }
   const dk=document.body.getAttribute('data-theme')==='dark';
+  // sparkline last 7 days
+  const _7d=Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);return d;});
+  const mySpkVals=_7d.map(d=>{const k=fk(d);return myD[k]?cpDay(myD[k]).total:0;});
+  const pSpkVals=_7d.map(d=>{const k=fk(d);return D.gp()[k]?cpDay(D.gp()[k]).total:0;});
+  const makeSvgSparkline=(vals,color)=>{
+    const max=Math.max(...vals,1);const w=200,h=24;
+    const pts=vals.map((v,i)=>`${Math.round(i*(w/(vals.length-1))||0)},${Math.round(h-1-(v/max)*(h-4))}`).join(' ');
+    const fillPts=`0,${h} ${pts} ${w},${h}`;
+    return `<svg viewBox="0 0 ${w} ${h}" class="uc-sparkline" preserveAspectRatio="none"><polygon points="${fillPts}" fill="${color}" opacity="0.15"/><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  };
+  // חיסוי שבועי
+  const _wStart=new Date();_wStart.setDate(_wStart.getDate()-_wStart.getDay());
+  let myWk=0,pWk=0;
+  for(let i=0;i<7;i++){const d=new Date(_wStart);d.setDate(_wStart.getDate()+i);const k=fk(d);if(myD[k])myWk+=cpDay(myD[k]).total;if(D.gp()[k])pWk+=cpDay(D.gp()[k]).total;}
+  const wkChipTxt=myWk>0&&pWk>0?(myWk>pWk?`השבוע: ${s.myName} מוביל/ת ×${(myWk/Math.max(pWk,1)).toFixed(1)} 🏆`:`השבוע: ${s.partnerName} מוביל/ת ×${(pWk/Math.max(myWk,1)).toFixed(1)} 🏆`):'';
+
   cont.innerHTML=`
+  ${wkChipTxt?`<div class="cmp-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg> ${wkChipTxt}</div>`:''}
   <div id="cplStats">
     <div class="couple-total"><div class="ct-lbl" id="cplPeriodLbl">הכנסה משותפת החודש</div><div class="ct-val" id="cplTotVal">₪0</div><div class="ct-sub" id="cplHoursLbl">0 + 0 שעות ביחד</div></div>
     <div class="ucard" id="cplMyCard" style="background:${s.myColor}18;border-color:${s.myColor}">
       <div class="uc-top"><div class="uc-av" style="background:${s.myColor}">${s.myName.charAt(0)}</div><div><div class="uc-name" style="color:${s.myColor}">${s.myName}</div><div class="uc-h" id="cplMyH">0 שעות</div></div></div>
       <div class="uc-money" id="cplMyP" style="color:${s.myColor}">₪0</div>
-      <div class="pbar-wrap" style="margin-top:10px"><div class="pbar-fill" id="cplMyBar" style="width:50%;background:${s.myColor}"></div></div>
+      ${makeSvgSparkline(mySpkVals,s.myColor)}
+      <div class="pbar-wrap" style="margin-top:6px"><div class="pbar-fill" id="cplMyBar" style="width:50%;background:linear-gradient(90deg,${s.myColor}99,${s.myColor})"></div></div>
       <div style="font-size:11px;color:var(--t3);margin-top:4px" id="cplMyPct">50% מסה"כ</div>
     </div>
     <div class="ucard" id="cplPCard" style="background:${s.partnerColor}18;border-color:${s.partnerColor}">
       <div class="uc-top"><div class="uc-av" style="background:${s.partnerColor}">${s.partnerName.charAt(0)}</div><div><div class="uc-name" style="color:${s.partnerColor}">${s.partnerName}</div><div class="uc-h" id="cplPH">0 שעות</div></div></div>
       <div class="uc-money" id="cplPP" style="color:${s.partnerColor}">₪0</div>
-      <div class="pbar-wrap" style="margin-top:10px"><div class="pbar-fill" id="cplPBar" style="width:50%;background:${s.partnerColor}"></div></div>
+      ${makeSvgSparkline(pSpkVals,s.partnerColor)}
+      <div class="pbar-wrap" style="margin-top:6px"><div class="pbar-fill" id="cplPBar" style="width:50%;background:linear-gradient(90deg,${s.partnerColor}99,${s.partnerColor})"></div></div>
       <div style="font-size:11px;color:var(--t3);margin-top:4px" id="cplPPct">50% מסה"כ</div>
     </div>
   </div>

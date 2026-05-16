@@ -38,8 +38,18 @@ function renderCal(){
     const isT=k===tk,isPast=dt<today&&!isT,isWd=dt.getDay()!==6;
     const isMiss=s.showMissing&&isPast&&isWd&&!hasMe;
     if(isMiss)miss++;
+    // heat map: חשב רמת עוצמה לפי שעות (1-5)
+    const hmHours=(data[k]?.hours||0)+(data[k]?.extraJobs||[]).reduce((a,ej)=>a+(ej.hours||0),0);
+    let hmClass='';
+    if(hasMe&&!isT){
+      if(hmHours<4)hmClass=' hm-1';
+      else if(hmHours<6)hmClass=' hm-2';
+      else if(hmHours<8)hmClass=' hm-3';
+      else if(hmHours<10)hmClass=' hm-4';
+      else hmClass=' hm-5';
+    }
     const c=document.createElement('div');
-    c.className='cc'+(isT?' today':isMiss?' missing':hasMe?' has-data':'');
+    c.className='cc'+(isT?' today':isMiss?' missing':hmClass||'');
     c.onclick=()=>{vib();openDay(k);};
     let html='';
     if(data[k]?.note||(data[k]?.bonuses?.length>0)){const col=s.jobs?.[data[k]?.jobIdx||0]?.color||'#1E3A8A';html+=`<div class="cc-dot" style="background:${col}"></div>`;}
@@ -51,6 +61,16 @@ function renderCal(){
     if(bars.length)html+=`<div class="cc-bars">${bars.join('')}</div>`;
     else if(hasMe){const _eh=(data[k].extraJobs||[]).reduce((a,ej)=>a+(ej.hours||0),0);const _ah=((data[k].hours||0)+_eh);html+=`<div class="cc-h">${_ah%1===0?_ah:_ah.toFixed(1)}ש'</div>`;}
     c.innerHTML=html;grid.appendChild(c);
+  }
+  // streak counter
+  const streakEl=document.getElementById('streakBanner');
+  if(streakEl){
+    const streak=calcStreak(data);
+    if(streak>=2){
+      streakEl.innerHTML=`<div class="streak-banner"><span class="streak-icon">🔥</span><div class="streak-txt"><strong>${streak}</strong> ימים ברצף עם רישום</div></div>`;
+    } else {
+      streakEl.innerHTML='';
+    }
   }
   const mb=document.getElementById('missBanner');
   if(miss>0&&D.gs().showMissing){mb.innerHTML=`<div class="miss-banner"><span style="display:flex;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><div class="miss-banner-txt"><strong>${miss} ימים ללא רישום</strong>לחץ על יום מסומן לתיקון</div></div>`;}
@@ -186,6 +206,24 @@ function renderDayView(){
 
 function goToday(){vib();curDt=new Date();renderCal();}
 function jumpDate(){const v=document.getElementById('jDate').value;if(v){curDt=new Date(v);renderCal();}}
+
+// ---- STREAK COUNTER ----
+function calcStreak(data){
+  var streak=0;
+  var d=new Date();
+  d.setHours(0,0,0,0);
+  // אם היום אין נתונים עדיין, התחל מאתמול
+  var todayKey=fk(d);
+  if(!(data[todayKey]?.hours>0)){d.setDate(d.getDate()-1);}
+  for(var i=0;i<365;i++){
+    var k=fk(d);
+    if(d.getDay()===6){d.setDate(d.getDate()-1);continue;} // דלג שבת
+    if(data[k]?.hours>0){streak++;}
+    else{break;}
+    d.setDate(d.getDate()-1);
+  }
+  return streak;
+}
 function updHdrSub(){
   const data=D.g(),s=D.gs();
   const mk=`${curDt.getFullYear()}-${String(curDt.getMonth()+1).padStart(2,'0')}`;

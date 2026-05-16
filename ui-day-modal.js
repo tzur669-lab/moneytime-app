@@ -24,15 +24,71 @@ function openDay(k){
   document.getElementById('dExtraJobList').innerHTML='';
   (d.extraJobs||[]).forEach(ej=>addExtraJob(ej.jobIdx,ej.hours,ej.rate,ej.startTime,ej.endTime));
 
+  // עדכון banner רווח יומי
+  updateDayProfit();
+
   // הנה השורה שהוספנו! מפעילה את סיכום הפרטנר לפני פתיחת החלון
   updatePartnerDaySummary();
 
+  // הוסף event listeners לעדכון live של רווח יומי
+  setTimeout(function(){
+    var dH=document.getElementById('dH');
+    var dR=document.getElementById('dR');
+    if(dH&&!dH._profitListener){dH.addEventListener('input',updateDayProfit);dH._profitListener=true;}
+    if(dR&&!dR._profitListener){dR.addEventListener('input',updateDayProfit);dR._profitListener=true;}
+  },50);
+
   openM('mDay');
+}
+
+// ---- עדכון רווח יומי live ----
+function updateDayProfit(){
+  var banner=document.getElementById('dayProfitBanner');
+  var amtEl=document.getElementById('dpAmount');
+  var bdEl=document.getElementById('dpBreakdown');
+  var dateEl=document.getElementById('dpDate');
+  if(!banner||!amtEl)return;
+
+  var h=parseFloat(document.getElementById('dH')?.value)||0;
+  var r=parseFloat(document.getElementById('dR')?.value)||0;
+
+  // קרא בונוסים מהרשימה
+  var bons=[];
+  document.querySelectorAll('#dBonList .brow').forEach(function(row){
+    var amt=parseFloat(row.querySelector('.bamt')?.value)||0;
+    var desc=row.querySelector('.bdesc')?.value||'';
+    if(amt>0)bons.push({desc:desc,amount:amt});
+  });
+
+  // הצג תאריך
+  if(dateEl&&selDt){
+    var dn=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+    dateEl.textContent=dn[selDt.getDay()]+', '+fk(selDt);
+  }
+
+  if(h===0&&r===0&&bons.length===0){
+    banner.style.display='none';
+    return;
+  }
+
+  var result=cp(h,r,bons);
+  banner.style.cssText='display:flex;background:linear-gradient(135deg,var(--b0),var(--s2));border:1px solid var(--b1);border-radius:12px;padding:12px 14px;margin-bottom:14px;justify-content:space-between;align-items:center';
+  amtEl.textContent='₪'+Math.round(result.total).toLocaleString('he-IL');
+
+  // פירוט: בסיס + בונוסים
+  var parts=[];
+  if(result.base>0)parts.push('עבודה ₪'+Math.round(result.base).toLocaleString('he-IL'));
+  if(result.bonus>0)parts.push('בונוסים ₪'+Math.round(result.bonus).toLocaleString('he-IL'));
+  if(result.ot1>0)parts.push('שע"ן 125%: '+result.ot1.toFixed(1)+'ש\'');
+  if(result.ot2>0)parts.push('שע"ן 150%: '+result.ot2.toFixed(1)+'ש\'');
+  if(bdEl)bdEl.textContent=parts.join(' · ');
 }
 function onJobCh(){const s=D.gs(),ji=parseInt(document.getElementById('dJob').value);const j=s.jobs?.[ji];if(j)document.getElementById('dR').value=j.rate||'';}
 function calcT(){const sv=document.getElementById('dS').value,ev=document.getElementById('dE').value;if(sv&&ev){const[sh,sm]=sv.split(':').map(Number),[eh,em]=ev.split(':').map(Number);let df=(eh+em/60)-(sh+sm/60);if(df<0)df+=24;document.getElementById('dH').value=df.toFixed(2);}}
 function copyYest(){const y=new Date(selDt);y.setDate(y.getDate()-1);const d=D.g()[fk(y)];if(d)document.getElementById('dH').value=d.hours;}
-function addB(desc='',amt=''){const list=document.getElementById('dBonList');const row=document.createElement('div');row.className='brow';const sd=String(desc).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');row.innerHTML=`<input type="text" class="fi bdesc" placeholder="סיבה" value="${sd}"><input type="number" class="fi bamt" placeholder="₪" value="${amt}"><button class="bdel" onclick="this.parentElement.remove()">×</button>`;list.appendChild(row);}
+function addB(desc='',amt=''){const list=document.getElementById('dBonList');const row=document.createElement('div');row.className='brow';const sd=String(desc).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');row.innerHTML=`<input type="text" class="fi bdesc" placeholder="סיבה" value="${sd}"><input type="number" class="fi bamt" placeholder="₪" value="${amt}"><button class="bdel" onclick="this.parentElement.remove();updateDayProfit()">×</button>`;
+row.querySelector('.bamt').addEventListener('input',updateDayProfit);
+list.appendChild(row);}
 function addExtraJob(ji=0,h='',r='',st='',en=''){
   const s=D.gs();const list=document.getElementById('dExtraJobList');
   const row=document.createElement('div');

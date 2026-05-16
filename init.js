@@ -1,3 +1,25 @@
+// ---- FAB ----
+var _fabOpen=false;
+function toggleFab(){
+  _fabOpen=!_fabOpen;
+  var menu=document.getElementById('fabMenu');
+  var icon=document.getElementById('fabIcon');
+  if(menu)menu.classList.toggle('open',_fabOpen);
+  if(icon)icon.style.transform=_fabOpen?'rotate(45deg)':'rotate(0deg)';
+  vib();
+}
+function closeFab(){
+  _fabOpen=false;
+  var menu=document.getElementById('fabMenu');
+  var icon=document.getElementById('fabIcon');
+  if(menu)menu.classList.remove('open');
+  if(icon)icon.style.transform='rotate(0deg)';
+}
+// סגור FAB בלחיצה מחוץ
+document.addEventListener('click',function(e){
+  if(_fabOpen&&!e.target.closest('#fabBtn')&&!e.target.closest('#fabMenu'))closeFab();
+});
+
 // ---- KEYBOARD ----
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
